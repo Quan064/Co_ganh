@@ -5,48 +5,20 @@ import copy
 from importlib.machinery import SourceFileLoader
 import math
 
-
-
-def load_player(option, session_name):
-    cwd = os.getcwd()
-    current_session_username = session_name
-    current_user_file = f'botfile_{current_session_username}.py'
-    UserBot = SourceFileLoader(current_user_file, os.path.join(cwd, f"static/botfiles/{current_user_file}")).load_module()
-    if option == "bot":
-        import CGEngine as CGBot
-        player2 = CGBot
-    if option == "player":
-        player_file_list = os.listdir(os.path.join(cwd, "static/botfiles"))
-        load_rand_player = random.choice(player_file_list)
-
-        pfile_name = load_rand_player.rsplit(".", 1)[0]
-        if pfile_name == current_user_file:
-            load_player(option)
-        else:
-            UserBot2 = SourceFileLoader(pfile_name, f"static/botfiles/{load_rand_player}").load_module()
-            player2 = UserBot2
-    
-    run_game(UserBot, player2, game_state["board"])
-
-#               ----READ ME PLS----
-#   ROW = y, COLUMN = x. AS BOARD USES LIST NOTATION
+# ROW = y
+# COLUMN = x
 # ==> board[y][x] == board[ROW][COLUMN]
 
-#[0,0,0,0],
-
-
-board = [
-    [-1, -1, -1, -1, -1],
-    [-1,  0,  0,  0, -1],
-    [ 1,  0,  0,  0, -1],
-    [ 1,  0,  0,  0,  1],
-    [ 1,  1,  1,  1,  1]
-]
-
+board = [   [-1, -1, -1, -1, -1],
+            [-1,  0,  0,  0, -1],
+            [ 1,  0,  0,  0, -1],
+            [ 1,  0,  0,  0,  1],
+            [ 1,  1,  1,  1,  1]    ]
 diag_pos = [(1,1), (1, 3), (3,1), (3,3)]
+game_state = {  "board": board,
+                "current_turn": 1   }
 
-
-# Loops through board and gives locations of red and blue
+# board manipulation
 def display():
     for row in game_state["board"]:
         for cell in row:
@@ -57,118 +29,13 @@ def display():
             elif cell == 1:
                 print("B", end=" ")  #blue piece
         print()
-
-
-# Generates random sides for each bots
-def assign_side():
-    assignment = random.choice([-1,1])
-    return assignment
-
-
-# Toggles turn back and forth
-def toggle_turn():
-    game_state["current_turn"] = game_state["current_turn"]*-1
-
-
-# Main running function in game_manager
-def run_game(UserBot, Bot2, board):
-    player1 = {"side": assign_side(), "operator": UserBot}
-    player2 = {"side": -player1["side"], "operator": Bot2}
-    player1_info = {"your_pieces": get_position(player1["side"]),
-                    "your_side": player1["side"],
-                    "oponent_position": get_position(player2["side"]), 
-                    "board": copy.deepcopy(game_state["board"])
-                    }
-    player2_info = {"your_pieces": get_position(player2["side"]), 
-                    "your_side": player2["side"],
-                    "oponent_position": get_position(player1["side"]), 
-                    "board": copy.deepcopy(game_state["board"])
-                    }
-    winner = None
-    move_counter = 1
-    init_img(game_state["board"])
-
-    while winner is None:
-    
-        player1_info["board"] = copy.deepcopy(game_state["board"])
-        player2_info["board"] = copy.deepcopy(game_state["board"])
-
-        if player1["side"] == game_state["current_turn"]:
-            move = player1["operator"].main(player1_info)
-        elif player2["side"] == game_state["current_turn"]:
-            move = player2["operator"].main(player2_info)
-        else:
-            pass
-
-        move_is_legal = is_valid_move(move, game_state["current_turn"], game_state["board"])
-        
-        if move_is_legal:
-            pass
-        else:
-            if player1["side"] != game_state["current_turn"]:
-                winner = player1
-            else:
-                winner = player2
-
-        print(move)
-
-        board = execute(game_state["board"], move, game_state["current_turn"])
-        game_state["board"] = board
-
-        ganh_remove = ganh(game_state["current_turn"], -game_state["current_turn"], game_state["board"])
-        chet_remove = chet(game_state["current_turn"], -game_state["current_turn"], game_state["board"])
-
-        update_board(game_state["board"], ganh_remove, chet_remove)
-
-        generate_image(game_state["board"], move_counter, move, ganh_remove, chet_remove)
-
-        print("AFTER: \n----------")
-        display()
-        print("----------")
-        toggle_turn()
-        move_counter += 1
-        winner = result()
-
-
-        
-        
-        if winner is not None:
-            print(winner)
-            break
-        if move_counter == 201:
-            break
-    
-
-def execute(board, move, side):
-    current_x = move["selected_pos"]["x"]
-    current_y = move["selected_pos"]["y"]
-    new_x = move["new_pos"]["x"]
-    new_y = move["new_pos"]["y"]
-
+def get_position(color):
+    positions = []
     for row in range(len(board)):
         for column in range(len(board[0])):
-            if (row,column) == (new_y, new_x):
-                board[row][column] = side
-            if (row,column) == (current_y, current_x):
-                board[row][column] = 0
-
-    return board
-
-
-def del_all_img():
-    try:
-        cwd = os.getcwd() #Get current directory
-        img_dir = cwd + "/static/upload_img"
-        images = os.listdir(img_dir)
-        for file in images:
-            file_path = os.path.join(img_dir, file)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-        print("deletion successful")
-    except OSError:
-        print("OS error")
-
-
+            if board[row][column] == color:
+                positions.append({"x": column, "y": row})
+    return positions
 def is_valid_move(move, current_side, board):
     current_x = move["selected_pos"]["x"]
     current_y = move["selected_pos"]["y"]
@@ -199,8 +66,6 @@ def is_valid_move(move, current_side, board):
             return True
         
     return False
-
-
 def ganh(piece, opp_piece, board):
     valid_remove = []
     opp_remove = []
@@ -264,8 +129,6 @@ def ganh(piece, opp_piece, board):
 
     print("GANH VALID:", valid_remove)
     return valid_remove
-
-
 def chet(piece, opp_piece, board):
     valid_remove = []
     ally_chet = []
@@ -325,7 +188,43 @@ def chet(piece, opp_piece, board):
     print("CHET VALID:", valid_remove)
     return valid_remove
 
+# System
+def activation(option, session_name):
+    cwd = os.getcwd()
+    current_session_username = session_name
+    current_user_file = f'botfile_{current_session_username}.py'
+    UserBot = SourceFileLoader(current_user_file, os.path.join(cwd, f"static/botfiles/{current_user_file}")).load_module()
+    if option == "bot":
+        import CGEngine as CGBot
+        player2 = CGBot
+    if option == "player":
+        player_file_list = os.listdir(os.path.join(cwd, "static/botfiles"))
+        load_rand_player = random.choice(player_file_list)
 
+        pfile_name = load_rand_player.rsplit(".", 1)[0]
+        if pfile_name == current_user_file:
+            activation(option, session_name)
+        else:
+            UserBot2 = SourceFileLoader(pfile_name, f"static/botfiles/{load_rand_player}").load_module()
+            player2 = UserBot2
+    
+    winner = run_game(UserBot, player2, game_state["board"])
+
+    return winner
+def execute(board, move, side):
+    current_x = move["selected_pos"]["x"]
+    current_y = move["selected_pos"]["y"]
+    new_x = move["new_pos"]["x"]
+    new_y = move["new_pos"]["y"]
+
+    for row in range(len(board)):
+        for column in range(len(board[0])):
+            if (row,column) == (new_y, new_x):
+                board[row][column] = side
+            if (row,column) == (current_y, current_x):
+                board[row][column] = 0
+
+    return board
 def update_board(board, ganh_remove=None, chet_remove=None):
     execute = []
     board = board
@@ -344,28 +243,89 @@ def update_board(board, ganh_remove=None, chet_remove=None):
         return board
     else:
         pass
+def del_all_img():
+    try:
+        cwd = os.getcwd() #Get current directory
+        img_dir = cwd + "/static/upload_img"
+        images = os.listdir(img_dir)
+        for file in images:
+            file_path = os.path.join(img_dir, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+    except OSError:
+        pass
+def run_game(UserBot, Bot2, board): # Main
+    player1 = {"side": random.choice([-1,1]), "operator": UserBot}
+    player2 = {"side": player1["side"]*-1, "operator": Bot2}
+    player1_info = {"your_pieces": get_position(player1["side"]),
+                    "your_side": player1["side"],
+                    "oponent_position": get_position(player2["side"]), 
+                    "board": copy.deepcopy(game_state["board"])
+                    }
+    player2_info = {"your_pieces": get_position(player2["side"]), 
+                    "your_side": player2["side"],
+                    "oponent_position": get_position(player1["side"]), 
+                    "board": copy.deepcopy(game_state["board"])
+                    }
+    winner = None
+    move_counter = 1
+    init_img(game_state["board"])
+
+    while winner is None:
+    
+        player1_info["board"] = copy.deepcopy(game_state["board"])
+        player2_info["board"] = copy.deepcopy(game_state["board"])
+
+        if player1["side"] == game_state["current_turn"]:
+            move = player1["operator"].main(player1_info)
+        elif player2["side"] == game_state["current_turn"]:
+            move = player2["operator"].main(player2_info)
+        else:
+            pass
+
+        move_is_legal = is_valid_move(move, game_state["current_turn"], game_state["board"])
+        
+        if not move_is_legal:
+            if player1["side"] != game_state["current_turn"]:
+                if player1["side"] == 1:
+                    winner = "Xanh thắng"
+                else:
+                    winner = "Đỏ thắng"
+
+            else:
+                if player2["side"] == 1:
+                    winner = "Xanh thắng"
+                else:
+                    winner = "Đỏ thắng"
 
 
-def result():
-    if not get_position(1): 
-        return "red wins"
-    elif not get_position(-1):
-        return "blue wins"
-    elif len(get_position(1)) == 1 and len(get_position(-1)) == 1:
-        return "Tie"
-    else:
-        return None
+        board = execute(game_state["board"], move, game_state["current_turn"])
+        game_state["board"] = board
+
+        ganh_remove = ganh(game_state["current_turn"], -game_state["current_turn"], game_state["board"])
+        chet_remove = chet(game_state["current_turn"], -game_state["current_turn"], game_state["board"])
+
+        update_board(game_state["board"], ganh_remove, chet_remove)
+
+        generate_image(game_state["board"], move_counter, move, ganh_remove, chet_remove)
+
+        game_state["current_turn"] = game_state["current_turn"]*-1
+
+        move_counter += 1
+        if not get_position(1): 
+            winner = "Đỏ thắng"
+        elif not get_position(-1):
+            winner = "Xanh thắng"
+        elif len(get_position(1)) == 1 and len(get_position(-1)) == 1:
+            winner = "Hòa"
+        else:
+            winner = None
 
 
-# Get positions of required color
-def get_position(color):
-    positions = []
-    for row in range(len(board)):
-        for column in range(len(board[0])):
-            if board[row][column] == color:
-                positions.append({"x": column, "y": row})
-    return positions
-
+        if winner is not None:
+            return winner 
+        if move_counter == 201:
+            return "Hòa"
 
 def init_img(board):
     image = Image.new("RGB", (600, 600), "WHITE")
@@ -408,11 +368,8 @@ def init_img(board):
     img_dir = cwd + "/static/upload_img"
 
     image.save(f"{img_dir}/chessboard0.png", "PNG")
-
 def generate_image(board, move_counter, move, ganh_remove, chet_remove):
 
-    print(f"MY SHITS{chet_remove}")
-    print(f"MY SHITS{ganh_remove}")
     new_x = move["new_pos"]["x"]
     new_y = move["new_pos"]["y"]
     image = Image.new("RGB", (600, 600), "WHITE")
@@ -464,20 +421,3 @@ def generate_image(board, move_counter, move, ganh_remove, chet_remove):
     img_dir = cwd + "/static/upload_img"
 
     image.save(f"{img_dir}/chessboard{move_counter}.png", "PNG")
-
-
-
-game_state = {
-            "board": board,
-            "current_turn": 1
-}
-
-
-def activation(option, session_name):
-    if option == "bot":
-        load_player(option, session_name)
-    if option == "player":
-        load_player(option, session_name)
-
-
-

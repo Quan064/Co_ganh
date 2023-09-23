@@ -3,14 +3,16 @@ import os
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_wtf import FlaskForm, CSRFProtect
+from flask_wtf import FlaskForm 
 from wtforms import SubmitField, PasswordField, StringField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 from game_manager import activation, del_all_img
+import webbrowser
+from threading import Timer
 
 
-
+del_all_img()
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] =\
@@ -21,8 +23,6 @@ app.app_context().push()
 #Flask Alchemy initialization
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
-
-csrf = CSRFProtect(app)
 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 100  #Max file size
 app.config['UPLOAD_FOLDER'] = "static/botfiles"
@@ -144,15 +144,16 @@ def submit_bot():
 
     if request.method == "POST":
         del_all_img()
-        if request.form.get("match_bot") == "Đăng code":
-            activation("bot", session["username"])
-        if request.form.get("match_player") == "Đấu Người":
-            activation("player", session["username"])
+        if request.form.get("match_bot") == "Đấu với bot hệ thống":
+            winner = activation("bot", session["username"])
+    
+        if request.form.get("match_player") == "Đấu với bot của người chơi":
+            winner = activation("player", session["username"])
     
         img_folder = 'static/upload_img'
         image_filenames = [f for f in os.listdir(img_folder) if os.path.isfile(os.path.join(img_folder, f))]
         
-        return render_template('result.html', image_filenames=image_filenames)
+        return render_template('result.html', image_filenames=image_filenames, winner=winner)
     
     return redirect(url_for("menu"))
 
@@ -165,7 +166,11 @@ def get_image_list():
     return jsonify(image_filenames)
 
 
+def open_browser():
+    webbrowser.open_new("http://127.0.0.1:5000")
+
 if __name__ == '__main__': 
-    app.run(debug=True, use_reloader=False)
+    Timer(1, open_browser).start()
+    app.run(port=5000, debug=True, use_reloader=False)
 
 
