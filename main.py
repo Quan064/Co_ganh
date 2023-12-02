@@ -7,16 +7,25 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, PasswordField, StringField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-from game_manager import activation, del_all_img
+from game_manager import activation
 import webbrowser
 from threading import Timer
 
+# Delete all images
+try:
+    cwd = os.getcwd() #Get current directory
+    img_dir = cwd + "/static/upload_img"
+    images = os.listdir(img_dir)
+    for file in images:
+        file_path = os.path.join(img_dir, file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+except OSError:
+    pass
 
-del_all_img()
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] =\
-        'sqlite:///' + os.path.join(basedir, 'database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
 app.config['SECRET_KEY'] = 'pkH{XQup/)QikTx'
 app.app_context().push()
 
@@ -143,7 +152,18 @@ def submit_bot():
         file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], filename))
 
     if request.method == "POST":
-        del_all_img()
+        # Delete all images
+        try:
+            cwd = os.getcwd() #Get current directory
+            img_dir = cwd + "/static/upload_img"
+            images = os.listdir(img_dir)
+            for file in images:
+                file_path = os.path.join(img_dir, file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+        except OSError:
+            pass
+        
         if request.form.get("match_bot") == "Đấu với bot hệ thống":
             winner = activation("bot", session["username"])
     

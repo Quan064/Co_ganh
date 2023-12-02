@@ -3,94 +3,52 @@ import random
 
 # Remember that board[y][x] is the tile at (x, y) when printing
     
-def is_valid_move(move, board, my_piece):
-    # Check if the piece is yours
-    piece = move["selected_pos"]
-    if board[piece["y"]][piece["x"]] != my_piece:
+def is_valid_move(move, side, board):
+    current_x = move["selected_pos"][0]
+    current_y = move["selected_pos"][1]
+    new_x = move["new_pos"][0]
+    new_y = move["new_pos"][1]
+
+    dx = abs(new_x-current_x)
+    dy = abs(new_y-current_y)
+    if (current_x%1!=0 or current_y%1!=0 or new_x%1!=0 or new_y%1!=0 or # Checking if pos is integer
+        current_x < 0 or current_x > 4 or current_y < 0 or current_y > 4 or # Checking if move is out of bounds
+        new_x     < 0 or new_x     > 4 or new_y     < 0 or new_y     > 4 or
+        board[new_y][new_x] != 0 or board[current_y][current_x] != side): # Checking if selected position and new position is legal
         return False
-    # Check if the new position is empty
-    new_pos = move["new_pos"]
-    try:
-        if board[new_pos["y"]][new_pos["x"]] !=  0:
-            return False
-        # Check if it is not moving to the same position
-        if piece["x"] == new_pos["x"] and piece["y"] == new_pos["y"]:
-            return False
-        # Check if the new position is not more than 1 tile away
-        if abs(piece["x"] - new_pos["x"]) > 1 \
-                or abs(piece["y"] - new_pos["y"]) > 1:
-            return False
-        # Check if the new position is not out of bounds
-        max_x = len(board[0]) - 1
-        max_y = len(board) - 1
-        min_x = 0
-        min_y = 0
-        if new_pos["x"] > max_x \
-                or new_pos["x"] < min_x \
-                or new_pos["y"] > max_y \
-                or new_pos["y"] < min_y:
-            return False
-        # Check if there is a road to the new position
-        # Piece can move 8 directions if x + y is even
-        # Piece can move 4 directions if x + y is odd
-        move_direction = {
-            "x": new_pos["x"] - piece["x"],
-            "y": new_pos["y"] - piece["y"]
-        }
-        valid_directions = [
-            {"x": 1, "y": 0},
-            {"x": 0, "y": 1},
-            {"x": -1, "y": 0},
-            {"x": 0, "y": -1}
-        ]
-        if (piece["x"] + piece["y"]) % 2 == 0:
-            valid_directions.extend([
-                {"x": 1, "y": 1},
-                {"x": -1, "y": 1},
-                {"x": -1, "y": -1},
-                {"x": 1, "y": -1}
-            ])
-        if move_direction not in valid_directions:
-            return False
-        return True
-    except IndexError:
-        return False
+    elif (current_y, current_x) in ((1,1), (1, 3), (3,1), (3,3), (2,2), (0,0), (4,4), (0,4), (4,0)): # Checking if the piece has moved one position away (Using the Manhattan distance formula)
+        return (dx + dy == 1) or (dx * dy == 1)
+    return (dx + dy == 1)
     
 
 def main(input):
 
-    # This is the main function that will be called by the game engine
+    # {'your_pieces': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    #  'your_side': -1,
+    #  'oponent_position': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    #  'board': [[-1,-1, 0,-1, 0],
+    #            [ 0,-1,-1,-1, 0],
+    #            [-1, 0, 0,-1, 1],
+    #            [ 0, 1, 1, 1, 1],
+    #            [ 1, 1, 0, 1, 0]]}
+
     while True:
         selected_pos = random.choice(input["your_pieces"])
         board = input["board"]
         new_pos_select = random_move(selected_pos)
-        new_pos = {"x": new_pos_select["x"], "y": new_pos_select["y"]}
+        new_pos = (new_pos_select[0], new_pos_select[1])
         move = {"selected_pos": selected_pos, "new_pos": new_pos}
-        if is_valid_move(move, board, input["your_side"]):
+        if is_valid_move(move, input["your_side"], board):
             return move
 
             
 
 # Function of the game manager
-def execute_move(move, board, my_piece):
-    piece = move["selected_pos"]
-    new_pos = move["new_pos"]
-    board[piece["y"]][piece["x"]] = 0
-    board[new_pos["y"]][new_pos["x"]] = my_piece
-    return board
-
-
-def print_board(board):
-    for i in range(len(board)):
-        print(board[i])
-    print()
-
-
 def random_move(position):
     movement = [(0, -1), (0, 1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]  #possible moves
     movement_select = random.choice(movement)  #Randomize movement
-    new_pos_x = position["x"] + movement_select[1]
-    new_pos_y = position["y"] + movement_select[0]
-    new_pos = {"x": new_pos_x, "y": new_pos_y}
+    new_pos_x = position[0] + movement_select[1]
+    new_pos_y = position[1] + movement_select[0]
+    new_pos = (new_pos_x, new_pos_y)
     return new_pos
 

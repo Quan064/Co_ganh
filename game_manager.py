@@ -1,203 +1,121 @@
 import random
 import os
 from PIL import Image, ImageDraw
-import copy
 from importlib.machinery import SourceFileLoader
-import math
 
 # ROW = y
 # COLUMN = x
 # ==> board[y][x] == board[ROW][COLUMN]
 
-board = [   [-1, -1, -1, -1, -1],
-            [-1,  0,  0,  0, -1],
-            [ 1,  0,  0,  0, -1],
-            [ 1,  0,  0,  0,  1],
-            [ 1,  1,  1,  1,  1]    ]
-diag_pos = [(1,1), (1, 3), (3,1), (3,3)]
-game_state = {  "board": board,
-                "current_turn": 1   }
+diag_pos = ((1,1), (1, 3), (3,1), (3,3), (2,2), (0,0), (4,4), (0,4), (4,0))
+game_state = {"current_turn": 1,
+              "board": [[-1, -1, -1, -1, -1],
+                        [-1,  0,  0,  0, -1],
+                        [ 1,  0,  0,  0, -1],
+                        [ 1,  0,  0,  0,  1],
+                        [ 1,  1,  1,  1,  1]]}
+positions = [None,
+             [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
+             [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
+ganh_checked = [None, False, False]
 
-# board manipulation
-def display():
-    for row in game_state["board"]:
-        for cell in row:
-            if cell == -1:
-                print("R", end=" ")  #red piece
-            elif cell == 0:
-                print(".", end=" ")
-            elif cell == 1:
-                print("B", end=" ")  #blue piece
-        print()
-def get_position(color):
-    positions = []
-    for row in range(len(board)):
-        for column in range(len(board[0])):
-            if board[row][column] == color:
-                positions.append({"x": column, "y": row})
-    return positions
+# Board manipulation
 def is_valid_move(move, current_side, board):
-    current_x = move["selected_pos"]["x"]
-    current_y = move["selected_pos"]["y"]
-    new_x = move["new_pos"]["x"]
-    new_y = move["new_pos"]["y"]
+    current_x = move["selected_pos"][0]
+    current_y = move["selected_pos"][1]
+    new_x = move["new_pos"][0]
+    new_y = move["new_pos"][1]
 
-    #Checking if move is out of bounds
-    if (current_x < 0 or current_x >= len(game_state["board"]) or
-        current_y < 0 or current_y >= len(game_state["board"])
-        ):
-        
+    dx = abs(new_x-current_x)
+    dy = abs(new_y-current_y)
+    if (current_x%1!=0 or current_y%1!=0 or new_x%1!=0 or new_y%1!=0 or # Checking if pos is integer
+        current_x < 0 or current_x > 4 or current_y < 0 or current_y > 4 or # Checking if move is out of bounds
+        new_x     < 0 or new_x     > 4 or new_y     < 0 or new_y     > 4 or
+        board[new_y][new_x] != 0 or board[current_y][current_x] != current_side): # Checking if selected position and new position is legal
         return False
-    
-    #Checking if selected position and new position is legal
-    if (board[new_y][new_x] != 0 or board[current_y][current_x] != current_side or board[current_y][current_x] == 0):
-        return False
+    elif move["selected_pos"] in diag_pos: # Checking if the piece has moved one position away
+        return (dx + dy == 1) or (dx * dy == 1)
+    return (dx + dy == 1)
+def ganh(move, opp_side):
+    global game_state, ganh_checked, positions
 
-    #Checking if the piece has moved one position away (Using the Manhattan distance formula)
-    if (current_y, current_x) in diag_pos:
-        dx = abs(new_x-current_x)
-        dy = abs(new_y-current_y)
-        if  (abs(new_x - current_x) + abs(new_y - current_y) == 1) or \
-            (math.sqrt(dx**2+dy**2) == math.sqrt(2)):
-            return True
-        
-    else:
-        if (abs(new_x - current_x) + abs(new_y - current_y) == 1):
-            return True
-        
-    return False
-def ganh(piece, opp_piece, board):
     valid_remove = []
     opp_remove = []
-    print(piece)
+    board = game_state["board"]
 
-    print("BEFORE \n----------")
-    display()
-    print("----------")
+    if move in diag_pos:
+        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)), ((1,1), (-1,-1)), ((-1,1), (1,-1)))
+    else:
+        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
+    # Loops through each pair and conclude the opponent piece
+    for pair in ganh_pair:
+        for x, y in pair:
+            new_posx = move[0] + x
+            new_posy = move[1] + y
+            if 0<=new_posy<=4 and 0<=new_posx<=4 and board[new_posy][new_posx]==opp_side:
+                opp_remove.append((new_posx, new_posy))
 
-    game_state["board"] = board
-    ganh_pair = [[(1,0), (-1, 0)], [(0,1), (0, -1)]]
-    ganh_pair2 = [[(1,0), (-1, 0)], [(0,1), (0, -1)], [(1,1), (-1,-1)], [(-1,1), (1,-1)]]
+        # Check if we have a pair
+        if len(opp_remove) == 2:
+            valid_remove.extend(opp_remove)
+            for x, y in opp_remove:
+                board[y][x] = 0
+                positions[opp_side].remove((x, y))
+            ganh_checked[-opp_side] = True
+        opp_remove = []
 
-    pieces_pos = get_position(piece)
-
-    #NOTE: position is saved as {"x": x, "y": y}
-    for position in pieces_pos:
-        print(position)
-        if (position["y"], position["x"]) in diag_pos:
-            # Loops through each pair and conclude the opponent piece
-            for pair in ganh_pair2:
-                for y, x in pair:
-                    new_posx = position["x"] + x
-                    new_posy = position["y"] + y
-                    if 0 <= new_posy < len(board) and 0 <= new_posx < len(board[0]):
-                        if board[new_posy][new_posx] == opp_piece:
-                            opp_remove.append((new_posy, new_posx))
-                            print("Recieved ganh2:", opp_remove)
-
-                # Check if we have a pair
-                if len(opp_remove) < 2:
-                    opp_remove = []
-                    pass
-                else:
-                    print("VALID GANH2")
-                    valid_remove.extend(opp_remove)
-                    opp_remove = []
-
-        else:
-            # Loops through each pair and conclude the opponent piece
-            for pair in ganh_pair:
-                for y, x in pair:
-                    new_posx = position["x"] + x
-                    new_posy = position["y"] + y
-                    try: 
-                        if 0 <= new_posy < len(board) and 0 <= new_posx < len(board[0]):
-                            if board[new_posy][new_posx] == opp_piece:
-                                opp_remove.append((new_posy, new_posx))
-                                print("Recieved ganh:", opp_remove)
-                    except IndexError:
-                        pass
-
-                if len(opp_remove) < 2:
-                    opp_remove = []
-                    pass
-                else:
-                    print("VALID GANH")
-                    valid_remove.extend(opp_remove)
-                    opp_remove = []        
-
-
-    print("GANH VALID:", valid_remove)
     return valid_remove
-def chet(piece, opp_piece, board):
-    valid_remove = []
-    ally_chet = []
-    game_state["board"] = board
-    chet_pair = [[(1,0), (-1, 0)], [(0,1), (0, -1)]]
-    chet_pair2 = [[(1,0), (-1, 0)], [(0,1), (0, -1)], [(1,1), (-1,-1)], [(-1,1), (1,-1)]]
+def chet(move, side, opp_side):
+    global game_state, ganh_checked, positions
 
-    opp_pieces_pos = get_position(opp_piece)
+    if ganh_checked[side]: # Must have at least 1 GANH to CHET
 
-    #NOTE: position is saved as {"x": x, "y": y}
-    for position in opp_pieces_pos:
-        if (position["y"], position["x"]) in diag_pos:
-            # Loops through each pair and conclude the opponent piece
-            for pair in chet_pair2:
-                for y, x in pair:
-                    new_posx = position["x"] + x
-                    new_posy = position["y"] + y
-                    try:
-                        if 0 <= new_posy < len(board) and 0 <= new_posx < len(board[0]):
-                            if board[new_posy][new_posx] == piece:
-                                ally_chet.append((new_posy, new_posx))
-                                print("Recieved chet2:", ally_chet)
+        valid_remove = []
+        board = game_state["board"]
+    
+        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
+        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+        for i in range(8):
+            new_oth_chetx = move[0] + oth_chet[i][0]
+            new_oth_chety = move[1] + oth_chet[i][1]
+            removex = move[0] + pos_remove[i][0]
+            removey = move[1] + pos_remove[i][1]
+            if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==side and board[removey][removex]==opp_side:
+                valid_remove.append((removex, removey))
+                board[removey][removex] = 0
+                positions[opp_side].remove((removex, removey))
 
-                    except IndexError:
-                        pass
-                if len(ally_chet) < 2:
-                    ally_chet = []
-                    pass
-                else:
-                    print("CHET VALID2")
-                    valid_remove.append((position["y"], position["x"]))
-                    ally_chet = []
+        # check VAY
+        valid_move_pos = set()
+        for pos in positions[opp_side]:
+            if pos in diag_pos:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+            else:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1))
+            for i in range(len(move_list)):
+                new_valid_x = pos[0] + move_list[i][0]
+                new_valid_y = pos[1] + move_list[i][1]
+                if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
+                    valid_move_pos.add((new_valid_x, new_valid_y))
+        if not valid_move_pos:
+            for x, y in positions[opp_side]:
+                valid_remove.append((x, y))
+                board[y][x] = 0
+            positions[opp_side] = []
 
-        else:
-            # Loops through each pair and conclude the opponent piece
-            for pair in chet_pair:
-                for y, x in pair:
-                    new_posx = position["x"] + x
-                    new_posy = position["y"] + y
-                    try:
-                        if 0 <= new_posy < len(board) and 0 <= new_posx < len(board[0]):
-                            if board[new_posy][new_posx] == piece:
-                                ally_chet.append((new_posy, new_posx))
-                                print("Recieved chet:", ally_chet)
-
-                    except IndexError:
-                        pass
-
-                if len(ally_chet) < 2:
-                    ally_chet = []
-                    pass
-                else:
-                    print("CHET VALID")
-                    valid_remove.append((position["y"], position["x"]))
-                    ally_chet = []
-
-    print("CHET VALID:", valid_remove)
-    return valid_remove
+        return valid_remove
+    else:
+        return []
 
 # System
 def activation(option, session_name):
     cwd = os.getcwd()
-    current_session_username = session_name
-    current_user_file = f'botfile_{current_session_username}.py'
+    current_user_file = f'botfile_{session_name}.py'
     UserBot = SourceFileLoader(current_user_file, os.path.join(cwd, f"static/botfiles/{current_user_file}")).load_module()
     if option == "bot":
         import CGEngine as CGBot
         player2 = CGBot
-    if option == "player":
+    elif option == "player":
         player_file_list = os.listdir(os.path.join(cwd, "static/botfiles"))
         load_rand_player = random.choice(player_file_list)
 
@@ -208,126 +126,63 @@ def activation(option, session_name):
             UserBot2 = SourceFileLoader(pfile_name, f"static/botfiles/{load_rand_player}").load_module()
             player2 = UserBot2
     
-    winner = run_game(UserBot, player2, game_state["board"])
+    winner = run_game(UserBot, player2)
 
     return winner
-def execute(board, move, side):
-    current_x = move["selected_pos"]["x"]
-    current_y = move["selected_pos"]["y"]
-    new_x = move["new_pos"]["x"]
-    new_y = move["new_pos"]["y"]
-
-    for row in range(len(board)):
-        for column in range(len(board[0])):
-            if (row,column) == (new_y, new_x):
-                board[row][column] = side
-            if (row,column) == (current_y, current_x):
-                board[row][column] = 0
-
-    return board
-def update_board(board, ganh_remove=None, chet_remove=None):
-    execute = []
-    board = board
-
-    if ganh_remove:
-        execute.extend(ganh_remove)
-    
-    if chet_remove:
-        execute.extend(chet_remove)
-
-    print("EXECUTION:", execute)
-    for row, column in execute:
-        board[row][column] = 0
-
-    if execute:
-        return board
-    else:
-        pass
-def del_all_img():
-    try:
-        cwd = os.getcwd() #Get current directory
-        img_dir = cwd + "/static/upload_img"
-        images = os.listdir(img_dir)
-        for file in images:
-            file_path = os.path.join(img_dir, file)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-    except OSError:
-        pass
-def run_game(UserBot, Bot2, board): # Main
+def run_game(UserBot, Bot2): # Main
+    global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
-    player2 = {"side": player1["side"]*-1, "operator": Bot2}
-    player1_info = {"your_pieces": get_position(player1["side"]),
+    player2 = {"side": -player1["side"], "operator": Bot2}
+    player1_info = {"your_pieces": positions[player1["side"]],
                     "your_side": player1["side"],
-                    "oponent_position": get_position(player2["side"]), 
-                    "board": copy.deepcopy(game_state["board"])
-                    }
-    player2_info = {"your_pieces": get_position(player2["side"]), 
+                    "oponent_position": positions[player2["side"]], 
+                    "board": game_state["board"].copy()}
+    player2_info = {"your_pieces": positions[player2["side"]], 
                     "your_side": player2["side"],
-                    "oponent_position": get_position(player1["side"]), 
-                    "board": copy.deepcopy(game_state["board"])
-                    }
-    winner = None
+                    "oponent_position": positions[player1["side"]], 
+                    "board": game_state["board"].copy()}
+    winner = False
     move_counter = 1
-    init_img(game_state["board"])
+    init_img(positions)
 
-    while winner is None:
+    while not winner:
     
-        player1_info["board"] = copy.deepcopy(game_state["board"])
-        player2_info["board"] = copy.deepcopy(game_state["board"])
+        player1_info["board"] = game_state["board"].copy()
+        player2_info["board"] = game_state["board"].copy()
 
         if player1["side"] == game_state["current_turn"]:
             move = player1["operator"].main(player1_info)
         elif player2["side"] == game_state["current_turn"]:
             move = player2["operator"].main(player2_info)
-        else:
-            pass
 
-        move_is_legal = is_valid_move(move, game_state["current_turn"], game_state["board"])
+        if not is_valid_move(move, game_state["current_turn"], game_state["board"]):
+            raise Exception(f"Invalid move {move_counter}")
         
-        if not move_is_legal:
-            if player1["side"] != game_state["current_turn"]:
-                if player1["side"] == 1:
-                    winner = "Xanh thắng"
-                else:
-                    winner = "Đỏ thắng"
+        # Update move to board
+        game_state["board"][move["new_pos"][1]][move["new_pos"][0]] = game_state["current_turn"]
+        game_state["board"][move["selected_pos"][1]][move["selected_pos"][0]] = 0
+        # Update move to positions
+        positions[game_state["current_turn"]].remove((move["selected_pos"][0], move["selected_pos"][1]))
+        positions[game_state["current_turn"]].append((move["new_pos"][0], move["new_pos"][1]))
 
-            else:
-                if player2["side"] == 1:
-                    winner = "Xanh thắng"
-                else:
-                    winner = "Đỏ thắng"
+        new_pos = move["new_pos"]
+        ganh_remove = ganh(new_pos, -game_state["current_turn"])
+        chet_remove = chet(new_pos, game_state["current_turn"], -game_state["current_turn"])
 
+        generate_image(positions, move_counter, move, ganh_remove, chet_remove)
 
-        board = execute(game_state["board"], move, game_state["current_turn"])
-        game_state["board"] = board
-
-        ganh_remove = ganh(game_state["current_turn"], -game_state["current_turn"], game_state["board"])
-        chet_remove = chet(game_state["current_turn"], -game_state["current_turn"], game_state["board"])
-
-        update_board(game_state["board"], ganh_remove, chet_remove)
-
-        generate_image(game_state["board"], move_counter, move, ganh_remove, chet_remove)
-
-        game_state["current_turn"] = game_state["current_turn"]*-1
-
-        move_counter += 1
-        if not get_position(1): 
+        if not positions[1]:
             winner = "Đỏ thắng"
-        elif not get_position(-1):
+        elif not positions[-1]:
             winner = "Xanh thắng"
-        elif len(get_position(1)) == 1 and len(get_position(-1)) == 1:
+        elif (len(positions[1]) + len(positions[-1]) < 4) or move_counter == 200:
             winner = "Hòa"
-        else:
-            winner = None
+        game_state["current_turn"] *= -1
+        move_counter += 1
 
+    return winner
 
-        if winner is not None:
-            return winner 
-        if move_counter == 201:
-            return "Hòa"
-
-def init_img(board):
+def init_img(positions):
     image = Image.new("RGB", (600, 600), "WHITE")
     draw = ImageDraw.Draw(image)
 
@@ -350,28 +205,14 @@ def init_img(board):
     draw.line((500, 300, 300, 500), fill="black", width=3)
     draw.line((300, 500, 100, 300), fill="black", width=3)
 
-    x = 80
-    y = 80
-    for row in range(len(board)):
-        for column in range(len(board[0])):
-            if board[row][column] == -1:
-                draw.ellipse((x, y, x + 40, y + 40), fill="red", outline="red")
-            elif board[row][column] == 1:
-                draw.ellipse((x, y, x + 40, y + 40), fill="blue", outline="blue")
-            else:
-                pass
-            x = x + 100
-        x = 80
-        y = y + 100
+    for x, y in positions[1]:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
+    for x, y in positions[-1]:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
 
-    cwd = os.getcwd()
-    img_dir = cwd + "/static/upload_img"
+    image.save(os.getcwd()+"/static/upload_img/chessboard0.png", "PNG")
+def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
 
-    image.save(f"{img_dir}/chessboard0.png", "PNG")
-def generate_image(board, move_counter, move, ganh_remove, chet_remove):
-
-    new_x = move["new_pos"]["x"]
-    new_y = move["new_pos"]["y"]
     image = Image.new("RGB", (600, 600), "WHITE")
     draw = ImageDraw.Draw(image)
 
@@ -394,30 +235,16 @@ def generate_image(board, move_counter, move, ganh_remove, chet_remove):
     draw.line((500, 300, 300, 500), fill="black", width=3)
     draw.line((300, 500, 100, 300), fill="black", width=3)
 
-    x = 80
-    y = 80
-    for row in range(len(board)):
-        for column in range(len(board[0])):
-            if (row, column) in ganh_remove:
-                draw.ellipse((x, y, x + 40, y + 40), fill=None, outline="#FFC900", width=4)
-            if (row, column) in chet_remove:
-                draw.ellipse((x, y, x + 40, y + 40), fill=None, outline="#FFC900", width=4)
-            if board[row][column] == -1:
-                draw.ellipse((x, y, x + 40, y + 40), fill="red", outline="red")
-                if (row,column) == (new_y,new_x):
-                    draw.ellipse((x , y , x + 40, y + 40), fill="red", outline="green", width=5)
-            elif board[row][column] == 1:
-                draw.ellipse((x, y, x + 40, y + 40), fill="blue", outline="blue")
-                if (row,column) == (new_y,new_x):
-                    draw.ellipse((x , y , x + 40, y + 40), fill="blue", outline="green", width=5)
+    for x, y in ganh_remove:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill=None, outline="#FFC900", width=4)
+    for x, y in chet_remove:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill=None, outline="#FFC900", width=4)
+    for x, y in positions[1]:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
+    for x, y in positions[-1]:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
+    new_x = move["new_pos"][0]
+    new_y = move["new_pos"][1]
+    draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=("red", "blue")[move_counter%2], outline="green", width=5)
 
-            else:
-                pass
-            x = x + 100
-        x = 80
-        y = y + 100
-
-    cwd = os.getcwd()
-    img_dir = cwd + "/static/upload_img"
-
-    image.save(f"{img_dir}/chessboard{move_counter}.png", "PNG")
+    image.save(os.getcwd()+f"/static/upload_img/chessboard{move_counter}.png", "PNG")
