@@ -72,10 +72,14 @@ def chet(move, side, opp_side):
 
         valid_remove = []
         board = game_state["board"]
-    
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-        for i in range(8):
+
+        if move in diag_pos:
+            oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
+            pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+        else:
+            oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
+            pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
+        for i in range(len(oth_chet)):
             new_oth_chetx = move[0] + oth_chet[i][0]
             new_oth_chety = move[1] + oth_chet[i][1]
             removex = move[0] + pos_remove[i][0]
