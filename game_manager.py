@@ -2,6 +2,7 @@ import random
 import os
 from PIL import Image, ImageDraw
 from importlib.machinery import SourceFileLoader
+import CGEngine
 
 # ROW = y
 # COLUMN = x
@@ -117,8 +118,7 @@ def activation(option, session_name):
     current_user_file = f'botfile_{session_name}.py'
     UserBot = SourceFileLoader(current_user_file, os.path.join(cwd, f"static/botfiles/{current_user_file}")).load_module()
     if option == "bot":
-        import CGEngine as CGBot
-        player2 = CGBot
+        player2 = CGEngine
     elif option == "player":
         player_file_list = os.listdir(os.path.join(cwd, "static/botfiles"))
         load_rand_player = random.choice(player_file_list)
@@ -130,9 +130,7 @@ def activation(option, session_name):
             UserBot2 = SourceFileLoader(pfile_name, f"static/botfiles/{load_rand_player}").load_module()
             player2 = UserBot2
     
-    winner = run_game(UserBot, player2)
-
-    return winner
+    return run_game(UserBot, player2)
 def run_game(UserBot, Bot2): # Main
     global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
@@ -184,7 +182,7 @@ def run_game(UserBot, Bot2): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
-    return winner
+    return winner, move_counter-1
 
 def init_img(positions):
     image = Image.new("RGB", (600, 600), "WHITE")
@@ -252,3 +250,41 @@ def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
     draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=("red", "blue")[move_counter%2], outline="green", width=5)
 
     image.save(os.getcwd()+f"/static/upload_img/chessboard{move_counter}.png", "PNG")
+
+if __name__ == '__main__':
+    from ursina import *
+    app = Ursina(title="Cờ gánh", borderless=False)
+
+    application.compressed_textures_folder = "static/upload_img"
+
+    Master = SourceFileLoader("Master.py", os.path.join(os.getcwd(), "static/botfiles/Master.py")).load_module()
+    winner, win_move_counter = run_game(Master, CGEngine)
+
+    chess_board = Sprite("chessboard0", scale=2.5)
+    winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
+    indexIMG = 0
+    indexIMG_txt = Text("0", x=-.6, y=.43, scale=2, color=color.black)
+
+    def input(key):
+        global indexIMG
+
+        if "arrow" in key:
+            if key == "left arrow":
+                indexIMG -= 1
+            if key == "right arrow":
+                indexIMG += 1
+
+            if indexIMG < 0:
+                indexIMG = win_move_counter
+            elif indexIMG > win_move_counter:
+                indexIMG = 0
+
+            chess_board.texture = f"chessboard{indexIMG}"
+            indexIMG_txt.text = str(indexIMG)
+
+    window.size = (600,600)
+    window.fps_counter.enabled = False
+    window.entity_counter.enabled = False
+    window.collider_counter.enabled = False
+
+    app.run()
