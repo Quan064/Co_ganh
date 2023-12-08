@@ -131,7 +131,7 @@ def activation(option, session_name):
             player2 = UserBot2
     
     return run_game(UserBot, player2)
-def run_game(UserBot, Bot2): # Main
+def run_game(UserBot, Bot2, trainAI=False): # Main
     global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
@@ -177,12 +177,17 @@ def run_game(UserBot, Bot2): # Main
             winner = "Đỏ thắng"
         elif not positions[-1]:
             winner = "Xanh thắng"
-        elif (len(positions[1]) + len(positions[-1]) < 4) or move_counter == 200:
+        elif (len(positions[1]) + len(positions[-1]) < 4): # or move_counter == 200:
             winner = "Hòa"
         game_state["current_turn"] *= -1
         move_counter += 1
 
+        if trainAI:
+            trainAI(game_state["board"])
+
     return winner, move_counter-1
+def trainAI(board):
+    line_board = [].extend(board)
 
 def init_img(positions):
     image = Image.new("RGB", (600, 600), "WHITE")
@@ -247,7 +252,10 @@ def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
     new_x = move["new_pos"][0]
     new_y = move["new_pos"][1]
+    old_x = move["selected_pos"][0]
+    old_y = move["selected_pos"][1]
     draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=("red", "blue")[move_counter%2], outline="green", width=5)
+    draw.ellipse((old_x*100+80, old_y*100+80, old_x*100+120, old_y*100+120), fill=None, outline="green", width=5)
 
     image.save(os.getcwd()+f"/static/upload_img/chessboard{move_counter}.png", "PNG")
 
@@ -258,7 +266,7 @@ if __name__ == '__main__':
     application.compressed_textures_folder = "static/upload_img"
 
     Master = SourceFileLoader("Master.py", os.path.join(os.getcwd(), "static/botfiles/Master.py")).load_module()
-    winner, win_move_counter = run_game(Master, CGEngine)
+    winner, win_move_counter = run_game(Master, CGEngine, trainAi=True)
 
     chess_board = Sprite("chessboard0", scale=2.5)
     winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
