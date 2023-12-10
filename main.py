@@ -165,15 +165,15 @@ def submit_bot():
             pass
         
         if request.form.get("match_bot") == "Đấu với bot hệ thống":
-            winner = activation("bot", session["username"])
+            winner, max_move_win = activation("bot", session["username"])
     
         if request.form.get("match_player") == "Đấu với bot của người chơi":
-            winner = activation("player", session["username"])
+            winner, max_move_win = activation("player", session["username"])
     
-        img_folder = 'static/upload_img'
-        image_filenames = [f for f in os.listdir(img_folder) if os.path.isfile(os.path.join(img_folder, f))]
+        # img_folder = 'static/upload_img'
+        # image_filenames = [f for f in os.listdir(img_folder) if os.path.isfile(os.path.join(img_folder, f))]
         
-        return render_template('result.html', image_filenames=image_filenames, winner=winner)
+        return render_template('result.html', winner=winner, max_move_win=max_move_win)
     
     return redirect(url_for("menu"))
 

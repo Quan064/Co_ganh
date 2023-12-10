@@ -44,8 +44,7 @@
     let imageFiles = []; 
 
     let currentIndex = 0;
-    let moveCount = 0
-
+    let moveCount = 0;
 
     function showImage(index) {
         if (index >= 0 && index < imageFiles.length) {
@@ -60,7 +59,7 @@
         if (moveCount == 201) {
             moveCount = 0;
         } else if (moveCount < 0) {
-            moveCount = 200
+            moveCount = 200;
         }
         moveCountEl.textContent= `Nước đi: ${moveCount}` ;
     }
@@ -69,14 +68,14 @@
     prevButton.addEventListener("click", () => {
         currentIndex = (currentIndex - 1 + imageFiles.length) % imageFiles.length;
         showImage(currentIndex);
-        showMoveCount(-1)
+        showMoveCount(-1);
     });
 
 
     nextButton.addEventListener("click", () => {
         currentIndex = (currentIndex + 1) % imageFiles.length;
         showImage(currentIndex);
-        showMoveCount(1)
+        showMoveCount(1);
     });
 
 
@@ -94,6 +93,6 @@
         });
 </script>
 
-        <a href='{{ url_for('menu') }}'>Quay lại</a>
+        <a href='{{ url_for("menu") }}'>Quay lại</a>
     </body>
 </html>

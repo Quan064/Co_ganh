@@ -2,6 +2,7 @@ import random
 import os
 from PIL import Image, ImageDraw
 from importlib.machinery import SourceFileLoader
+import CGEngine
 
 # ROW = y
 # COLUMN = x
@@ -40,7 +41,6 @@ def ganh(move, opp_side):
     global game_state, ganh_checked, positions
 
     valid_remove = []
-    opp_remove = []
     board = game_state["board"]
 
     if move in diag_pos:
@@ -49,20 +49,18 @@ def ganh(move, opp_side):
         ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
     # Loops through each pair and conclude the opponent piece
     for pair in ganh_pair:
-        for x, y in pair:
-            new_posx = move[0] + x
-            new_posy = move[1] + y
-            if 0<=new_posy<=4 and 0<=new_posx<=4 and board[new_posy][new_posx]==opp_side:
-                opp_remove.append((new_posx, new_posy))
-
-        # Check if we have a pair
-        if len(opp_remove) == 2:
+        remove_posx_1 = move[0] + pair[0][0]
+        remove_posy_1 = move[1] + pair[0][1]
+        remove_posx_2 = move[0] + pair[1][0]
+        remove_posy_2 = move[1] + pair[1][1]
+        if 0<=remove_posx_1<=4 and 0<=remove_posy_1<=4 and board[remove_posy_1][remove_posx_1]==opp_side and \
+           0<=remove_posx_2<=4 and 0<=remove_posy_2<=4 and board[remove_posy_2][remove_posx_2]==opp_side:
+            opp_remove = ((remove_posx_1, remove_posy_1), (remove_posx_2, remove_posy_2))
             valid_remove.extend(opp_remove)
             for x, y in opp_remove:
                 board[y][x] = 0
                 positions[opp_side].remove((x, y))
             ganh_checked[-opp_side] = True
-        opp_remove = []
 
     return valid_remove
 def chet(move, side, opp_side):
@@ -72,10 +70,14 @@ def chet(move, side, opp_side):
 
         valid_remove = []
         board = game_state["board"]
-    
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-        for i in range(8):
+
+        if move in diag_pos:
+            oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
+            pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+        else:
+            oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
+            pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
+        for i in range(len(oth_chet)):
             new_oth_chetx = move[0] + oth_chet[i][0]
             new_oth_chety = move[1] + oth_chet[i][1]
             removex = move[0] + pos_remove[i][0]
@@ -113,8 +115,7 @@ def activation(option, session_name):
     current_user_file = f'botfile_{session_name}.py'
     UserBot = SourceFileLoader(current_user_file, os.path.join(cwd, f"static/botfiles/{current_user_file}")).load_module()
     if option == "bot":
-        import CGEngine as CGBot
-        player2 = CGBot
+        player2 = CGEngine
     elif option == "player":
         player_file_list = os.listdir(os.path.join(cwd, "static/botfiles"))
         load_rand_player = random.choice(player_file_list)
@@ -126,10 +127,8 @@ def activation(option, session_name):
             UserBot2 = SourceFileLoader(pfile_name, f"static/botfiles/{load_rand_player}").load_module()
             player2 = UserBot2
     
-    winner = run_game(UserBot, player2)
-
-    return winner
-def run_game(UserBot, Bot2): # Main
+    return run_game(UserBot, player2)
+def run_game(UserBot, Bot2, trainAI=False): # Main
     global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
@@ -175,12 +174,17 @@ def run_game(UserBot, Bot2): # Main
             winner = "Đỏ thắng"
         elif not positions[-1]:
             winner = "Xanh thắng"
-        elif (len(positions[1]) + len(positions[-1]) < 4) or move_counter == 200:
+        elif (len(positions[1]) + len(positions[-1]) < 4): # or move_counter == 200:
             winner = "Hòa"
         game_state["current_turn"] *= -1
         move_counter += 1
 
-    return winner
+        if trainAI:
+            trainAI(game_state["board"])
+
+    return winner, move_counter-1
+def trainAI(board):
+    pass
 
 def init_img(positions):
     image = Image.new("RGB", (600, 600), "WHITE")
@@ -245,6 +249,47 @@ def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
     new_x = move["new_pos"][0]
     new_y = move["new_pos"][1]
+    old_x = move["selected_pos"][0]
+    old_y = move["selected_pos"][1]
     draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=("red", "blue")[move_counter%2], outline="green", width=5)
+    draw.ellipse((old_x*100+80, old_y*100+80, old_x*100+120, old_y*100+120), fill=None, outline="green", width=5)
 
     image.save(os.getcwd()+f"/static/upload_img/chessboard{move_counter}.png", "PNG")
+
+if __name__ == '__main__':
+    from ursina import *
+    app = Ursina(title="Cờ gánh", borderless=False)
+
+    application.compressed_textures_folder = "static/upload_img"
+
+    Master = SourceFileLoader("Master.py", os.path.join(os.getcwd(), "static/botfiles/Master.py")).load_module()
+    winner, win_move_counter = run_game(Master, CGEngine, trainAi=True)
+
+    chess_board = Sprite("chessboard0", scale=2.5)
+    winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
+    indexIMG = 0
+    indexIMG_txt = Text("0", x=-.6, y=.43, scale=2, color=color.black)
+
+    def input(key):
+        global indexIMG
+
+        if "arrow" in key:
+            if key == "left arrow":
+                indexIMG -= 1
+            if key == "right arrow":
+                indexIMG += 1
+
+            if indexIMG < 0:
+                indexIMG = win_move_counter
+            elif indexIMG > win_move_counter:
+                indexIMG = 0
+
+            chess_board.texture = f"chessboard{indexIMG}"
+            indexIMG_txt.text = str(indexIMG)
+
+    window.size = (600,600)
+    window.fps_counter.enabled = False
+    window.entity_counter.enabled = False
+    window.collider_counter.enabled = False
+
+    app.run()
