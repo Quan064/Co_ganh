@@ -250,6 +250,8 @@ def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
 if __name__ == '__main__':
     from ursina import *
     import static.botfiles.Master as Master
+    import CGEngine
+
     app = Ursina(title="Cờ gánh", borderless=False)
 
     application.compressed_textures_folder = "static/upload_img"
