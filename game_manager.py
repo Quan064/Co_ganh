@@ -110,7 +110,7 @@ def chet(move, side, opp_side):
 
 # System
 def activation(option, session_name):
-    exec(f"import static.botfiles.botfile_{session_name} as UserBot", globals())
+    UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     if option == "bot":
         UserBot2 = __import__("CGEngine")
     elif option == "player":
@@ -249,14 +249,13 @@ def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
 
 if __name__ == '__main__':
     from ursina import *
-    import static.botfiles.Master as Master
-    import CGEngine
+    import Master, CGEngine
 
     app = Ursina(title="Cờ gánh", borderless=False)
 
     application.compressed_textures_folder = "static/upload_img"
 
-    winner, win_move_counter = run_game(CGEngine, CGEngine, trainAI=True)
+    winner, win_move_counter = run_game(Master, CGEngine, trainAI=True)
 
     chess_board = Sprite("chessboard0", scale=2.5)
     winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
