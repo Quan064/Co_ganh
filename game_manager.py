@@ -17,8 +17,6 @@ positions = [None,
              [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
              [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
 ganh_checked = [None, False, False]
-UserBot = None
-UserBot2 = None
 
 # Board manipulation
 def is_valid_move(move, current_side, board):
