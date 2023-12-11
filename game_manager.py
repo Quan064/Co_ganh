@@ -41,7 +41,6 @@ def ganh(move, opp_side):
     global game_state, ganh_checked, positions
 
     valid_remove = []
-    opp_remove = []
     board = game_state["board"]
 
     if move in diag_pos:
@@ -50,20 +49,18 @@ def ganh(move, opp_side):
         ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
     # Loops through each pair and conclude the opponent piece
     for pair in ganh_pair:
-        for x, y in pair:
-            new_posx = move[0] + x
-            new_posy = move[1] + y
-            if 0<=new_posy<=4 and 0<=new_posx<=4 and board[new_posy][new_posx]==opp_side:
-                opp_remove.append((new_posx, new_posy))
-
-        # Check if we have a pair
-        if len(opp_remove) == 2:
+        remove_posx_1 = move[0] + pair[0][0]
+        remove_posy_1 = move[1] + pair[0][1]
+        remove_posx_2 = move[0] + pair[1][0]
+        remove_posy_2 = move[1] + pair[1][1]
+        if 0<=remove_posx_1<=4 and 0<=remove_posy_1<=4 and board[remove_posy_1][remove_posx_1]==opp_side and \
+           0<=remove_posx_2<=4 and 0<=remove_posy_2<=4 and board[remove_posy_2][remove_posx_2]==opp_side:
+            opp_remove = ((remove_posx_1, remove_posy_1), (remove_posx_2, remove_posy_2))
             valid_remove.extend(opp_remove)
             for x, y in opp_remove:
                 board[y][x] = 0
                 positions[opp_side].remove((x, y))
             ganh_checked[-opp_side] = True
-        opp_remove = []
 
     return valid_remove
 def chet(move, side, opp_side):
@@ -90,23 +87,24 @@ def chet(move, side, opp_side):
                 board[removey][removex] = 0
                 positions[opp_side].remove((removex, removey))
 
-        # check VAY
-        valid_move_pos = set()
-        for pos in positions[opp_side]:
-            if pos in diag_pos:
-                move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-            else:
-                move_list = ((1,0), (-1,0), (0,1), (0,-1))
-            for i in range(len(move_list)):
-                new_valid_x = pos[0] + move_list[i][0]
-                new_valid_y = pos[1] + move_list[i][1]
-                if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
-                    valid_move_pos.add((new_valid_x, new_valid_y))
-        if not valid_move_pos:
-            for x, y in positions[opp_side]:
-                valid_remove.append((x, y))
-                board[y][x] = 0
-            positions[opp_side] = []
+        if not valid_remove:
+            # check VAY
+            valid_move_pos = set()
+            for pos in positions[opp_side]:
+                if pos in diag_pos:
+                    move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+                else:
+                    move_list = ((1,0), (-1,0), (0,1), (0,-1))
+                for i in range(len(move_list)):
+                    new_valid_x = pos[0] + move_list[i][0]
+                    new_valid_y = pos[1] + move_list[i][1]
+                    if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
+                        valid_move_pos.add((new_valid_x, new_valid_y))
+            if not valid_move_pos:
+                for x, y in positions[opp_side]:
+                    valid_remove.append((x, y))
+                    board[y][x] = 0
+                positions[opp_side] = []
 
         return valid_remove
     else:
@@ -135,22 +133,22 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
     global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
-    player1_info = {"your_pieces": positions[player1["side"]],
-                    "your_side": player1["side"],
-                    "oponent_position": positions[player2["side"]], 
-                    "board": game_state["board"].copy()}
-    player2_info = {"your_pieces": positions[player2["side"]], 
-                    "your_side": player2["side"],
-                    "oponent_position": positions[player1["side"]], 
-                    "board": game_state["board"].copy()}
     winner = False
     move_counter = 1
     init_img(positions)
 
     while not winner:
     
-        player1_info["board"] = game_state["board"].copy()
-        player2_info["board"] = game_state["board"].copy()
+        player1_info = {"your_pieces": positions[player1["side"]],
+                        "your_side": player1["side"],
+                        "oponent_position": positions[player2["side"]], 
+                        "board": game_state["board"].copy(),
+                        "ganh_checked": ganh_checked[player1["side"]]}
+        player2_info = {"your_pieces": positions[player2["side"]], 
+                        "your_side": player2["side"],
+                        "oponent_position": positions[player1["side"]], 
+                        "board": game_state["board"].copy(),
+                        "ganh_checked": ganh_checked[player2["side"]]}
 
         if player1["side"] == game_state["current_turn"]:
             move = player1["operator"].main(player1_info)
@@ -183,11 +181,11 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
         move_counter += 1
 
         if trainAI:
-            trainAI(game_state["board"])
+            AI_tool(game_state["board"])
 
     return winner, move_counter-1
-def trainAI(board):
-    line_board = [].extend(board)
+def AI_tool(board):
+    pass
 
 def init_img(positions):
     image = Image.new("RGB", (600, 600), "WHITE")
@@ -266,7 +264,7 @@ if __name__ == '__main__':
     application.compressed_textures_folder = "static/upload_img"
 
     Master = SourceFileLoader("Master.py", os.path.join(os.getcwd(), "static/botfiles/Master.py")).load_module()
-    winner, win_move_counter = run_game(Master, CGEngine, trainAi=True)
+    winner, win_move_counter = run_game(Master, CGEngine, trainAI=True)
 
     chess_board = Sprite("chessboard0", scale=2.5)
     winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
