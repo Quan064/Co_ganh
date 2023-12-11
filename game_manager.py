@@ -1,7 +1,6 @@
 import random
 import os
 from PIL import Image, ImageDraw
-import CGEngine
 
 # ROW = y
 # COLUMN = x
@@ -115,11 +114,11 @@ def chet(move, side, opp_side):
 def activation(option, session_name):
     exec(f"import static.botfiles.botfile_{session_name} as UserBot", globals())
     if option == "bot":
-        exec("UserBot2 = CGEngine")
+        UserBot2 = __import__("CGEngine")
     elif option == "player":
-        player_file_list = [i[:-3] for i in os.listdir(r"static\botfiles") if i != '__pycache__']
+        player_file_list = [i for i in os.listdir(r"static\botfiles") if i != '__pycache__']
         load_rand_player = random.choice(player_file_list)
-        exec(f"import static.botfiles.{load_rand_player} as UserBot2", globals())
+        UserBot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
 
     return run_game(UserBot, UserBot2)
 def run_game(UserBot, Bot2, trainAI=False): # Main
