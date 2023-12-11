@@ -1,7 +1,6 @@
 import random
 import os
 from PIL import Image, ImageDraw
-from importlib.machinery import SourceFileLoader
 import CGEngine
 
 # ROW = y
@@ -19,6 +18,8 @@ positions = [None,
              [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
              [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
 ganh_checked = [None, False, False]
+UserBot = None
+UserBot2 = None
 
 # Board manipulation
 def is_valid_move(move, current_side, board):
@@ -112,23 +113,15 @@ def chet(move, side, opp_side):
 
 # System
 def activation(option, session_name):
-    cwd = os.getcwd()
-    current_user_file = f'botfile_{session_name}.py'
-    UserBot = SourceFileLoader(current_user_file, os.path.join(cwd, f"static/botfiles/{current_user_file}")).load_module()
+    exec(f"import static.botfiles.botfile_{session_name} as UserBot", globals())
     if option == "bot":
-        player2 = CGEngine
+        exec("UserBot2 = CGEngine")
     elif option == "player":
-        player_file_list = os.listdir(os.path.join(cwd, "static/botfiles"))
+        player_file_list = [i[:-3] for i in os.listdir(r"static\botfiles") if i != '__pycache__']
         load_rand_player = random.choice(player_file_list)
+        exec(f"import static.botfiles.{load_rand_player} as UserBot2", globals())
 
-        pfile_name = load_rand_player.rsplit(".", 1)[0]
-        if pfile_name == current_user_file:
-            activation(option, session_name)
-        else:
-            UserBot2 = SourceFileLoader(pfile_name, f"static/botfiles/{load_rand_player}").load_module()
-            player2 = UserBot2
-    
-    return run_game(UserBot, player2)
+    return run_game(UserBot, UserBot2)
 def run_game(UserBot, Bot2, trainAI=False): # Main
     global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
@@ -175,7 +168,7 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
             winner = "Đỏ thắng"
         elif not positions[-1]:
             winner = "Xanh thắng"
-        elif (len(positions[1]) + len(positions[-1]) < 4): # or move_counter == 200:
+        elif (len(positions[1]) + len(positions[-1]) < 4) or move_counter == 500:
             winner = "Hòa"
         game_state["current_turn"] *= -1
         move_counter += 1
@@ -259,11 +252,11 @@ def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
 
 if __name__ == '__main__':
     from ursina import *
+    import static.botfiles.Master as Master
     app = Ursina(title="Cờ gánh", borderless=False)
 
     application.compressed_textures_folder = "static/upload_img"
 
-    Master = SourceFileLoader("Master.py", os.path.join(os.getcwd(), "static/botfiles/Master.py")).load_module()
     winner, win_move_counter = run_game(CGEngine, CGEngine, trainAI=True)
 
     chess_board = Sprite("chessboard0", scale=2.5)

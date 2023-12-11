@@ -170,9 +170,6 @@ def submit_bot():
         if request.form.get("match_player") == "Đấu với bot của người chơi":
             winner, max_move_win = activation("player", session["username"])
     
-        # img_folder = 'static/upload_img'
-        # image_filenames = [f for f in os.listdir(img_folder) if os.path.isfile(os.path.join(img_folder, f))]
-        
         return render_template('result.html', winner=winner, max_move_win=max_move_win)
     
     return redirect(url_for("menu"))
@@ -192,5 +189,3 @@ def open_browser():
 if __name__ == '__main__': 
     Timer(1, open_browser).start()
     app.run(port=5000, debug=True, use_reloader=False)
-
-

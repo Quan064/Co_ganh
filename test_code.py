@@ -1,30 +1,18 @@
-# from tempfile import NamedTemporaryFile
-# from os import remove, replace
-# from os.path import dirname
+import os
+import random
+import CGEngine
 
-# datfile = 'C:/Users/Hello/OneDrive/Code Tutorial/Python/Co_ganh/static/AI.txt'
+UserBot = None
+UserBot2 = None
 
-# try:
-#     with open(datfile) as file, NamedTemporaryFile(mode='wt', dir=dirname(datfile), delete=False) as output:
-#         tname = output.name
-#         for line in file:
-#             if line.startswith('17,18,19,20,21,22,23,24'):
-#                 line = "new" + '\n'
-#             output.write(line)
-# except:
-#     remove(tname)
-# else:
-#     replace(tname, datfile)
+def activation(option="player", session_name="Quan064"):
+    exec(f"import static.botfiles.botfile_{session_name} as UserBot", globals())
+    if option == "bot":
+        exec("UserBot2 = CGEngine")
+    elif option == "player":
+        player_file_list = [i[:-3] for i in os.listdir(r"static\botfiles") if i != '__pycache__']
+        load_rand_player = random.choice(player_file_list)
+        exec(f"import static.botfiles.{load_rand_player} as UserBot2", globals())
+    print(UserBot2)
 
-for i1 in range(18):
-    for i2 in range(i1+1, 19):
-        for i3 in range(i2+1, 20):
-            for i4 in range(i3+1, 21):
-                for i5 in range(i4+1, 22):
-                    for i6 in range(i5+1, 23):
-                        for i7 in range(i6+1, 24):
-                            with open("static/AI.txt", mode="a") as f:
-                                f.write(f"{i1},{i2},{i3},{i4},{i5},{i6},{i7}:\n")
-
-# 8: 0
-# 7: 1081576
+activation()
