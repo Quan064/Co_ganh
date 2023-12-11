@@ -87,23 +87,24 @@ def chet(move, side, opp_side):
                 board[removey][removex] = 0
                 positions[opp_side].remove((removex, removey))
 
-        # check VAY
-        valid_move_pos = set()
-        for pos in positions[opp_side]:
-            if pos in diag_pos:
-                move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-            else:
-                move_list = ((1,0), (-1,0), (0,1), (0,-1))
-            for i in range(len(move_list)):
-                new_valid_x = pos[0] + move_list[i][0]
-                new_valid_y = pos[1] + move_list[i][1]
-                if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
-                    valid_move_pos.add((new_valid_x, new_valid_y))
-        if not valid_move_pos:
-            for x, y in positions[opp_side]:
-                valid_remove.append((x, y))
-                board[y][x] = 0
-            positions[opp_side] = []
+        if not valid_remove:
+            # check VAY
+            valid_move_pos = set()
+            for pos in positions[opp_side]:
+                if pos in diag_pos:
+                    move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+                else:
+                    move_list = ((1,0), (-1,0), (0,1), (0,-1))
+                for i in range(len(move_list)):
+                    new_valid_x = pos[0] + move_list[i][0]
+                    new_valid_y = pos[1] + move_list[i][1]
+                    if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
+                        valid_move_pos.add((new_valid_x, new_valid_y))
+            if not valid_move_pos:
+                for x, y in positions[opp_side]:
+                    valid_remove.append((x, y))
+                    board[y][x] = 0
+                positions[opp_side] = []
 
         return valid_remove
     else:
@@ -132,22 +133,22 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
     global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
-    player1_info = {"your_pieces": positions[player1["side"]],
-                    "your_side": player1["side"],
-                    "oponent_position": positions[player2["side"]], 
-                    "board": game_state["board"].copy()}
-    player2_info = {"your_pieces": positions[player2["side"]], 
-                    "your_side": player2["side"],
-                    "oponent_position": positions[player1["side"]], 
-                    "board": game_state["board"].copy()}
     winner = False
     move_counter = 1
     init_img(positions)
 
     while not winner:
     
-        player1_info["board"] = game_state["board"].copy()
-        player2_info["board"] = game_state["board"].copy()
+        player1_info = {"your_pieces": positions[player1["side"]],
+                        "your_side": player1["side"],
+                        "oponent_position": positions[player2["side"]], 
+                        "board": game_state["board"].copy(),
+                        "ganh_checked": ganh_checked[player1["side"]]}
+        player2_info = {"your_pieces": positions[player2["side"]], 
+                        "your_side": player2["side"],
+                        "oponent_position": positions[player1["side"]], 
+                        "board": game_state["board"].copy(),
+                        "ganh_checked": ganh_checked[player2["side"]]}
 
         if player1["side"] == game_state["current_turn"]:
             move = player1["operator"].main(player1_info)
@@ -180,10 +181,10 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
         move_counter += 1
 
         if trainAI:
-            trainAI(game_state["board"])
+            AI_tool(game_state["board"])
 
     return winner, move_counter-1
-def trainAI(board):
+def AI_tool(board):
     pass
 
 def init_img(positions):
@@ -263,7 +264,7 @@ if __name__ == '__main__':
     application.compressed_textures_folder = "static/upload_img"
 
     Master = SourceFileLoader("Master.py", os.path.join(os.getcwd(), "static/botfiles/Master.py")).load_module()
-    winner, win_move_counter = run_game(Master, CGEngine, trainAi=True)
+    winner, win_move_counter = run_game(CGEngine, CGEngine, trainAI=True)
 
     chess_board = Sprite("chessboard0", scale=2.5)
     winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
