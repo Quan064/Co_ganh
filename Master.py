@@ -127,6 +127,3 @@ def main(input):
 
     move = {"selected_pos": selected_pos, "new_pos": new_pos}
     return move
-
-if __name__ == '__main__':
-    exec(open("game_manager.py").read())
