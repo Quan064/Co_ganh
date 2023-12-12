@@ -6,7 +6,6 @@ from PIL import Image, ImageDraw
 # COLUMN = x
 # ==> board[y][x] == board[ROW][COLUMN]
 
-diag_pos = ((1,1), (1, 3), (3,1), (3,3), (2,2), (0,0), (4,4), (0,4), (4,0))
 game_state = {"current_turn": 1,
               "board": [[-1, -1, -1, -1, -1],
                         [-1,  0,  0,  0, -1],
@@ -32,7 +31,7 @@ def is_valid_move(move, current_side, board):
         new_x     < 0 or new_x     > 4 or new_y     < 0 or new_y     > 4 or
         board[new_y][new_x] != 0 or board[current_y][current_x] != current_side): # Checking if selected position and new position is legal
         return False
-    elif move["selected_pos"] in diag_pos: # Checking if the piece has moved one position away
+    elif (current_x+current_y)%2==0: # Checking if the piece has moved one position away
         return (dx + dy == 1) or (dx * dy == 1)
     return (dx + dy == 1)
 def ganh(move, opp_side):
@@ -41,7 +40,7 @@ def ganh(move, opp_side):
     valid_remove = []
     board = game_state["board"]
 
-    if move in diag_pos:
+    if (move[0]+move[1])%2==0:
         ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)), ((1,1), (-1,-1)), ((-1,1), (1,-1)))
     else:
         ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
@@ -69,7 +68,7 @@ def chet(move, side, opp_side):
         valid_remove = []
         board = game_state["board"]
 
-        if move in diag_pos:
+        if (move[0]+move[1])%2==0:
             oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
             pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
         else:
@@ -89,7 +88,7 @@ def chet(move, side, opp_side):
             # check VAY
             valid_move_pos = set()
             for pos in positions[opp_side]:
-                if pos in diag_pos:
+                if (pos[0]+pos[1])%2==0:
                     move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
                 else:
                     move_list = ((1,0), (-1,0), (0,1), (0,-1))
@@ -112,13 +111,13 @@ def chet(move, side, opp_side):
 def activation(option, session_name):
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     if option == "bot":
-        UserBot2 = __import__("CGEngine")
+        Bot2 = __import__("CGEngine")
     elif option == "player":
         player_file_list = [i for i in os.listdir(r"static\botfiles") if i != '__pycache__']
         load_rand_player = random.choice(player_file_list)
-        UserBot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
+        Bot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
 
-    return run_game(UserBot, UserBot2)
+    return run_game(UserBot, Bot2)
 def run_game(UserBot, Bot2, trainAI=False): # Main
     global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
@@ -127,26 +126,26 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
     move_counter = 1
     init_img(positions)
 
-    while not winner:
-    
-        player1_info = {"your_pieces": positions[player1["side"]],
+    player1_info = {"your_pieces": positions[player1["side"]],
                         "your_side": player1["side"],
                         "oponent_position": positions[player2["side"]], 
-                        "board": game_state["board"].copy(),
+                        "board": game_state["board"],
                         "ganh_checked": ganh_checked[player1["side"]]}
-        player2_info = {"your_pieces": positions[player2["side"]], 
-                        "your_side": player2["side"],
-                        "oponent_position": positions[player1["side"]], 
-                        "board": game_state["board"].copy(),
-                        "ganh_checked": ganh_checked[player2["side"]]}
+    player2_info = {"your_pieces": positions[player2["side"]], 
+                    "your_side": player2["side"],
+                    "oponent_position": positions[player1["side"]], 
+                    "board": game_state["board"],
+                    "ganh_checked": ganh_checked[player2["side"]]}
 
+    while not winner:
+    
         if player1["side"] == game_state["current_turn"]:
             move = player1["operator"].main(player1_info)
         elif player2["side"] == game_state["current_turn"]:
             move = player2["operator"].main(player2_info)
 
         if not is_valid_move(move, game_state["current_turn"], game_state["board"]):
-            raise Exception(f"Invalid move {move_counter}")
+            raise Exception(f"Invalid move {move_counter} | {move}")
         
         # Update move to board
         game_state["board"][move["new_pos"][1]][move["new_pos"][0]] = game_state["current_turn"]
@@ -162,9 +161,9 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
         generate_image(positions, move_counter, move, ganh_remove, chet_remove)
 
         if not positions[1]:
-            winner = "Đỏ thắng"
+            winner = "Người chơi " + (None, "thua", "thắng")[player1["side"]]
         elif not positions[-1]:
-            winner = "Xanh thắng"
+            winner = "Người chơi " + (None, "thắng", "thua")[player1["side"]]
         elif (len(positions[1]) + len(positions[-1]) < 4) or move_counter == 500:
             winner = "Hòa"
         game_state["current_turn"] *= -1
