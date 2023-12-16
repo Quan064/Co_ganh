@@ -2,7 +2,7 @@ from flask import Flask, flash, request, redirect, url_for, render_template, ses
 import os
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_wtf import FlaskForm 
 from wtforms import SubmitField, PasswordField, StringField
 from wtforms.validators import InputRequired, Length, ValidationError
@@ -11,17 +11,11 @@ from game_manager import activation
 import webbrowser
 from threading import Timer
 
-# Delete all images
-try:
-    cwd = os.getcwd() #Get current directory
-    img_dir = cwd + "/static/upload_img"
-    images = os.listdir(img_dir)
+def Delete_all_images():
+    images = os.listdir("static\\upload_img\\")
     for file in images:
-        file_path = os.path.join(img_dir, file)
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-except OSError:
-    pass
+        os.remove("static\\upload_img\\"+file)
+Delete_all_images()
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -152,17 +146,7 @@ def submit_bot():
         file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], filename))
 
     if request.method == "POST":
-        # Delete all images
-        try:
-            cwd = os.getcwd() #Get current directory
-            img_dir = cwd + "/static/upload_img"
-            images = os.listdir(img_dir)
-            for file in images:
-                file_path = os.path.join(img_dir, file)
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
-        except OSError:
-            pass
+        Delete_all_images()
         
         if request.form.get("match_bot") == "Đấu với bot hệ thống":
             winner, max_move_win = activation("bot", session["username"])
@@ -183,9 +167,7 @@ def get_image_list():
     return jsonify(image_filenames)
 
 
-def open_browser():
-    webbrowser.open_new("http://127.0.0.1:5000")
-
-if __name__ == '__main__': 
+if __name__ == '__main__':
+    open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
     Timer(1, open_browser).start()
     app.run(port=5000, debug=True, use_reloader=False)
