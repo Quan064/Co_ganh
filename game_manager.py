@@ -17,6 +17,29 @@ positions = [None,
              [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
 ganh_checked = [None, False, False]
 
+# Initialization board
+static_image = Image.new("RGB", (600, 600), "WHITE")
+draw = ImageDraw.Draw(static_image)
+
+draw.line((100, 100, 500, 100), fill="black", width=3)
+draw.line((100, 200, 500, 200), fill="black", width=3)
+draw.line((100, 300, 500, 300), fill="black", width=3)
+draw.line((100, 400, 500, 400), fill="black", width=3)
+draw.line((100, 500, 500, 500), fill="black", width=3)
+draw.line((100, 100, 100, 500), fill="black", width=3)
+
+draw.line((200, 100, 200, 500), fill="black", width=3)
+draw.line((300, 100, 300, 500), fill="black", width=3)
+draw.line((400, 100, 400, 500), fill="black", width=3)
+draw.line((500, 100, 500, 500), fill="black", width=3)
+draw.line((100, 100, 500, 500), fill="black", width=3)
+draw.line((100, 500, 500, 100), fill="black", width=3)
+
+draw.line((100, 300, 300, 100), fill="black", width=3)
+draw.line((300, 100, 500, 300), fill="black", width=3)
+draw.line((500, 300, 300, 500), fill="black", width=3)
+draw.line((300, 500, 100, 300), fill="black", width=3)
+
 # Board manipulation
 def is_valid_move(move, current_side, board):
     current_x = move["selected_pos"][0]
@@ -35,8 +58,6 @@ def is_valid_move(move, current_side, board):
         return (dx + dy == 1) or (dx * dy == 1)
     return (dx + dy == 1)
 def ganh(move, opp_side):
-    global game_state, ganh_checked, positions
-
     valid_remove = []
     board = game_state["board"]
 
@@ -61,8 +82,6 @@ def ganh(move, opp_side):
 
     return valid_remove
 def chet(move, side, opp_side):
-    global game_state, ganh_checked, positions
-
     if ganh_checked[side]: # Must have at least 1 GANH to CHET
 
         valid_remove = []
@@ -119,11 +138,11 @@ def activation(option, session_name):
 
     return run_game(UserBot, Bot2)
 def run_game(UserBot, Bot2, trainAI=False): # Main
-    global game_state, positions
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
     winner = False
     move_counter = 1
+
     init_img(positions)
 
     player1_info = {"your_pieces": positions[player1["side"]],
@@ -177,57 +196,18 @@ def AI_tool(board):
     pass
 
 def init_img(positions):
-    image = Image.new("RGB", (600, 600), "WHITE")
+    image = static_image.copy()
     draw = ImageDraw.Draw(image)
-
-    draw.line((100, 100, 500, 100), fill="black", width=3)
-    draw.line((100, 200, 500, 200), fill="black", width=3)
-    draw.line((100, 300, 500, 300), fill="black", width=3)
-    draw.line((100, 400, 500, 400), fill="black", width=3)
-    draw.line((100, 500, 500, 500), fill="black", width=3)
-    draw.line((100, 100, 100, 500), fill="black", width=3)
-
-    draw.line((200, 100, 200, 500), fill="black", width=3)
-    draw.line((300, 100, 300, 500), fill="black", width=3)
-    draw.line((400, 100, 400, 500), fill="black", width=3)
-    draw.line((500, 100, 500, 500), fill="black", width=3)
-    draw.line((100, 100, 500, 500), fill="black", width=3)
-    draw.line((100, 500, 500, 100), fill="black", width=3)
-
-    draw.line((100, 300, 300, 100), fill="black", width=3)
-    draw.line((300, 100, 500, 300), fill="black", width=3)
-    draw.line((500, 300, 300, 500), fill="black", width=3)
-    draw.line((300, 500, 100, 300), fill="black", width=3)
 
     for x, y in positions[1]:
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
     for x, y in positions[-1]:
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
-
+        
     image.save(os.getcwd()+"/static/upload_img/chessboard0.png", "PNG")
 def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
-
-    image = Image.new("RGB", (600, 600), "WHITE")
+    image = static_image.copy()
     draw = ImageDraw.Draw(image)
-
-    draw.line((100, 100, 500, 100), fill="black", width=3)
-    draw.line((100, 200, 500, 200), fill="black", width=3)
-    draw.line((100, 300, 500, 300), fill="black", width=3)
-    draw.line((100, 400, 500, 400), fill="black", width=3)
-    draw.line((100, 500, 500, 500), fill="black", width=3)
-    draw.line((100, 100, 100, 500), fill="black", width=3)
-
-    draw.line((200, 100, 200, 500), fill="black", width=3)
-    draw.line((300, 100, 300, 500), fill="black", width=3)
-    draw.line((400, 100, 400, 500), fill="black", width=3)
-    draw.line((500, 100, 500, 500), fill="black", width=3)
-    draw.line((100, 100, 500, 500), fill="black", width=3)
-    draw.line((100, 500, 500, 100), fill="black", width=3)
-
-    draw.line((100, 300, 300, 100), fill="black", width=3)
-    draw.line((300, 100, 500, 300), fill="black", width=3)
-    draw.line((500, 300, 300, 500), fill="black", width=3)
-    draw.line((300, 500, 100, 300), fill="black", width=3)
 
     for x, y in ganh_remove:
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill=None, outline="#FFC900", width=4)

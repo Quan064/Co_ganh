@@ -23,5 +23,7 @@ draw.line((500, 300, 300, 500), fill="black", width=3)
 draw.line((300, 500, 100, 300), fill="black", width=3)
 
 image2 = image.copy()
+draw = ImageDraw.Draw(image2)
+draw.line((300, 500, 150, 300), fill="black", width=3)
 
 image2.show()

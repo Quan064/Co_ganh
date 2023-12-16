@@ -102,11 +102,6 @@ def main(input):
     #  'ganh_checked' : False}
 
     your_pieces = input["your_pieces"]
-    # oponent_position = input["oponent_position"]
-    # your_side = input["your_side"]
-    # opp_side = -input["your_side"]
-    # board = input["board"]
-    # ganh_checked = input["ganh_checked"]
 
     max_kill_count = -1
 
@@ -120,6 +115,7 @@ def main(input):
                 kill_count = len(ganh(move, input)) + len(chet(move, input))
                 if kill_count == 0:
                     kill_count += len(vay(input))
+                # Always kill if can
                 if kill_count > max_kill_count:
                     max_kill_count = kill_count
                     selected_pos = pos
