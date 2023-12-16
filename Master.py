@@ -115,6 +115,7 @@ def main(input):
                 kill_count = len(ganh(move, input)) + len(chet(move, input))
                 if kill_count == 0:
                     kill_count += len(vay(input))
+                # Always kill if can
                 if kill_count > max_kill_count:
                     max_kill_count = kill_count
                     selected_pos = pos
