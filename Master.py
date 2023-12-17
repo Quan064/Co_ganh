@@ -44,25 +44,22 @@ def chet(move, input):
     your_side = input["your_side"]
     opp_side = -your_side
     board = input["board"]
-    ganh_checked = input["ganh_checked"]
 
     valid_remove = []
 
-    if ganh_checked:
-
-        if (move[0]+move[1])%2==0:
-            oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-            pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-        else:
-            oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
-            pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
-        for i in range(len(oth_chet)):
-            new_oth_chetx = move[0] + oth_chet[i][0]
-            new_oth_chety = move[1] + oth_chet[i][1]
-            removex = move[0] + pos_remove[i][0]
-            removey = move[1] + pos_remove[i][1]
-            if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==your_side and board[removey][removex]==opp_side:
-                valid_remove.append((removex, removey))
+    if (move[0]+move[1])%2==0:
+        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
+        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+    else:
+        oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
+        pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
+    for i in range(len(oth_chet)):
+        new_oth_chetx = move[0] + oth_chet[i][0]
+        new_oth_chety = move[1] + oth_chet[i][1]
+        removex = move[0] + pos_remove[i][0]
+        removey = move[1] + pos_remove[i][1]
+        if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==your_side and board[removey][removex]==opp_side:
+            valid_remove.append((removex, removey))
 
     return valid_remove
 def vay(input):
@@ -89,6 +86,13 @@ def vay(input):
 
     return valid_remove
 
+# Ưu thế:
+# Vị trí
+# Hạn chế nước đi của đối phương
+# Ăn quân
+# Không bị ăn quân
+# 
+
 def main(input):
 
     # {'your_pieces': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
@@ -98,8 +102,7 @@ def main(input):
     #            [-1,  0,  0,  0, -1],
     #            [ 1,  0,  0,  0, -1],
     #            [ 1,  0,  0,  0,  1],
-    #            [ 1,  1,  1,  1,  1]],
-    #  'ganh_checked' : False}
+    #            [ 1,  1,  1,  1,  1]]}
 
     your_pieces = input["your_pieces"]
 
