@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 # ==> board[y][x] == board[ROW][COLUMN]
 
 def declare():
-    global game_state, positions, ganh_checked, static_image
+    global game_state, positions, static_image
 
     game_state = {"current_turn": 1,
                 "board": [[-1, -1, -1, -1, -1],
@@ -18,7 +18,6 @@ def declare():
     positions = [None,
                 [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
                 [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
-    ganh_checked = [None, False, False]
 
     # Initialization board
     static_image = Image.new("RGB", (600, 600), "WHITE")
@@ -81,53 +80,48 @@ def ganh(move, opp_side):
             for x, y in opp_remove:
                 board[y][x] = 0
                 positions[opp_side].remove((x, y))
-            ganh_checked[-opp_side] = True
 
     return valid_remove
 def chet(move, side, opp_side):
-    if ganh_checked[side]: # Must have at least 1 GANH to CHET
+    valid_remove = []
+    board = game_state["board"]
 
-        valid_remove = []
-        board = game_state["board"]
-
-        if (move[0]+move[1])%2==0:
-            oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-            pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-        else:
-            oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
-            pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
-        for i in range(len(oth_chet)):
-            new_oth_chetx = move[0] + oth_chet[i][0]
-            new_oth_chety = move[1] + oth_chet[i][1]
-            removex = move[0] + pos_remove[i][0]
-            removey = move[1] + pos_remove[i][1]
-            if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==side and board[removey][removex]==opp_side:
-                valid_remove.append((removex, removey))
-                board[removey][removex] = 0
-                positions[opp_side].remove((removex, removey))
-
-        if not valid_remove:
-            # check VAY
-            valid_move_pos = set()
-            for pos in positions[opp_side]:
-                if (pos[0]+pos[1])%2==0:
-                    move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-                else:
-                    move_list = ((1,0), (-1,0), (0,1), (0,-1))
-                for i in range(len(move_list)):
-                    new_valid_x = pos[0] + move_list[i][0]
-                    new_valid_y = pos[1] + move_list[i][1]
-                    if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
-                        valid_move_pos.add((new_valid_x, new_valid_y))
-            if not valid_move_pos:
-                for x, y in positions[opp_side]:
-                    valid_remove.append((x, y))
-                    board[y][x] = 0
-                positions[opp_side] = []
-
-        return valid_remove
+    if (move[0]+move[1])%2==0:
+        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
+        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
     else:
-        return []
+        oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
+        pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
+    for i in range(len(oth_chet)):
+        new_oth_chetx = move[0] + oth_chet[i][0]
+        new_oth_chety = move[1] + oth_chet[i][1]
+        removex = move[0] + pos_remove[i][0]
+        removey = move[1] + pos_remove[i][1]
+        if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==side and board[removey][removex]==opp_side:
+            valid_remove.append((removex, removey))
+            board[removey][removex] = 0
+            positions[opp_side].remove((removex, removey))
+
+    if not valid_remove:
+        # check VAY
+        valid_move_pos = set()
+        for pos in positions[opp_side]:
+            if (pos[0]+pos[1])%2==0:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+            else:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1))
+            for i in range(len(move_list)):
+                new_valid_x = pos[0] + move_list[i][0]
+                new_valid_y = pos[1] + move_list[i][1]
+                if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
+                    valid_move_pos.add((new_valid_x, new_valid_y))
+        if not valid_move_pos:
+            for x, y in positions[opp_side]:
+                valid_remove.append((x, y))
+                board[y][x] = 0
+            positions[opp_side] = []
+
+    return valid_remove
 
 # System
 def activation(option, session_name):
@@ -153,13 +147,11 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
     player1_info = {"your_pieces": positions[player1["side"]],
                     "your_side": player1["side"],
                     "oponent_position": positions[player2["side"]], 
-                    "board": game_state["board"],
-                    "ganh_checked": ganh_checked[player1["side"]]}
+                    "board": game_state["board"]}
     player2_info = {"your_pieces": positions[player2["side"]], 
                     "your_side": player2["side"],
                     "oponent_position": positions[player1["side"]], 
-                    "board": game_state["board"],
-                    "ganh_checked": ganh_checked[player2["side"]]}
+                    "board": game_state["board"]}
 
     while not winner:
     
