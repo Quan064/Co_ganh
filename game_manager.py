@@ -60,26 +60,24 @@ def is_valid_move(move, current_side, board):
         return (dx + dy == 1) or (dx * dy == 1)
     return (dx + dy == 1)
 def ganh(move, opp_side):
+
     valid_remove = []
     board = game_state["board"]
+    dir_check = [False] * 4
 
-    if (move[0]+move[1])%2==0:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)), ((1,1), (-1,-1)), ((-1,1), (1,-1)))
-    else:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
-    # Loops through each pair and conclude the opponent piece
-    for pair in ganh_pair:
-        remove_posx_1 = move[0] + pair[0][0]
-        remove_posy_1 = move[1] + pair[0][1]
-        remove_posx_2 = move[0] + pair[1][0]
-        remove_posy_2 = move[1] + pair[1][1]
-        if 0<=remove_posx_1<=4 and 0<=remove_posy_1<=4 and board[remove_posy_1][remove_posx_1]==opp_side and \
-           0<=remove_posx_2<=4 and 0<=remove_posy_2<=4 and board[remove_posy_2][remove_posx_2]==opp_side:
-            opp_remove = ((remove_posx_1, remove_posy_1), (remove_posx_2, remove_posy_2))
-            valid_remove.extend(opp_remove)
-            for x, y in opp_remove:
-                board[y][x] = 0
-                positions[opp_side].remove((x, y))
+    for x0, y0 in positions[opp_side]:
+        x, y = x0-move[0], y0-move[1]
+        if -1<=x<=1 and -1<=y<=1:
+            for i in range(4):
+                if (x==0, y==0, x==y, -x==y)[i]:
+                    if dir_check[i]:
+                        opp_remove = ((move[0]+x, move[1]+y), (move[0]-x, move[1]-y))
+                        valid_remove.extend(opp_remove)
+                        for x1, y1 in opp_remove:
+                            board[y1][x1] = 0
+                            positions[opp_side].remove((x1, y1))
+                    else: dir_check[i] = True
+                    break
 
     return valid_remove
 def chet(move, side, opp_side):
@@ -240,6 +238,12 @@ if __name__ == '__main__':
 
     def input(key):
         global indexIMG
+
+        if key == 'escape':
+            images = os.listdir("static\\upload_img\\")
+            for file in images:
+                os.remove("static\\upload_img\\"+file)
+            quit()
 
         if "arrow" in key:
             if key == "left arrow":

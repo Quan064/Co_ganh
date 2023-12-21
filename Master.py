@@ -15,28 +15,22 @@ def is_valid_move(current_pos, new_pos, input):
         if (current_x+current_y)%2==0:
             return (dx + dy == 1) or (dx * dy == 1)
         return (dx + dy == 1)
-def ganh(move, input):
 
-    board = input["board"]
-    opp_side = -input["your_side"]
+def ganh(move, oponent_position):
 
     valid_remove = []
+    dir_check = [False] * 4
 
-    if (move[0]+move[1])%2==0:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)), ((1,1), (-1,-1)), ((-1,1), (1,-1)))
-    else:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
-
-    for pair in ganh_pair:
-        remove_posx_1 = move[0] + pair[0][0]
-        remove_posy_1 = move[1] + pair[0][1]
-        remove_posx_2 = move[0] + pair[1][0]
-        remove_posy_2 = move[1] + pair[1][1]
-        if (0<=remove_posx_1<=4 and 0<=remove_posy_1<=4 and
-            0<=remove_posx_2<=4 and 0<=remove_posy_2<=4 and 
-            board[remove_posy_1][remove_posx_1]==opp_side and
-            board[remove_posy_2][remove_posx_2]==opp_side):
-            valid_remove.extend(((remove_posx_1, remove_posy_1), (remove_posx_2, remove_posy_2)))
+    for x0, y0 in oponent_position:
+        x, y = x0-move[0], y0-move[1]
+        if -1<=x<=1 and -1<=y<=1:
+            for i in range(4):
+                if (x==0, y==0, x==y, -x==y)[i]:
+                    if dir_check[i]:
+                        opp_remove = ((move[0]+x, move[1]+y), (move[0]-x, move[1]-y))
+                        valid_remove.extend(opp_remove)
+                    else: dir_check[i] = True
+                    break
 
     return valid_remove
 def chet(move, input):
@@ -86,6 +80,10 @@ def vay(input):
 
     return valid_remove
 
+def check_point(input):
+    point = len(input["your_pieces"]) - len(input["oponent_position"])
+    return point
+
 # Ưu thế:
 # Vị trí
 # Hạn chế nước đi của đối phương
@@ -105,6 +103,7 @@ def main(input):
     #            [ 1,  1,  1,  1,  1]]}
 
     your_pieces = input["your_pieces"]
+    oponent_position = input["oponent_position"]
 
     max_kill_count = -1
 
@@ -115,7 +114,7 @@ def main(input):
             new_pos_y = pos[1] + movement[1]
             move = (new_pos_x, new_pos_y)
             if is_valid_move(pos, move, input):
-                kill_count = len(ganh(move, input)) + len(chet(move, input))
+                kill_count = len(ganh(move, oponent_position)) + len(chet(move, input))
                 if kill_count == 0:
                     kill_count += len(vay(input))
                 # Always kill if can
