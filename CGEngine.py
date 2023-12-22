@@ -23,9 +23,9 @@ def is_valid_move(move, side, board):
 
 def main(input):
 
-    # {'your_pieces': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
     #  'your_side': -1,
-    #  'oponent_position': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    #  'opp_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
     #  'board': [[-1,-1, 0,-1, 0],
     #            [ 0,-1,-1,-1, 0],
     #            [-1, 0, 0,-1, 1],
@@ -33,7 +33,7 @@ def main(input):
     #            [ 1, 1, 0, 1, 0]]}
 
     while True:
-        selected_pos = random.choice(input["your_pieces"])
+        selected_pos = random.choice(input["your_pos"])
         board = input["board"]
         new_pos_select = random_move(selected_pos)
         new_pos = (new_pos_select[0], new_pos_select[1])

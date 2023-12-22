@@ -19,11 +19,11 @@ def is_valid_move(current_pos, new_pos, input):
 def ganh(move, input):
 
     valid_remove = []
-    oponent_position = input["oponent_position"]
+    opp_pos = input["opp_pos"]
     dir_check = [False] * 4
     at_8intction = (move[0]+move[1])%2==0
 
-    for x0, y0 in oponent_position:
+    for x0, y0 in opp_pos:
         dx, dy = x0-move[0], y0-move[1]
         if -1<=dx<=1 and -1<=dy<=1:
             for i in range(4):
@@ -37,7 +37,7 @@ def ganh(move, input):
     return valid_remove
 def chet(move, input):
 
-    your_pieces = input["your_pieces"]
+    your_pos = input["your_pos"]
     opp_side = -input["your_side"]
     board = input["board"]
 
@@ -45,7 +45,7 @@ def chet(move, input):
     if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
     else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
 
-    for x0, y0 in your_pieces:
+    for x0, y0 in your_pos:
         dx, dy = x0-move[0], y0-move[1]
         if bool(dx,dy):
             x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
@@ -55,13 +55,13 @@ def chet(move, input):
     return valid_remove
 def vay(input):
     
-    oponent_position = input["oponent_position"]
+    opp_pos = input["opp_pos"]
     board = input["board"]
 
     valid_remove = []
 
     valid_move_pos = set()
-    for pos in oponent_position:
+    for pos in opp_pos:
         if (pos[0]+pos[1])%2==0:
             move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
         else:
@@ -72,13 +72,13 @@ def vay(input):
             if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
                 valid_move_pos.add((new_valid_x, new_valid_y))
     if not valid_move_pos:
-        for x, y in oponent_position:
+        for x, y in opp_pos:
             valid_remove.append((x, y))
 
     return valid_remove
 
 def check_point(input):
-    point = len(input["your_pieces"]) - len(input["oponent_position"])
+    point = len(input["your_pos"]) - len(input["opp_pos"])
     return point
 
 # Ưu thế:
@@ -90,21 +90,21 @@ def check_point(input):
 
 def main(input):
 
-    # {'your_pieces': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
     #  'your_side': -1,
-    #  'oponent_position': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    #  'opp_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
     #  'board': [[-1, -1, -1, -1, -1],
     #            [-1,  0,  0,  0, -1],
     #            [ 1,  0,  0,  0, -1],
     #            [ 1,  0,  0,  0,  1],
     #            [ 1,  1,  1,  1,  1]]}
 
-    your_pieces = input["your_pieces"]
+    your_pos = input["your_pos"]
 
     max_kill_count = -1
 
     movements = [(0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1)]
-    for pos in your_pieces:
+    for pos in your_pos:
         for movement in movements:
             new_pos_x = pos[0] + movement[0]
             new_pos_y = pos[1] + movement[1]
