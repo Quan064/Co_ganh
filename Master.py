@@ -15,62 +15,53 @@ def is_valid_move(current_pos, new_pos, input):
         if (current_x+current_y)%2==0:
             return (dx + dy == 1) or (dx * dy == 1)
         return (dx + dy == 1)
+
 def ganh(move, input):
 
-    board = input["board"]
-    opp_side = -input["your_side"]
-
     valid_remove = []
+    opp_pos = input["opp_pos"]
+    dir_check = [False] * 4
+    at_8intction = (move[0]+move[1])%2==0
 
-    if (move[0]+move[1])%2==0:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)), ((1,1), (-1,-1)), ((-1,1), (1,-1)))
-    else:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
-
-    for pair in ganh_pair:
-        remove_posx_1 = move[0] + pair[0][0]
-        remove_posy_1 = move[1] + pair[0][1]
-        remove_posx_2 = move[0] + pair[1][0]
-        remove_posy_2 = move[1] + pair[1][1]
-        if (0<=remove_posx_1<=4 and 0<=remove_posy_1<=4 and
-            0<=remove_posx_2<=4 and 0<=remove_posy_2<=4 and 
-            board[remove_posy_1][remove_posx_1]==opp_side and
-            board[remove_posy_2][remove_posx_2]==opp_side):
-            valid_remove.extend(((remove_posx_1, remove_posy_1), (remove_posx_2, remove_posy_2)))
+    for x0, y0 in opp_pos:
+        dx, dy = x0-move[0], y0-move[1]
+        if -1<=dx<=1 and -1<=dy<=1:
+            for i in range(4):
+                if (dx==0, dy==0, at_8intction and dx==dy, at_8intction and -dx==dy)[i]:
+                    if dir_check[i]:
+                        opp_remove = ((x0, y0), (move[0]-dx, move[1]-dy))
+                        valid_remove.extend(opp_remove)
+                    else: dir_check[i] = True
+                    break
 
     return valid_remove
 def chet(move, input):
 
-    your_side = input["your_side"]
-    opp_side = -your_side
+    your_pos = input["your_pos"]
+    opp_side = -input["your_side"]
     board = input["board"]
 
     valid_remove = []
+    if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
+    else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
 
-    if (move[0]+move[1])%2==0:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-    else:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
-    for i in range(len(oth_chet)):
-        new_oth_chetx = move[0] + oth_chet[i][0]
-        new_oth_chety = move[1] + oth_chet[i][1]
-        removex = move[0] + pos_remove[i][0]
-        removey = move[1] + pos_remove[i][1]
-        if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==your_side and board[removey][removex]==opp_side:
-            valid_remove.append((removex, removey))
+    for x0, y0 in your_pos:
+        dx, dy = x0-move[0], y0-move[1]
+        if bool(dx,dy):
+            x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
+            if board[y][x] == opp_side:
+                valid_remove.append((x, y))
 
     return valid_remove
 def vay(input):
     
-    oponent_position = input["oponent_position"]
+    opp_pos = input["opp_pos"]
     board = input["board"]
 
     valid_remove = []
 
     valid_move_pos = set()
-    for pos in oponent_position:
+    for pos in opp_pos:
         if (pos[0]+pos[1])%2==0:
             move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
         else:
@@ -81,10 +72,14 @@ def vay(input):
             if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
                 valid_move_pos.add((new_valid_x, new_valid_y))
     if not valid_move_pos:
-        for x, y in oponent_position:
+        for x, y in opp_pos:
             valid_remove.append((x, y))
 
     return valid_remove
+
+def check_point(input):
+    point = len(input["your_pos"]) - len(input["opp_pos"])
+    return point
 
 # Ưu thế:
 # Vị trí
@@ -95,21 +90,21 @@ def vay(input):
 
 def main(input):
 
-    # {'your_pieces': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
     #  'your_side': -1,
-    #  'oponent_position': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    #  'opp_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
     #  'board': [[-1, -1, -1, -1, -1],
     #            [-1,  0,  0,  0, -1],
     #            [ 1,  0,  0,  0, -1],
     #            [ 1,  0,  0,  0,  1],
     #            [ 1,  1,  1,  1,  1]]}
 
-    your_pieces = input["your_pieces"]
+    your_pos = input["your_pos"]
 
     max_kill_count = -1
 
     movements = [(0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1)]
-    for pos in your_pieces:
+    for pos in your_pos:
         for movement in movements:
             new_pos_x = pos[0] + movement[0]
             new_pos_y = pos[1] + movement[1]

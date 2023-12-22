@@ -59,14 +59,13 @@ def is_valid_move(move, current_side, board):
     elif (current_x+current_y)%2==0: # Checking if the piece has moved one position away
         return (dx + dy == 1) or (dx * dy == 1)
     return (dx + dy == 1)
-def ganh(move, opp_side):
+def ganh(move, board, opp_pos):
 
     valid_remove = []
-    board = game_state["board"]
     dir_check = [False] * 4
     at_8intction = (move[0]+move[1])%2==0
 
-    for x0, y0 in positions[opp_side]:
+    for x0, y0 in opp_pos:
         dx, dy = x0-move[0], y0-move[1]
         if -1<=dx<=1 and -1<=dy<=1:
             for i in range(4):
@@ -79,29 +78,28 @@ def ganh(move, opp_side):
 
     for x, y in valid_remove:
         board[y][x] = 0
-        positions[opp_side].remove((x, y))
+        opp_pos.remove((x, y))
 
     return valid_remove
-def chet(move, side, opp_side):
+def chet(move, board, opp_pos, your_pos, opp_side):
 
     valid_remove = []
-    board = game_state["board"]
     if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
     else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
 
-    for x0, y0 in positions[side]:
+    for x0, y0 in your_pos:
         dx, dy = x0-move[0], y0-move[1]
         if bool(dx,dy):
             x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
             if board[y][x] == opp_side:
                 valid_remove.append((x, y))
                 board[y][x] = 0
-                positions[opp_side].remove((x, y))
+                opp_pos.remove((x, y))
 
     # check VAY
     if not valid_remove:
         valid_move_pos = set()
-        for pos in positions[opp_side]:
+        for pos in opp_pos:
             if (pos[0]+pos[1])%2==0:
                 move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
             else:
@@ -112,10 +110,10 @@ def chet(move, side, opp_side):
                 if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
                     valid_move_pos.add((new_valid_x, new_valid_y))
         if not valid_move_pos:
-            for x, y in positions[opp_side]:
+            for x, y in opp_pos:
                 valid_remove.append((x, y))
                 board[y][x] = 0
-            positions[opp_side] = []
+            opp_pos = []
 
     return valid_remove
 
@@ -130,7 +128,7 @@ def activation(option, session_name):
         Bot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
 
     return run_game(UserBot, Bot2)
-def run_game(UserBot, Bot2, trainAI=False): # Main
+def run_game(UserBot, Bot2): # Main
     declare()
 
     player1 = {"side": random.choice([-1,1]), "operator": UserBot}
@@ -140,13 +138,13 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
 
     init_img(positions)
 
-    player1_info = {"your_pieces": positions[player1["side"]],
+    player1_info = {"your_pos": positions[player1["side"]],
                     "your_side": player1["side"],
-                    "oponent_position": positions[player2["side"]], 
+                    "opp_pos": positions[player2["side"]], 
                     "board": game_state["board"]}
-    player2_info = {"your_pieces": positions[player2["side"]], 
+    player2_info = {"your_pos": positions[player2["side"]], 
                     "your_side": player2["side"],
-                    "oponent_position": positions[player1["side"]], 
+                    "opp_pos": positions[player1["side"]], 
                     "board": game_state["board"]}
 
     while not winner:
@@ -167,8 +165,11 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
         positions[game_state["current_turn"]].append((move["new_pos"][0], move["new_pos"][1]))
 
         new_pos = move["new_pos"]
-        ganh_remove = ganh(new_pos, -game_state["current_turn"])
-        chet_remove = chet(new_pos, game_state["current_turn"], -game_state["current_turn"])
+        board = game_state["board"]
+        opp_turn = -game_state["current_turn"]
+        opp_pos = positions[opp_turn]
+        ganh_remove = ganh(new_pos, board, opp_pos)
+        chet_remove = chet(new_pos, board, opp_pos, positions[-opp_turn], opp_turn)
 
         generate_image(positions, move_counter, move, ganh_remove, chet_remove)
 
@@ -222,7 +223,7 @@ if __name__ == '__main__':
 
     application.compressed_textures_folder = "static/upload_img"
 
-    winner, win_move_counter = run_game(Master, CGEngine, trainAI=True)
+    winner, win_move_counter = run_game(Master, CGEngine)
 
     chess_board = Sprite("chessboard0", scale=2.5)
     winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
