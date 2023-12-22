@@ -181,12 +181,7 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
-        if trainAI:
-            AI_tool(game_state["board"])
-
     return winner, move_counter-1
-def AI_tool(board):
-    pass
 
 def init_img(positions):
     image = static_image.copy()
