@@ -16,18 +16,20 @@ def is_valid_move(current_pos, new_pos, input):
             return (dx + dy == 1) or (dx * dy == 1)
         return (dx + dy == 1)
 
-def ganh(move, oponent_position):
+def ganh(move, input):
 
     valid_remove = []
+    oponent_position = input["oponent_position"]
     dir_check = [False] * 4
+    at_8intction = (move[0]+move[1])%2==0
 
     for x0, y0 in oponent_position:
-        x, y = x0-move[0], y0-move[1]
-        if -1<=x<=1 and -1<=y<=1:
+        dx, dy = x0-move[0], y0-move[1]
+        if -1<=dx<=1 and -1<=dy<=1:
             for i in range(4):
-                if (x==0, y==0, x==y, -x==y)[i]:
+                if (dx==0, dy==0, at_8intction and dx==dy, at_8intction and -dx==dy)[i]:
                     if dir_check[i]:
-                        opp_remove = ((move[0]+x, move[1]+y), (move[0]-x, move[1]-y))
+                        opp_remove = ((x0, y0), (move[0]-dx, move[1]-dy))
                         valid_remove.extend(opp_remove)
                     else: dir_check[i] = True
                     break
@@ -35,25 +37,20 @@ def ganh(move, oponent_position):
     return valid_remove
 def chet(move, input):
 
-    your_side = input["your_side"]
-    opp_side = -your_side
+    your_pieces = input["your_pieces"]
+    opp_side = -input["your_side"]
     board = input["board"]
 
     valid_remove = []
+    if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
+    else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
 
-    if (move[0]+move[1])%2==0:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-    else:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
-    for i in range(len(oth_chet)):
-        new_oth_chetx = move[0] + oth_chet[i][0]
-        new_oth_chety = move[1] + oth_chet[i][1]
-        removex = move[0] + pos_remove[i][0]
-        removey = move[1] + pos_remove[i][1]
-        if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==your_side and board[removey][removex]==opp_side:
-            valid_remove.append((removex, removey))
+    for x0, y0 in your_pieces:
+        dx, dy = x0-move[0], y0-move[1]
+        if bool(dx,dy):
+            x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
+            if board[y][x] == opp_side:
+                valid_remove.append((x, y))
 
     return valid_remove
 def vay(input):
@@ -103,7 +100,6 @@ def main(input):
     #            [ 1,  1,  1,  1,  1]]}
 
     your_pieces = input["your_pieces"]
-    oponent_position = input["oponent_position"]
 
     max_kill_count = -1
 
@@ -114,7 +110,7 @@ def main(input):
             new_pos_y = pos[1] + movement[1]
             move = (new_pos_x, new_pos_y)
             if is_valid_move(pos, move, input):
-                kill_count = len(ganh(move, oponent_position)) + len(chet(move, input))
+                kill_count = len(ganh(move, input)) + len(chet(move, input))
                 if kill_count == 0:
                     kill_count += len(vay(input))
                 # Always kill if can

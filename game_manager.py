@@ -10,7 +10,7 @@ def declare():
     global game_state, positions, static_image
 
     game_state = {"current_turn": 1,
-                "board": [[-1, -1, -1, -1, -1],
+                  "board": [[-1, -1, -1, -1, -1],
                             [-1,  0,  0,  0, -1],
                             [ 1,  0,  0,  0, -1],
                             [ 1,  0,  0,  0,  1],
@@ -64,44 +64,42 @@ def ganh(move, opp_side):
     valid_remove = []
     board = game_state["board"]
     dir_check = [False] * 4
+    at_8intction = (move[0]+move[1])%2==0
 
     for x0, y0 in positions[opp_side]:
-        x, y = x0-move[0], y0-move[1]
-        if -1<=x<=1 and -1<=y<=1:
+        dx, dy = x0-move[0], y0-move[1]
+        if -1<=dx<=1 and -1<=dy<=1:
             for i in range(4):
-                if (x==0, y==0, x==y, -x==y)[i]:
+                if (dx==0, dy==0, at_8intction and dx==dy, at_8intction and -dx==dy)[i]:
                     if dir_check[i]:
-                        opp_remove = ((x0, y0), (move[0]-x, move[1]-y))
+                        opp_remove = ((x0, y0), (move[0]-dx, move[1]-dy))
                         valid_remove.extend(opp_remove)
-                        for x1, y1 in opp_remove:
-                            board[y1][x1] = 0
-                            positions[opp_side].remove((x1, y1))
                     else: dir_check[i] = True
                     break
 
+    for x, y in valid_remove:
+        board[y][x] = 0
+        positions[opp_side].remove((x, y))
+
     return valid_remove
 def chet(move, side, opp_side):
+
     valid_remove = []
     board = game_state["board"]
+    if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
+    else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
 
-    if (move[0]+move[1])%2==0:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-    else:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
-    for i in range(len(oth_chet)):
-        new_oth_chetx = move[0] + oth_chet[i][0]
-        new_oth_chety = move[1] + oth_chet[i][1]
-        removex = move[0] + pos_remove[i][0]
-        removey = move[1] + pos_remove[i][1]
-        if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==side and board[removey][removex]==opp_side:
-            valid_remove.append((removex, removey))
-            board[removey][removex] = 0
-            positions[opp_side].remove((removex, removey))
+    for x0, y0 in positions[side]:
+        dx, dy = x0-move[0], y0-move[1]
+        if bool(dx,dy):
+            x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
+            if board[y][x] == opp_side:
+                valid_remove.append((x, y))
+                board[y][x] = 0
+                positions[opp_side].remove((x, y))
 
+    # check VAY
     if not valid_remove:
-        # check VAY
         valid_move_pos = set()
         for pos in positions[opp_side]:
             if (pos[0]+pos[1])%2==0:
@@ -239,12 +237,6 @@ if __name__ == '__main__':
     def input(key):
         global indexIMG
 
-        if key == 'escape':
-            images = os.listdir("static\\upload_img\\")
-            for file in images:
-                os.remove("static\\upload_img\\"+file)
-            quit()
-
         if "arrow" in key:
             if key == "left arrow":
                 indexIMG -= 1
@@ -259,9 +251,16 @@ if __name__ == '__main__':
             chess_board.texture = f"chessboard{indexIMG}"
             indexIMG_txt.text = str(indexIMG)
 
+    def delete_img():
+        images = os.listdir("static\\upload_img\\")
+        for file in images:
+            os.remove("static\\upload_img\\"+file)
+        return application.quit()
+
     window.size = (600,600)
     window.fps_counter.enabled = False
     window.entity_counter.enabled = False
     window.collider_counter.enabled = False
+    window.exit_button.on_click = delete_img
 
     app.run()
