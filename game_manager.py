@@ -71,7 +71,7 @@ def ganh(move, opp_side):
             for i in range(4):
                 if (x==0, y==0, x==y, -x==y)[i]:
                     if dir_check[i]:
-                        opp_remove = ((move[0]+x, move[1]+y), (move[0]-x, move[1]-y))
+                        opp_remove = ((x0, y0), (move[0]-x, move[1]-y))
                         valid_remove.extend(opp_remove)
                         for x1, y1 in opp_remove:
                             board[y1][x1] = 0
