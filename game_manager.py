@@ -10,7 +10,7 @@ def declare():
     global game_state, positions, static_image
 
     game_state = {"current_turn": 1,
-                "board": [[-1, -1, -1, -1, -1],
+                  "board": [[-1, -1, -1, -1, -1],
                             [-1,  0,  0,  0, -1],
                             [ 1,  0,  0,  0, -1],
                             [ 1,  0,  0,  0,  1],
@@ -60,50 +60,46 @@ def is_valid_move(move, current_side, board):
         return (dx + dy == 1) or (dx * dy == 1)
     return (dx + dy == 1)
 def ganh(move, opp_side):
+
     valid_remove = []
     board = game_state["board"]
+    dir_check = [False] * 4
+    at_8intction = (move[0]+move[1])%2==0
 
-    if (move[0]+move[1])%2==0:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)), ((1,1), (-1,-1)), ((-1,1), (1,-1)))
-    else:
-        ganh_pair = (((1,0), (-1,0)), ((0,1), (0,-1)))
-    # Loops through each pair and conclude the opponent piece
-    for pair in ganh_pair:
-        remove_posx_1 = move[0] + pair[0][0]
-        remove_posy_1 = move[1] + pair[0][1]
-        remove_posx_2 = move[0] + pair[1][0]
-        remove_posy_2 = move[1] + pair[1][1]
-        if 0<=remove_posx_1<=4 and 0<=remove_posy_1<=4 and board[remove_posy_1][remove_posx_1]==opp_side and \
-           0<=remove_posx_2<=4 and 0<=remove_posy_2<=4 and board[remove_posy_2][remove_posx_2]==opp_side:
-            opp_remove = ((remove_posx_1, remove_posy_1), (remove_posx_2, remove_posy_2))
-            valid_remove.extend(opp_remove)
-            for x, y in opp_remove:
-                board[y][x] = 0
-                positions[opp_side].remove((x, y))
+    for x0, y0 in positions[opp_side]:
+        dx, dy = x0-move[0], y0-move[1]
+        if -1<=dx<=1 and -1<=dy<=1:
+            for i in range(4):
+                if (dx==0, dy==0, at_8intction and dx==dy, at_8intction and -dx==dy)[i]:
+                    if dir_check[i]:
+                        opp_remove = ((x0, y0), (move[0]-dx, move[1]-dy))
+                        valid_remove.extend(opp_remove)
+                    else: dir_check[i] = True
+                    break
+
+    for x, y in valid_remove:
+        board[y][x] = 0
+        positions[opp_side].remove((x, y))
 
     return valid_remove
 def chet(move, side, opp_side):
+
     valid_remove = []
     board = game_state["board"]
+    if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
+    else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
 
-    if (move[0]+move[1])%2==0:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2), (2,2), (-2,-2), (-2,2), (2,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-    else:
-        oth_chet = ((2,0), (-2,0), (0,2), (0,-2))
-        pos_remove = ((1,0), (-1,0), (0,1), (0,-1))
-    for i in range(len(oth_chet)):
-        new_oth_chetx = move[0] + oth_chet[i][0]
-        new_oth_chety = move[1] + oth_chet[i][1]
-        removex = move[0] + pos_remove[i][0]
-        removey = move[1] + pos_remove[i][1]
-        if 0<=new_oth_chetx<=4 and 0<=new_oth_chety<=4 and board[new_oth_chety][new_oth_chetx]==side and board[removey][removex]==opp_side:
-            valid_remove.append((removex, removey))
-            board[removey][removex] = 0
-            positions[opp_side].remove((removex, removey))
+    for x0, y0 in positions[side]:
+        dx, dy = x0-move[0], y0-move[1]
+        if bool(dx,dy):
+            x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
+            if board[y][x] == opp_side:
+                valid_remove.append((x, y))
+                board[y][x] = 0
+                positions[opp_side].remove((x, y))
 
+    # check VAY
     if not valid_remove:
-        # check VAY
         valid_move_pos = set()
         for pos in positions[opp_side]:
             if (pos[0]+pos[1])%2==0:
@@ -185,12 +181,7 @@ def run_game(UserBot, Bot2, trainAI=False): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
-        if trainAI:
-            AI_tool(game_state["board"])
-
     return winner, move_counter-1
-def AI_tool(board):
-    pass
 
 def init_img(positions):
     image = static_image.copy()
@@ -255,9 +246,16 @@ if __name__ == '__main__':
             chess_board.texture = f"chessboard{indexIMG}"
             indexIMG_txt.text = str(indexIMG)
 
+    def delete_img():
+        images = os.listdir("static\\upload_img\\")
+        for file in images:
+            os.remove("static\\upload_img\\"+file)
+        return application.quit()
+
     window.size = (600,600)
     window.fps_counter.enabled = False
     window.entity_counter.enabled = False
     window.collider_counter.enabled = False
+    window.exit_button.on_click = delete_img
 
     app.run()
