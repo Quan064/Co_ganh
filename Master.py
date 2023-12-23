@@ -34,6 +34,10 @@ def ganh(move, input):
                     else: dir_check[i] = True
                     break
 
+    for x, y in valid_remove:
+        input["board"][y][x] = 0
+        input["opp_pos"].remove((x, y))
+
     return valid_remove
 def chet(move, input):
 
@@ -51,6 +55,8 @@ def chet(move, input):
             x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
             if board[y][x] == opp_side:
                 valid_remove.append((x, y))
+                board[y][x] = 0
+                input["opp_pos"].remove((x, y))
 
     return valid_remove
 def vay(input):
@@ -74,19 +80,10 @@ def vay(input):
     if not valid_move_pos:
         for x, y in opp_pos:
             valid_remove.append((x, y))
+            board[y][x] = 0
+        opp_pos = []
 
     return valid_remove
-
-def check_point(input):
-    point = len(input["your_pos"]) - len(input["opp_pos"])
-    return point
-
-# Ưu thế:
-# Vị trí
-# Hạn chế nước đi của đối phương
-# Ăn quân
-# Không bị ăn quân
-# 
 
 def main(input):
 
