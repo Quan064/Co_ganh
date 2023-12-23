@@ -1,6 +1,7 @@
 import random
 import os
 from PIL import Image, ImageDraw
+from copy import deepcopy
 
 # ROW = y
 # COLUMN = x
@@ -59,13 +60,14 @@ def is_valid_move(move, current_side, board):
     elif (current_x+current_y)%2==0: # Checking if the piece has moved one position away
         return (dx + dy == 1) or (dx * dy == 1)
     return (dx + dy == 1)
-def ganh(move, board, opp_pos):
+def ganh(move, opp_side):
 
     valid_remove = []
+    board = game_state["board"]
     dir_check = [False] * 4
     at_8intction = (move[0]+move[1])%2==0
 
-    for x0, y0 in opp_pos:
+    for x0, y0 in positions[opp_side]:
         dx, dy = x0-move[0], y0-move[1]
         if -1<=dx<=1 and -1<=dy<=1:
             for i in range(4):
@@ -78,28 +80,29 @@ def ganh(move, board, opp_pos):
 
     for x, y in valid_remove:
         board[y][x] = 0
-        opp_pos.remove((x, y))
+        positions[opp_side].remove((x, y))
 
     return valid_remove
-def chet(move, board, opp_pos, your_pos, opp_side):
+def chet(move, side, opp_side):
 
     valid_remove = []
+    board = game_state["board"]
     if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
     else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
 
-    for x0, y0 in your_pos:
+    for x0, y0 in positions[side]:
         dx, dy = x0-move[0], y0-move[1]
         if bool(dx,dy):
             x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
             if board[y][x] == opp_side:
                 valid_remove.append((x, y))
                 board[y][x] = 0
-                opp_pos.remove((x, y))
+                positions[opp_side].remove((x, y))
 
     # check VAY
     if not valid_remove:
         valid_move_pos = set()
-        for pos in opp_pos:
+        for pos in positions[opp_side]:
             if (pos[0]+pos[1])%2==0:
                 move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
             else:
@@ -110,10 +113,10 @@ def chet(move, board, opp_pos, your_pos, opp_side):
                 if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
                     valid_move_pos.add((new_valid_x, new_valid_y))
         if not valid_move_pos:
-            for x, y in opp_pos:
+            for x, y in positions[opp_side]:
                 valid_remove.append((x, y))
                 board[y][x] = 0
-            opp_pos = []
+            positions[opp_side] = []
 
     return valid_remove
 
@@ -140,36 +143,36 @@ def run_game(UserBot, Bot2): # Main
 
     player1_info = {"your_pos": positions[player1["side"]],
                     "your_side": player1["side"],
-                    "opp_pos": positions[player2["side"]], 
+                    "opp_pos": positions[player2["side"]],
                     "board": game_state["board"]}
-    player2_info = {"your_pos": positions[player2["side"]], 
+    player2_info = {"your_pos": positions[player2["side"]],
                     "your_side": player2["side"],
                     "opp_pos": positions[player1["side"]], 
                     "board": game_state["board"]}
 
     while not winner:
-    
-        if player1["side"] == game_state["current_turn"]:
-            move = player1["operator"].main(player1_info)
-        elif player2["side"] == game_state["current_turn"]:
-            move = player2["operator"].main(player2_info)
 
-        if not is_valid_move(move, game_state["current_turn"], game_state["board"]):
+        current_turn = game_state["current_turn"]
+        if player1["side"] == current_turn:
+            move = player1["operator"].main(deepcopy(player1_info))
+        else:
+            move = player2["operator"].main(deepcopy(player2_info))
+
+        move_new_pos = move["new_pos"]
+        move_selected_pos = move["selected_pos"]
+
+        if not is_valid_move(move, current_turn, game_state["board"]):
             raise Exception(f"Invalid move {move_counter} | {move}")
         
         # Update move to board
-        game_state["board"][move["new_pos"][1]][move["new_pos"][0]] = game_state["current_turn"]
-        game_state["board"][move["selected_pos"][1]][move["selected_pos"][0]] = 0
+        game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
+        game_state["board"][move_selected_pos[1]][move_selected_pos[0]] = 0
         # Update move to positions
-        positions[game_state["current_turn"]].remove((move["selected_pos"][0], move["selected_pos"][1]))
-        positions[game_state["current_turn"]].append((move["new_pos"][0], move["new_pos"][1]))
+        index_move = positions[current_turn].index(move_selected_pos)
+        positions[current_turn][index_move] = move_new_pos
 
-        new_pos = move["new_pos"]
-        board = game_state["board"]
-        opp_turn = -game_state["current_turn"]
-        opp_pos = positions[opp_turn]
-        ganh_remove = ganh(new_pos, board, opp_pos)
-        chet_remove = chet(new_pos, board, opp_pos, positions[-opp_turn], opp_turn)
+        ganh_remove = ganh(move_new_pos, -current_turn)
+        chet_remove = chet(move_new_pos, current_turn, -current_turn)
 
         generate_image(positions, move_counter, move, ganh_remove, chet_remove)
 
