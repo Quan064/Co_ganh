@@ -60,44 +60,22 @@ def is_valid_move(move, current_side, board):
     elif (current_x+current_y)%2==0: # Checking if the piece has moved one position away
         return (dx + dy == 1) or (dx * dy == 1)
     return (dx + dy == 1)
-def ganh(move, opp_side):
+def ganh_chet(move, side, opp_side):
 
     valid_remove = []
     board = game_state["board"]
-    dir_check = [False] * 4
     at_8intction = (move[0]+move[1])%2==0
 
     for x0, y0 in positions[opp_side]:
         dx, dy = x0-move[0], y0-move[1]
-        if -1<=dx<=1 and -1<=dy<=1:
-            for i in range(4):
-                if (dx==0, dy==0, at_8intction and dx==dy, at_8intction and -dx==dy)[i]:
-                    if dir_check[i]:
-                        opp_remove = ((x0, y0), (move[0]-dx, move[1]-dy))
-                        valid_remove.extend(opp_remove)
-                    else: dir_check[i] = True
-                    break
+        if -1<=dx<=1 and -1<=dy<=1 and (0 in (dx,dy) or at_8intction):
+            if ((0<=move[0]-dx<=4 and 0<=move[1]-dy<=4 and board[move[1]-dy][move[0]-dx] == opp_side) or #ganh
+                (0<=x0+dx<=4 and 0<=y0+dy<=4 and board[y0+dy][x0+dx] == side)): # chet
+                valid_remove.append((x0, y0))
 
     for x, y in valid_remove:
         board[y][x] = 0
         positions[opp_side].remove((x, y))
-
-    return valid_remove
-def chet(move, side, opp_side):
-
-    valid_remove = []
-    board = game_state["board"]
-    if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
-    else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
-
-    for x0, y0 in positions[side]:
-        dx, dy = x0-move[0], y0-move[1]
-        if bool(dx,dy):
-            x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
-            if board[y][x] == opp_side:
-                valid_remove.append((x, y))
-                board[y][x] = 0
-                positions[opp_side].remove((x, y))
 
     return valid_remove
 def vay(opp_side):
@@ -175,8 +153,7 @@ def run_game(UserBot, Bot2): # Main
         index_move = positions[current_turn].index(move_selected_pos)
         positions[current_turn][index_move] = move_new_pos
 
-        remove = ganh(move_new_pos, -current_turn)
-        remove += chet(move_new_pos, current_turn, -current_turn)
+        remove = ganh_chet(move_new_pos, current_turn, -current_turn)
         if abs(len(positions[1]) - len(positions[-1])) >= 2:
             remove += vay(-current_turn)
 
