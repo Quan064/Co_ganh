@@ -99,24 +99,28 @@ def chet(move, side, opp_side):
                 board[y][x] = 0
                 positions[opp_side].remove((x, y))
 
-    # check VAY
-    if not valid_remove:
-        valid_move_pos = set()
-        for pos in positions[opp_side]:
-            if (pos[0]+pos[1])%2==0:
-                move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-            else:
-                move_list = ((1,0), (-1,0), (0,1), (0,-1))
-            for i in range(len(move_list)):
-                new_valid_x = pos[0] + move_list[i][0]
-                new_valid_y = pos[1] + move_list[i][1]
-                if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
-                    valid_move_pos.add((new_valid_x, new_valid_y))
-        if not valid_move_pos:
-            for x, y in positions[opp_side]:
-                valid_remove.append((x, y))
-                board[y][x] = 0
-            positions[opp_side] = []
+    return valid_remove
+def vay(opp_side):
+
+    valid_remove = []
+    board = game_state["board"]
+
+    valid_move_pos = set()
+    for pos in positions[opp_side]:
+        if (pos[0]+pos[1])%2==0:
+            move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+        else:
+            move_list = ((1,0), (-1,0), (0,1), (0,-1))
+        for i in range(len(move_list)):
+            new_valid_x = pos[0] + move_list[i][0]
+            new_valid_y = pos[1] + move_list[i][1]
+            if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
+                valid_move_pos.add((new_valid_x, new_valid_y))
+    if not valid_move_pos:
+        for x, y in positions[opp_side]:
+            valid_remove.append((x, y))
+            board[y][x] = 0
+        positions[opp_side] = []
 
     return valid_remove
 
@@ -171,10 +175,12 @@ def run_game(UserBot, Bot2): # Main
         index_move = positions[current_turn].index(move_selected_pos)
         positions[current_turn][index_move] = move_new_pos
 
-        ganh_remove = ganh(move_new_pos, -current_turn)
-        chet_remove = chet(move_new_pos, current_turn, -current_turn)
+        remove = ganh(move_new_pos, -current_turn)
+        remove += chet(move_new_pos, current_turn, -current_turn)
+        if abs(len(positions[1]) - len(positions[-1])) >= 2:
+            remove += vay(-current_turn)
 
-        generate_image(positions, move_counter, move, ganh_remove, chet_remove)
+        generate_image(positions, move_counter, move, remove)
 
         if not positions[1]:
             winner = "Người chơi " + (None, "thua", "thắng")[player1["side"]]
@@ -197,13 +203,11 @@ def init_img(positions):
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
         
     image.save(os.getcwd()+"/static/upload_img/chessboard0.png", "PNG")
-def generate_image(positions, move_counter, move, ganh_remove, chet_remove):
+def generate_image(positions, move_counter, move, remove):
     image = static_image.copy()
     draw = ImageDraw.Draw(image)
 
-    for x, y in ganh_remove:
-        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill=None, outline="#FFC900", width=4)
-    for x, y in chet_remove:
+    for x, y in remove:
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill=None, outline="#FFC900", width=4)
     for x, y in positions[1]:
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
