@@ -80,10 +80,7 @@ def ganh_chet(move, opp_pos, side, opp_side):
     return valid_remove
 def vay(opp_pos):
 
-    valid_remove = []
     board = game_state["board"]
-
-    valid_move_pos = set()
     for pos in opp_pos:
         if (pos[0]+pos[1])%2==0:
             move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
@@ -93,15 +90,11 @@ def vay(opp_pos):
             new_valid_x = pos[0] + move[0]
             new_valid_y = pos[1] + move[1]
             if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
-                valid_move_pos.add((new_valid_x, new_valid_y))
-                break
+                return []
 
-    if not valid_move_pos:
-        valid_remove.extend(opp_pos)
-        for x, y in opp_pos: board[y][x] = 0
-        opp_pos = []
-
-    return valid_remove
+    for x, y in opp_pos: board[y][x] = 0
+    opp_pos = []
+    return opp_pos
 
 # System
 def activation(option, session_name):
