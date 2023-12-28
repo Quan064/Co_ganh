@@ -162,6 +162,7 @@ def run_game(UserBot, Bot2): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
+    print(move_counter-1)
     return winner, move_counter-1
 
 def init_img(positions):
@@ -204,26 +205,26 @@ if __name__ == '__main__':
     winner, win_move_counter = run_game(Master, CGEngine)
 
     chess_board = Sprite("chessboard0", scale=2.5)
-    winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
+    # winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
     indexIMG = 0
     indexIMG_txt = Text("0", x=-.6, y=.43, scale=2, color=color.black)
 
-    def input(key):
-        global indexIMG
+    # def input(key):
+    #     global indexIMG
 
-        if "arrow" in key:
-            if key == "left arrow":
-                indexIMG -= 1
-            if key == "right arrow":
-                indexIMG += 1
+    #     if "arrow" in key:
+    #         if key == "left arrow":
+    #             indexIMG -= 1
+    #         if key == "right arrow":
+    #             indexIMG += 1
 
-            if indexIMG < 0:
-                indexIMG = win_move_counter
-            elif indexIMG > win_move_counter:
-                indexIMG = 0
+    #         if indexIMG < 0:
+    #             indexIMG = win_move_counter
+    #         elif indexIMG > win_move_counter:
+    #             indexIMG = 0
 
-            chess_board.texture = f"chessboard{indexIMG}"
-            indexIMG_txt.text = str(indexIMG)
+    #         chess_board.texture = f"chessboard{indexIMG}"
+    #         indexIMG_txt.text = str(indexIMG)
 
     def delete_img():
         images = os.listdir("static\\upload_img\\")
