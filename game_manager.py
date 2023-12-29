@@ -205,9 +205,11 @@ if __name__ == '__main__':
     winner, win_move_counter = run_game(Master, CGEngine)
 
     chess_board = Sprite("chessboard0", scale=2.5)
-    # winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
+    winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
     indexIMG = 0
     indexIMG_txt = Text("0", x=-.6, y=.43, scale=2, color=color.black)
+
+    # --- đoạn này có vẻ không hoạt động nên em xửa ở bên javascript của file result ---
 
     # def input(key):
     #     global indexIMG
