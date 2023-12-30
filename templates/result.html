@@ -21,6 +21,7 @@
         </style>
     </head>
     <body>
+        <div class="max_move_win" style="display: none;">{{max_move_win}}</div>
         <span id="move-counter" style="text-align: center;">Nước đi: 0</span>
         <div style="text-align: center;">{{ winner }}</div>
         <div id="image-container">
@@ -57,10 +58,11 @@
     
     function showMoveCount(move) {
         moveCount += move;
-        if (moveCount == 201) {
+        const maxMoveWin = Number(document.querySelector('.max_move_win').innerText);
+        if (moveCount > maxMoveWin) {
             moveCount = 0;
         } else if (moveCount < 0) {
-            moveCount = 200
+            moveCount = maxMoveWin;
         }
         moveCountEl.textContent= `Nước đi: ${moveCount}` ;
     }
