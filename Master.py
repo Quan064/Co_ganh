@@ -1,120 +1,103 @@
-def is_valid_move(current_pos, new_pos, input):
-    current_x = current_pos[0]
-    current_y = current_pos[1]
-    new_x = new_pos[0]
-    new_y = new_pos[1]
-    board = input["board"]
+from copy import deepcopy
 
-    if not (0 <= current_x <= 4 and 0 <= current_y <= 4 and
-            0 <= new_x     <= 4 and 0 <= new_y     <= 4 and
-            board[new_y][new_x] == 0):
+def is_valid_move(current_pos, new_pos, board):
+
+    if not (0 <= new_pos[0] <= 4 and 0 <= new_pos[1] <= 4 and board[new_pos[1]][new_pos[0]] == 0):
         return False
     else:
-        dx = abs(new_x-current_x)
-        dy = abs(new_y-current_y)
-        if (current_x+current_y)%2==0:
+        dx = abs(new_pos[0]-current_pos[0])
+        dy = abs(new_pos[1]-current_pos[1])
+        if (current_pos[0]+current_pos[1])%2==0:
             return (dx + dy == 1) or (dx * dy == 1)
         return (dx + dy == 1)
-
-def ganh(move, input):
+def ganh_chet(move, opp_pos, your_side, opp_side, board):
 
     valid_remove = []
-    opp_pos = input["opp_pos"]
-    dir_check = [False] * 4
     at_8intction = (move[0]+move[1])%2==0
 
     for x0, y0 in opp_pos:
         dx, dy = x0-move[0], y0-move[1]
-        if -1<=dx<=1 and -1<=dy<=1:
-            for i in range(4):
-                if (dx==0, dy==0, at_8intction and dx==dy, at_8intction and -dx==dy)[i]:
-                    if dir_check[i]:
-                        opp_remove = ((x0, y0), (move[0]-dx, move[1]-dy))
-                        valid_remove.extend(opp_remove)
-                    else: dir_check[i] = True
-                    break
+        if -1<=dx<=1 and -1<=dy<=1 and (0 in (dx,dy) or at_8intction):
+            if ((0<=move[0]-dx<=4 and 0<=move[1]-dy<=4 and board[move[1]-dy][move[0]-dx] == opp_side) or #ganh
+                (0<=x0+dx<=4 and 0<=y0+dy<=4 and board[y0+dy][x0+dx] == your_side)): # chet
+                valid_remove.append((x0, y0))
 
     for x, y in valid_remove:
-        input["board"][y][x] = 0
-        input["opp_pos"].remove((x, y))
+        board[y][x] = 0
+        opp_pos.remove((x, y))
 
     return valid_remove
-def chet(move, input):
-
-    your_pos = input["your_pos"]
-    opp_side = -input["your_side"]
-    board = input["board"]
-
-    valid_remove = []
-    if (move[0]+move[1])%2==0: bool = lambda dx, dy: {dx,dy} - {-2,2,0} == set()
-    else: bool = lambda dx, dy: {dx,dy} - {-2,2} == {0}
-
-    for x0, y0 in your_pos:
-        dx, dy = x0-move[0], y0-move[1]
-        if bool(dx,dy):
-            x, y = (int(move[0]+dx/2), int(move[1]+dy/2))
-            if board[y][x] == opp_side:
-                valid_remove.append((x, y))
-                board[y][x] = 0
-                input["opp_pos"].remove((x, y))
-
-    return valid_remove
-def vay(input):
+def vay(opp_pos, board):
     
-    opp_pos = input["opp_pos"]
-    board = input["board"]
-
-    valid_remove = []
-
-    valid_move_pos = set()
     for pos in opp_pos:
         if (pos[0]+pos[1])%2==0:
             move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
         else:
             move_list = ((1,0), (-1,0), (0,1), (0,-1))
-        for i in range(len(move_list)):
-            new_valid_x = pos[0] + move_list[i][0]
-            new_valid_y = pos[1] + move_list[i][1]
+        for move in move_list:
+            new_valid_x = pos[0] + move[0]
+            new_valid_y = pos[1] + move[1]
             if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
-                valid_move_pos.add((new_valid_x, new_valid_y))
-    if not valid_move_pos:
-        for x, y in opp_pos:
-            valid_remove.append((x, y))
-            board[y][x] = 0
-        opp_pos = []
+                return []
 
-    return valid_remove
+    for x, y in opp_pos: board[y][x] = 0
+    opp_pos = []
+    return opp_pos
 
-def main(input):
+def main(input_):
+    global move
+    move = {"selected_pos": None, "new_pos": None}
+    minimax(deepcopy(input_))
+    return move
 
-    # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
-    #  'your_side': -1,
-    #  'opp_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
-    #  'board': [[-1, -1, -1, -1, -1],
-    #            [-1,  0,  0,  0, -1],
-    #            [ 1,  0,  0,  0, -1],
-    #            [ 1,  0,  0,  0,  1],
-    #            [ 1,  1,  1,  1,  1]]}
+CheckGamepoint = lambda your_pos, opp_pos: (len(your_pos) - len(opp_pos))*10
+def minimax(input_, depth=0, isMaximizingPlayer=True):
 
-    your_pos = input["your_pos"]
+    if isMaximizingPlayer:
+        bestVal = float("-inf")
+        your_pos = input_["your_pos"]
+        opp_pos = input_["opp_pos"]
+        your_side = input_["your_side"]
+        opp_side = -your_side
+    else:
+        bestVal = float("inf")
+        opp_pos = input_["your_pos"]
+        your_pos = input_["opp_pos"]
+        opp_side = input_["your_side"]
+        your_side = -opp_side
+    board = input_["board"]
 
-    max_kill_count = -1
+    if depth == 4:
+        return CheckGamepoint(your_pos, opp_pos) - depth
 
-    movements = [(0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1)]
+    movements = ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1))
     for pos in your_pos:
         for movement in movements:
-            new_pos_x = pos[0] + movement[0]
-            new_pos_y = pos[1] + movement[1]
-            move = (new_pos_x, new_pos_y)
-            if is_valid_move(pos, move, input):
-                kill_count = len(ganh(move, input)) + len(chet(move, input))
-                if kill_count == 0:
-                    kill_count += len(vay(input))
-                # Always kill if can
-                if kill_count > max_kill_count:
-                    max_kill_count = kill_count
-                    selected_pos = pos
-                    new_pos = move
+            invalid_move = (pos[0] + movement[0], pos[1] + movement[1])
+            if is_valid_move(pos, invalid_move, board):
 
-    move = {"selected_pos": selected_pos, "new_pos": new_pos}
-    return move
+                pre_board = deepcopy(board)
+                pre_your_pos = your_pos.copy()
+                pre_opp_pos = opp_pos.copy()
+
+                # Update move to board
+                board[invalid_move[1]][invalid_move[0]] = your_side
+                board[pos[1]][pos[0]] = 0
+                # Update move to positions
+                index_move = your_pos.index(pos)
+                your_pos[index_move] = invalid_move
+
+                ganh_chet(invalid_move, opp_pos, your_side, opp_side, board)
+                vay(opp_pos, board)
+
+                value = minimax(deepcopy(input_), depth+1, not isMaximizingPlayer)
+                old_bestVal = bestVal
+                bestVal = (min, max)[isMaximizingPlayer](bestVal, value)
+                if depth == 0 and bestVal > old_bestVal:
+                    move["selected_pos"] = pos
+                    move["new_pos"] = invalid_move
+
+                # Undo move
+                board[:], your_pos[:], opp_pos[:] = pre_board, pre_your_pos, pre_opp_pos
+
+    return bestVal
