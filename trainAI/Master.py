@@ -42,12 +42,25 @@ def vay(opp_pos, board):
     return valid_remove
 
 def main(input_):
-    global move
+    global move, sum_pointF, board_pointF
     move = {"selected_pos": None, "new_pos": None}
+    with open("trainAI\source_code\pos_point.txt") as f:
+        sum_pointF = int(f.readline()[:-1])
+        board_pointF = eval(f.read())
+    temp = 5/sum_pointF
+    for i in range(5):
+        for j in range(5):
+            board_pointF[i][j] *= temp
+
     minimax(input_, Stopdepth=6)
     return move
 
-CheckGamepoint = lambda your_pos, opp_pos, isMaximizingPlayer: (len(your_pos) - len(opp_pos))*10*(-1,1)[isMaximizingPlayer]
+def CheckGamepoint(your_pos, opp_pos, isMaximizingPlayer):
+    point = len(your_pos) - len(opp_pos)
+    for x, y in your_pos: point += board_pointF[y][x]
+    for x, y in opp_pos: point -= board_pointF[y][x]
+    if isMaximizingPlayer: return  10*point
+    else: return  -10*point
 def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
 
     if isMaximizingPlayer:
