@@ -1,13 +1,11 @@
 def is_valid_move(current_pos, new_pos, board):
 
-    if not (0 <= new_pos[0] <= 4 and 0 <= new_pos[1] <= 4 and board[new_pos[1]][new_pos[0]] == 0):
-        return False
-    else:
+    if 0 <= new_pos[0] <= 4 and 0 <= new_pos[1] <= 4 and board[new_pos[1]][new_pos[0]] == 0:
         dx = abs(new_pos[0]-current_pos[0])
         dy = abs(new_pos[1]-current_pos[1])
-        if (current_pos[0]+current_pos[1])%2==0:
-            return (dx + dy == 1) or (dx * dy == 1)
-        return (dx + dy == 1)
+        if (dx + dy == 1): return True
+        return (current_pos[0]+current_pos[1])%2==0 and (dx * dy == 1)
+    return False
 def ganh_chet(move, opp_pos, your_side, opp_side, board):
 
     valid_remove = []
