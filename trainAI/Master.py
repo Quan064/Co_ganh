@@ -36,9 +36,10 @@ def vay(opp_pos, board):
             if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
                 return []
 
-    for x, y in opp_pos: board[y][x] = 0
-    opp_pos = []
-    return opp_pos
+    valid_remove = opp_pos.copy()
+    opp_pos[:] = []
+    board[:] = [[0]*5]*5
+    return valid_remove
 
 def main(input_):
     global move
@@ -46,7 +47,7 @@ def main(input_):
     minimax(input_, Stopdepth=6)
     return move
 
-CheckGamepoint = lambda your_pos, opp_pos: (len(your_pos) - len(opp_pos))*10
+CheckGamepoint = lambda your_pos, opp_pos, isMaximizingPlayer: (len(your_pos) - len(opp_pos))*10*(-1,1)[isMaximizingPlayer]
 def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
 
     if isMaximizingPlayer:
@@ -66,7 +67,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
     board = input_["board"]
 
     if depth == Stopdepth:
-        return CheckGamepoint(your_pos, opp_pos) - depth
+        return CheckGamepoint(your_pos, opp_pos, isMaximizingPlayer) - depth
 
     movements = ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1))
     for pos in your_pos:
@@ -89,10 +90,10 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
                 vay(opp_pos, board)
 
                 value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth, alpha, beta)
-                bestVal = min_or_max(bestVal, value)
-                if depth == 0 and value == bestVal:
+                if depth == 0 and value > bestVal:
                     move["selected_pos"] = pos
                     move["new_pos"] = invalid_move
+                bestVal = min_or_max(bestVal, value)
 
                 if isMaximizingPlayer: alpha = max(alpha, value)
                 else: beta = min(beta, value)
