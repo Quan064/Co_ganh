@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 def is_valid_move(current_pos, new_pos, board):
 
     if not (0 <= new_pos[0] <= 4 and 0 <= new_pos[1] <= 4 and board[new_pos[1]][new_pos[0]] == 0):
@@ -47,11 +45,11 @@ def vay(opp_pos, board):
 def main(input_):
     global move
     move = {"selected_pos": None, "new_pos": None}
-    minimax(deepcopy(input_))
+    minimax(input_, Stopdepth=4)
     return move
 
 CheckGamepoint = lambda your_pos, opp_pos: (len(your_pos) - len(opp_pos))*10
-def minimax(input_, depth=0, isMaximizingPlayer=True):
+def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None):
 
     if isMaximizingPlayer:
         bestVal = float("-inf")
@@ -67,7 +65,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True):
         your_side = -opp_side
     board = input_["board"]
 
-    if depth == 4:
+    if depth == Stopdepth:
         return CheckGamepoint(your_pos, opp_pos) - depth
 
     movements = ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1))
@@ -76,7 +74,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True):
             invalid_move = (pos[0] + movement[0], pos[1] + movement[1])
             if is_valid_move(pos, invalid_move, board):
 
-                pre_board = deepcopy(board)
+                pre_board = [i.copy() for i in board]
                 pre_your_pos = your_pos.copy()
                 pre_opp_pos = opp_pos.copy()
 
@@ -90,10 +88,9 @@ def minimax(input_, depth=0, isMaximizingPlayer=True):
                 ganh_chet(invalid_move, opp_pos, your_side, opp_side, board)
                 vay(opp_pos, board)
 
-                value = minimax(deepcopy(input_), depth+1, not isMaximizingPlayer)
-                old_bestVal = bestVal
+                value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth)
                 bestVal = (min, max)[isMaximizingPlayer](bestVal, value)
-                if depth == 0 and bestVal > old_bestVal:
+                if depth == 0 and value == bestVal:
                     move["selected_pos"] = pos
                     move["new_pos"] = invalid_move
 
