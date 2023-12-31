@@ -47,7 +47,7 @@ def main(input_):
     return move
 
 CheckGamepoint = lambda your_pos, opp_pos: (len(your_pos) - len(opp_pos))*10
-def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None):
+def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
 
     if isMaximizingPlayer:
         bestVal = float("-inf")
@@ -72,7 +72,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None):
     for pos in your_pos:
         for movement in movements:
             invalid_move = (pos[0] + movement[0], pos[1] + movement[1])
-            if is_valid_move(pos, invalid_move, board):
+            if is_valid_move(pos, invalid_move, board) and alpha < beta:
 
                 pre_board = [i.copy() for i in board]
                 pre_your_pos = your_pos.copy()
@@ -88,11 +88,14 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None):
                 ganh_chet(invalid_move, opp_pos, your_side, opp_side, board)
                 vay(opp_pos, board)
 
-                value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth)
+                value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth, alpha, beta)
                 bestVal = min_or_max(bestVal, value)
                 if depth == 0 and value == bestVal:
                     move["selected_pos"] = pos
                     move["new_pos"] = invalid_move
+
+                if isMaximizingPlayer: alpha = max(alpha, value)
+                else: beta = min(beta, value)
 
                 # Undo move
                 board[:], your_pos[:], opp_pos[:] = pre_board, pre_your_pos, pre_opp_pos
