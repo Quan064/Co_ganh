@@ -43,11 +43,11 @@ def vay(opp_pos, board):
 def main(input_):
     global move
     move = {"selected_pos": None, "new_pos": None}
-    minimax(input_)
+    minimax(input_, Stopdepth=6)
     return move
 
 CheckGamepoint = lambda your_pos, opp_pos: (len(your_pos) - len(opp_pos))*10
-def minimax(input_, depth=0, isMaximizingPlayer=True, alpha=float("-inf"), beta=float("inf")):
+def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
 
     if isMaximizingPlayer:
         bestVal = float("-inf")
@@ -65,7 +65,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, alpha=float("-inf"), beta=
         min_or_max = min
     board = input_["board"]
 
-    if depth == 6:
+    if depth == Stopdepth:
         return CheckGamepoint(your_pos, opp_pos) - depth
 
     movements = ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1))
@@ -88,7 +88,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, alpha=float("-inf"), beta=
                 ganh_chet(invalid_move, opp_pos, your_side, opp_side, board)
                 vay(opp_pos, board)
 
-                value = minimax(input_, depth+1, not isMaximizingPlayer, alpha, beta)
+                value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth, alpha, beta)
                 bestVal = min_or_max(bestVal, value)
                 if depth == 0 and value == bestVal:
                     move["selected_pos"] = pos
