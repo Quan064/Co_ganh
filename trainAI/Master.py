@@ -43,7 +43,7 @@ def vay(opp_pos, board):
 def main(input_):
     global move
     move = {"selected_pos": None, "new_pos": None}
-    minimax(input_, Stopdepth=4)
+    minimax(input_, Stopdepth=6)
     return move
 
 CheckGamepoint = lambda your_pos, opp_pos: (len(your_pos) - len(opp_pos))*10
