@@ -1,5 +1,4 @@
 from copy import deepcopy
-from pprint import pprint
 
 def is_valid_move(current_pos, new_pos, board):
 
@@ -45,31 +44,30 @@ def vay(opp_pos, board):
     opp_pos = []
     return opp_pos
 
-def main(input):
-    global move, count
-    count = [0]
+def main(input_):
+    global move
     move = {"selected_pos": None, "new_pos": None}
-    minimax(deepcopy(input))
+    minimax(deepcopy(input_))
     return move
 
 CheckGamepoint = lambda your_pos, opp_pos: (len(your_pos) - len(opp_pos))*10
-def minimax(input, depth=0, isMaximizingPlayer=True):
+def minimax(input_, depth=0, isMaximizingPlayer=True):
 
     if isMaximizingPlayer:
         bestVal = float("-inf")
-        your_pos = input["your_pos"]
-        opp_pos = input["opp_pos"]
-        your_side = input["your_side"]
+        your_pos = input_["your_pos"]
+        opp_pos = input_["opp_pos"]
+        your_side = input_["your_side"]
         opp_side = -your_side
     else:
         bestVal = float("inf")
-        opp_pos = input["your_pos"]
-        your_pos = input["opp_pos"]
-        opp_side = input["your_side"]
+        opp_pos = input_["your_pos"]
+        your_pos = input_["opp_pos"]
+        opp_side = input_["your_side"]
         your_side = -opp_side
-    board = input["board"]
+    board = input_["board"]
 
-    if depth == 3:
+    if depth == 4:
         return CheckGamepoint(your_pos, opp_pos) - depth
 
     movements = ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1))
@@ -92,16 +90,14 @@ def minimax(input, depth=0, isMaximizingPlayer=True):
                 ganh_chet(invalid_move, opp_pos, your_side, opp_side, board)
                 vay(opp_pos, board)
 
-                value = minimax(deepcopy(input), depth+1, not isMaximizingPlayer)
+                value = minimax(deepcopy(input_), depth+1, not isMaximizingPlayer)
                 old_bestVal = bestVal
                 bestVal = (min, max)[isMaximizingPlayer](bestVal, value)
-                if depth == 0:
-                    count[0] += 1
-                    print(count)
+                if depth == 0 and bestVal > old_bestVal:
                     move["selected_pos"] = pos
                     move["new_pos"] = invalid_move
 
                 # Undo move
-                board, your_pos, opp_pos = pre_board, pre_your_pos, pre_opp_pos
+                board[:], your_pos[:], opp_pos[:] = pre_board, pre_your_pos, pre_opp_pos
 
     return bestVal
