@@ -195,7 +195,7 @@ def generate_image(positions, move_counter, move, remove):
 
 if __name__ == '__main__':
     from ursina import *
-    import Master, CGEngine
+    import trainAI.Master as Master, CGEngine
 
     app = Ursina(title="Cờ gánh", borderless=False)
 
