@@ -57,12 +57,14 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None):
         opp_pos = input_["opp_pos"]
         your_side = input_["your_side"]
         opp_side = -your_side
+        min_or_max = max
     else:
         bestVal = float("inf")
         opp_pos = input_["your_pos"]
         your_pos = input_["opp_pos"]
         opp_side = input_["your_side"]
         your_side = -opp_side
+        min_or_max = min
     board = input_["board"]
 
     if depth == Stopdepth:
@@ -89,7 +91,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None):
                 vay(opp_pos, board)
 
                 value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth)
-                bestVal = (min, max)[isMaximizingPlayer](bestVal, value)
+                bestVal = min_or_max(bestVal, value)
                 if depth == 0 and value == bestVal:
                     move["selected_pos"] = pos
                     move["new_pos"] = invalid_move
