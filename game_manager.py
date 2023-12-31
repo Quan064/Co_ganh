@@ -50,16 +50,16 @@ def is_valid_move(move, current_side, board):
     new_x = move["new_pos"][0]
     new_y = move["new_pos"][1]
 
-    dx = abs(new_x-current_x)
-    dy = abs(new_y-current_y)
-    if (current_x%1!=0 or current_y%1!=0 or new_x%1!=0 or new_y%1!=0 or # Checking if pos is integer
-        current_x < 0 or current_x > 4 or current_y < 0 or current_y > 4 or # Checking if move is out of bounds
-        new_x     < 0 or new_x     > 4 or new_y     < 0 or new_y     > 4 or
-        board[new_y][new_x] != 0 or board[current_y][current_x] != current_side): # Checking if selected position and new position is legal
-        return False
-    elif (current_x+current_y)%2==0: # Checking if the piece has moved one position away
-        return (dx + dy == 1) or (dx * dy == 1)
-    return (dx + dy == 1)
+    if (current_x%1==0 and current_y%1==0 and new_x%1==0 and new_y%1==0 and # Checking if pos is integer
+        0 <= current_x <= 4 and 0 <= current_y <= 4 and # Checking if move is out of bounds
+        0 <= new_x     <= 4 and 0 <= new_x     <= 4 and
+        board[new_y][new_x] == 0 and board[current_y][current_x] == current_side): # Checking if selected position and new position is legal
+        dx = abs(new_x-current_x)
+        dy = abs(new_y-current_y)
+        if (dx + dy == 1): return True # Checking if the piece has moved one position away
+        return (current_x+current_y)%2==0 and (dx * dy == 1)
+    return False
+
 def ganh_chet(move, opp_pos, side, opp_side):
 
     valid_remove = []
