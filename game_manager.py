@@ -8,7 +8,7 @@ from copy import deepcopy
 # ==> board[y][x] == board[ROW][COLUMN]
 
 def declare():
-    global game_state, positions, static_image
+    global game_state, positions, static_image, point
 
     game_state = {"current_turn": 1,
                   "board": [[-1, -1, -1, -1, -1],
@@ -43,6 +43,7 @@ def declare():
     draw.line((500, 300, 300, 500), fill="black", width=3)
     draw.line((300, 500, 100, 300), fill="black", width=3)
 
+    point = []
 # Board manipulation
 def is_valid_move(move, current_side, board):
     current_x = move["selected_pos"][0]
@@ -92,9 +93,10 @@ def vay(opp_pos):
             if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and board[new_valid_y][new_valid_x]==0:
                 return []
 
-    for x, y in opp_pos: board[y][x] = 0
-    opp_pos = []
-    return opp_pos
+    valid_remove = opp_pos.copy()
+    opp_pos[:] = []
+    board[:] = [[0]*5]*5
+    return valid_remove
 
 # System
 def activation(option, session_name):
@@ -150,6 +152,7 @@ def run_game(UserBot, Bot2): # Main
         opp_pos = positions[-current_turn]
         remove = ganh_chet(move_new_pos, opp_pos, current_turn, -current_turn)
         remove += vay(opp_pos)
+        if remove: point[:] += [move_selected_pos]*len(remove)
 
         generate_image(positions, move_counter, move, remove)
 
@@ -225,16 +228,26 @@ if __name__ == '__main__':
             chess_board.texture = f"chessboard{indexIMG}"
             indexIMG_txt.text = str(indexIMG)
 
-    def delete_img():
+    def end_():
         images = os.listdir("static\\upload_img\\")
         for file in images:
             os.remove("static\\upload_img\\"+file)
+
+        with open("trainAI\source_code\pos_point.txt") as f:
+            sum_pointF = int(f.readline()[:-1]) + len(point)
+            board_pointF = eval(f.read())
+            for x, y in point:
+                board_pointF[y][x] += 1
+        with open("trainAI\source_code\pos_point.txt", "w") as f:
+            f.write(str(sum_pointF)+"\n")
+            f.write(str(board_pointF).replace("], [", "],\n["))
+
         return application.quit()
 
     window.size = (600,600)
     window.fps_counter.enabled = False
     window.entity_counter.enabled = False
     window.collider_counter.enabled = False
-    window.exit_button.on_click = delete_img
+    window.exit_button.on_click = end_
 
     app.run()
