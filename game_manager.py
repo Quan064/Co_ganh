@@ -94,8 +94,8 @@ def vay(opp_pos):
                 return []
 
     valid_remove = opp_pos.copy()
+    for x, y in opp_pos: board[y][x] = 0
     opp_pos[:] = []
-    board[:] = [[0]*5]*5
     return valid_remove
 
 # System
