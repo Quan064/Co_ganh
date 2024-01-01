@@ -37,8 +37,8 @@ def vay(opp_pos, board):
                 return []
 
     valid_remove = opp_pos.copy()
+    for x, y in opp_pos: board[y][x] = 0
     opp_pos[:] = []
-    board[:] = [[0]*5]*5
     return valid_remove
 
 def main(input_):
@@ -47,10 +47,9 @@ def main(input_):
     with open("trainAI\source_code\pos_point.txt") as f:
         sum_pointF = int(f.readline()[:-1])
         board_pointF = eval(f.read())
-    temp = 5/sum_pointF
     for i in range(5):
         for j in range(5):
-            board_pointF[i][j] *= temp
+            board_pointF[i][j] /= sum_pointF
 
     minimax(input_, Stopdepth=6)
     return move
@@ -79,7 +78,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
         min_or_max = min
     board = input_["board"]
 
-    if depth == Stopdepth:
+    if depth == Stopdepth or (not your_pos) or (not opp_pos):
         return CheckGamepoint(your_pos, opp_pos, isMaximizingPlayer) - depth
 
     movements = ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1))
