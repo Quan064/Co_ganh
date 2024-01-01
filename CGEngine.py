@@ -11,7 +11,7 @@ def is_valid_move(move, current_side, board):
 
     if (current_x%1==0 and current_y%1==0 and new_x%1==0 and new_y%1==0 and # Checking if pos is integer
         0 <= current_x <= 4 and 0 <= current_y <= 4 and # Checking if move is out of bounds
-        0 <= new_x     <= 4 and 0 <= new_x     <= 4 and
+        0 <= new_x     <= 4 and 0 <= new_y     <= 4 and
         board[new_y][new_x] == 0 and board[current_y][current_x] == current_side): # Checking if selected position and new position is legal
         dx = abs(new_x-current_x)
         dy = abs(new_y-current_y)
