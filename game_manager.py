@@ -130,6 +130,9 @@ def run_game(UserBot, Bot2): # Main
 
     while not winner:
 
+        filled = round(move_counter/10)
+        print(f"\rLoading |{'█'*filled}{'-'*(50-filled)}|{move_counter//5}% Complete", end='')
+
         current_turn = game_state["current_turn"]
         if player1["side"] == current_turn:
             move = player1["operator"].main(deepcopy(player1_info))
@@ -200,11 +203,12 @@ if __name__ == '__main__':
     from ursina import *
     import trainAI.Master as Master, CGEngine
 
+    winner, win_move_counter = run_game(Master, CGEngine)
+    print(f"\rLoading |{'█'*50}|100% Complete")
+
     app = Ursina(title="Cờ gánh", borderless=False)
 
     application.compressed_textures_folder = "static/upload_img"
-
-    winner, win_move_counter = run_game(Master, CGEngine)
 
     chess_board = Sprite("chessboard0", scale=2.5)
     winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
