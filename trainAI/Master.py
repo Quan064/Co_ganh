@@ -42,14 +42,14 @@ def vay(opp_pos, board):
     return valid_remove
 
 def main(input_):
-    global move, sum_pointF, board_pointF
+    global move, board_pointF
     move = {"selected_pos": None, "new_pos": None}
     with open("trainAI\source_code\pos_point.txt") as f:
-        sum_pointF = int(f.readline()[:-1])
+        max_pointF = int(f.readline()[:-1])
         board_pointF = eval(f.read())
     for i in range(5):
         for j in range(5):
-            board_pointF[i][j] /= sum_pointF
+            board_pointF[i][j] /= max_pointF
 
     minimax(input_, Stopdepth=6)
     return move
