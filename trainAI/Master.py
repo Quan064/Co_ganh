@@ -49,17 +49,17 @@ def main(input_):
         board_pointF = eval(f.read())
     for i in range(5):
         for j in range(5):
-            board_pointF[i][j] /= max_pointF
+            board_pointF[i][j] = board_pointF[i][j]/max_pointF+6
 
     minimax(input_, Stopdepth=6)
     return move
 
-def CheckGamepoint(your_pos, opp_pos, isMaximizingPlayer):
-    point = len(your_pos) - len(opp_pos)
+def CheckGamepoint(your_pos, opp_pos, isMaximizingPlayer, depth):
+    point = (len(your_pos) - len(opp_pos))*50
     for x, y in your_pos: point += board_pointF[y][x]
     for x, y in opp_pos: point -= board_pointF[y][x]
-    if isMaximizingPlayer: return  10*point
-    else: return  -10*point
+    if not isMaximizingPlayer: point *= -1
+    return point - depth
 def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
 
     if isMaximizingPlayer:
@@ -79,7 +79,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
     board = input_["board"]
 
     if depth == Stopdepth or (not your_pos) or (not opp_pos):
-        return CheckGamepoint(your_pos, opp_pos, isMaximizingPlayer) - depth
+        return CheckGamepoint(your_pos, opp_pos, isMaximizingPlayer, depth)
 
     movements = ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1))
     for pos in your_pos:
