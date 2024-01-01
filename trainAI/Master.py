@@ -49,7 +49,7 @@ def main(input_):
         board_pointF = eval(f.read())
     for i in range(5):
         for j in range(5):
-            board_pointF[i][j] = board_pointF[i][j]/max_pointF+6
+            board_pointF[i][j] = board_pointF[i][j]/max_pointF
 
     minimax(input_, Stopdepth=6)
     return move
