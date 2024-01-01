@@ -163,7 +163,7 @@ def run_game(UserBot, Bot2): # Main
             winner = "Người chơi " + (None, "thua ", "thắng ")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         elif not positions[-1]:
             winner = "Người chơi " + (None, "thắng", "thua")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
-        elif (len(positions[1]) + len(positions[-1]) < 4) or move_counter == 500:
+        elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 500:
             winner = "Hòa " + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         game_state["current_turn"] *= -1
         move_counter += 1
