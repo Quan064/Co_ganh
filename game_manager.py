@@ -238,12 +238,13 @@ if __name__ == '__main__':
             os.remove("static\\upload_img\\"+file)
 
         with open("trainAI\source_code\pos_point.txt") as f:
-            sum_pointF = int(f.readline()[:-1]) + len(point)
+            max_pointF = int(f.readline()[:-1])
             board_pointF = eval(f.read())
             for x, y in point:
                 board_pointF[y][x] += 1
+                max_pointF = max(max_pointF, board_pointF[y][x])
         with open("trainAI\source_code\pos_point.txt", "w") as f:
-            f.write(str(sum_pointF)+"\n")
+            f.write(str(max_pointF)+"\n")
             f.write(str(board_pointF).replace("], [", "],\n["))
 
         return application.quit()
