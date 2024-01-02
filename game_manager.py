@@ -201,9 +201,10 @@ def generate_image(positions, move_counter, move, remove):
 
 if __name__ == '__main__':
     from ursina import *
-    import trainAI.Master as Master, CGEngine
+    import trainAI.Master as Master
+    import trainAI.Master2 as Master2
 
-    winner, win_move_counter = run_game(Master, CGEngine)
+    winner, win_move_counter = run_game(Master, Master2)
     print(f"\rLoading |{'█'*50}|100% Complete")
 
     app = Ursina(title="Cờ gánh", borderless=False)
