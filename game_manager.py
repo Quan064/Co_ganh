@@ -112,7 +112,7 @@ def activation(option, session_name):
 def run_game(UserBot, Bot2): # Main
     declare()
 
-    player1 = {"side": random.choice([-1,1]), "operator": UserBot}
+    player1 = {"side": -1, "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
     winner = False
     move_counter = 1
@@ -162,7 +162,7 @@ def run_game(UserBot, Bot2): # Main
         if not positions[1]:
             winner = "Người chơi " + (None, "thua ", "thắng ")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         elif not positions[-1]:
-            winner = "Người chơi " + (None, "thắng", "thua")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
+            winner = "Người chơi " + (None, "thắng ", "thua ")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 500:
             winner = "Hòa " + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         game_state["current_turn"] *= -1
@@ -203,6 +203,7 @@ if __name__ == '__main__':
     from ursina import *
     import trainAI.Master as Master
     import trainAI.Master2 as Master2
+    import CGEngine
 
     winner, win_move_counter = run_game(Master, Master2)
     print(f"\rLoading |{'█'*50}|100% Complete")
