@@ -44,25 +44,14 @@ def vay(opp_pos, board):
 def main(input_):
     global move, board_pointF
     move = {"selected_pos": None, "new_pos": None}
-    with open("trainAI\source_code\pos_point.txt") as f:
-        max_pointF = int(f.readline()[:-1])
-        board_pointF = eval(f.read())
-    for i in range(5):
-        for j in range(5):
-            board_pointF[i][j] = board_pointF[i][j]/max_pointF
 
     minimax(input_, Stopdepth=6)
     return move
 
-def CheckGamepoint(your_pos, opp_pos):
-    point = (len(your_pos) - len(opp_pos))*25
-    for x, y in your_pos: point += board_pointF[y][x]
-    for x, y in opp_pos: point -= board_pointF[y][x]
-    return point
-def CheckGamepoint_(your_pos, opp_pos):
-    def expand(your_pos, opp_pos):
-        new_pos = set(your_pos)
-        for pos in your_pos:
+def CheckGamepoint_1(set_your_pos, set_opp_pos, depth=0):
+    def expand(set_your_pos, set_opp_pos):
+        new_pos = set_your_pos - {None}
+        for pos in set_your_pos:
             if (pos[0]+pos[1])%2==0:
                 move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
             else:
@@ -70,17 +59,30 @@ def CheckGamepoint_(your_pos, opp_pos):
             for move in move_list:
                 new_x = pos[0] + move[0]
                 new_y = pos[1] + move[1]
-                if 0<=new_x<=4 and 0<=new_y<=4 and not (new_x, new_y) in opp_pos:
+                if 0<=new_x<=4 and 0<=new_y<=4:
                     new_pos.add((new_x, new_y))
-        return list(new_pos)
-    
-    if len(your_pos) + len(opp_pos) == 25:
-        return (len(your_pos) - len(opp_pos))*25
-    
-    your_pos = expand(your_pos, opp_pos)
-    opp_pos = expand(opp_pos, your_pos)
+        return new_pos - set_opp_pos
 
-    return CheckGamepoint_(your_pos, opp_pos)
+    if depth == 4:
+        return (len(set_your_pos) - len(set_opp_pos))
+
+    set_your_pos, set_opp_pos = expand(set_your_pos, set_opp_pos), expand(set_opp_pos, set_your_pos)
+
+    return CheckGamepoint_1(set_your_pos - set_opp_pos, set_opp_pos - set_your_pos, depth+1)
+def CheckGamepoint_2(your_pos, opp_pos):
+    def count(your_pos):
+        num = len(your_pos)
+        for pos in your_pos:
+            if (pos[0]+pos[1])%2==0:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+            else:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1))
+            for move in move_list:
+                if (pos[0]+move[0], pos[1]+move[1]) in your_pos:
+                    num -= 0.25
+                    break
+        return num
+    return count(your_pos) - count(opp_pos)
 
 def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
 
@@ -91,9 +93,12 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
     your_side = input_["your_side"]
     opp_side = -your_side
     min_or_max = max
-    
+
     if depth == Stopdepth or (not your_pos) or (not opp_pos):
-        return CheckGamepoint(your_pos, opp_pos) + CheckGamepoint_(your_pos, opp_pos) - depth
+        point = (len(your_pos) - len(opp_pos)) * 100
+        point += CheckGamepoint_1(set(your_pos), set(opp_pos))
+        point += CheckGamepoint_2(your_pos, opp_pos) * 2
+        return point - depth
 
     if not isMaximizingPlayer:
         bestVal = float("inf")
