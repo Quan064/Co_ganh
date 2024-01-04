@@ -48,7 +48,7 @@ def main(input_):
     minimax(input_, Stopdepth=6)
     return move
 
-def CheckGamepoint_1(set_your_pos, set_opp_pos):
+def CheckGamepoint_1(set_your_pos, set_opp_pos, depth=0):
     def expand(set_your_pos, set_opp_pos):
         new_pos = set_your_pos - {None}
         for pos in set_your_pos:
@@ -63,27 +63,24 @@ def CheckGamepoint_1(set_your_pos, set_opp_pos):
                     new_pos.add((new_x, new_y))
         return new_pos - set_opp_pos
 
-    if len(set_your_pos) + len(set_opp_pos) == 25:
+    if depth == 4:
         return (len(set_your_pos) - len(set_opp_pos))
 
     set_your_pos, set_opp_pos = expand(set_your_pos, set_opp_pos), expand(set_opp_pos, set_your_pos)
 
-    return CheckGamepoint_1(set_your_pos^set_opp_pos & set_your_pos, set_your_pos^set_opp_pos & set_opp_pos)
+    return CheckGamepoint_1(set_your_pos - set_opp_pos, set_opp_pos - set_your_pos, depth+1)
 def CheckGamepoint_2(your_pos, opp_pos):
     def count(your_pos):
-        num = 0
-        checked = []
+        num = len(your_pos)
         for pos in your_pos:
-            if not pos in checked:
-                checked.append(pos)
-                if (pos[0]+pos[1])%2==0:
-                    move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
-                else:
-                    move_list = ((1,0), (-1,0), (0,1), (0,-1))
-                for move in move_list:
-                    new_pos = (pos[0]+move[0], pos[1]+move[1])
-                    if new_pos in your_pos and not new_pos in checked:
-                        num += 1
+            if (pos[0]+pos[1])%2==0:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1))
+            else:
+                move_list = ((1,0), (-1,0), (0,1), (0,-1))
+            for move in move_list:
+                if (pos[0]+move[0], pos[1]+move[1]) in your_pos:
+                    num -= 0.25
+                    break
         return num
     return count(your_pos) - count(opp_pos)
 
