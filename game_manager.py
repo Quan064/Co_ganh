@@ -102,7 +102,7 @@ def vay(opp_pos):
 def activation(option, session_name):
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     if option == "bot":
-        Bot2 = __import__("CGEngine")
+        Bot2 = __import__("trainAI.Master", fromlist=[None])
     elif option == "player":
         player_file_list = [i for i in os.listdir(r"static\botfiles") if i != '__pycache__']
         load_rand_player = random.choice(player_file_list)
@@ -112,7 +112,7 @@ def activation(option, session_name):
 def run_game(UserBot, Bot2): # Main
     declare()
 
-    player1 = {"side": random.choice([-1,1]), "operator": UserBot}
+    player1 = {"side": -1, "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
     winner = False
     move_counter = 1
@@ -127,6 +127,8 @@ def run_game(UserBot, Bot2): # Main
                     "your_side": player2["side"],
                     "opp_pos": positions[player1["side"]], 
                     "board": game_state["board"]}
+
+    open("trainAI\source_code\history.txt", "w").close()
 
     while not winner:
 
@@ -162,7 +164,7 @@ def run_game(UserBot, Bot2): # Main
         if not positions[1]:
             winner = "Người chơi " + (None, "thua ", "thắng ")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         elif not positions[-1]:
-            winner = "Người chơi " + (None, "thắng", "thua")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
+            winner = "Người chơi " + (None, "thắng ", "thua ")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 500:
             winner = "Hòa " + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
         game_state["current_turn"] *= -1

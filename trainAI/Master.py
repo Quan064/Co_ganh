@@ -42,7 +42,7 @@ def vay(opp_pos, board):
     return valid_remove
 
 def main(input_):
-    global move, board_pointF
+    global move, board_pointF, can_change_move
     move = {"selected_pos": None, "new_pos": None}
     with open("trainAI\source_code\pos_point.txt") as f:
         max_pointF = int(f.readline()[:-1])
@@ -51,7 +51,21 @@ def main(input_):
         for j in range(5):
             board_pointF[i][j] = board_pointF[i][j]/max_pointF
 
+    try:
+        with open("trainAI\source_code\history.txt") as f:
+            history = eval(f.read())
+    except: history = []
+    if len(set(history)) <= 2 and len(history) == 6:
+        can_change_move = lambda value, bestVal: value >= bestVal
+    else:
+        can_change_move = lambda value, bestVal: value == bestVal
+
     minimax(input_, Stopdepth=6)
+
+    history = (list(move.values()) + history)[:6]
+    with open("trainAI\source_code\history.txt", "w") as f:
+        f.write(str(history))
+
     return move
 
 def CheckGamepoint(your_pos, opp_pos, depth):
@@ -101,7 +115,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
                 vay(opp_pos, board)
 
                 value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth, alpha, beta)
-                if depth == 0 and value > bestVal:
+                if depth == 0 and can_change_move(value, bestVal):
                     move["selected_pos"] = pos
                     move["new_pos"] = invalid_move
                 bestVal = min_or_max(bestVal, value)
