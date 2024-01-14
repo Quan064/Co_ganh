@@ -102,7 +102,7 @@ def vay(opp_pos):
 def activation(option, session_name):
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     if option == "bot":
-        Bot2 = __import__("CGEngine")
+        Bot2 = __import__("trainAI.Master", fromlist=[None])
     elif option == "player":
         player_file_list = [i for i in os.listdir(r"static\botfiles") if i != '__pycache__']
         load_rand_player = random.choice(player_file_list)
@@ -127,6 +127,8 @@ def run_game(UserBot, Bot2): # Main
                     "your_side": player2["side"],
                     "opp_pos": positions[player1["side"]], 
                     "board": game_state["board"]}
+
+    open("trainAI\source_code\history.txt", "w").close()
 
     while not winner:
 
@@ -203,7 +205,6 @@ if __name__ == '__main__':
     from ursina import *
     import trainAI.Master as Master
     import trainAI.Master2 as Master2
-    import CGEngine
 
     winner, win_move_counter = run_game(Master, Master2)
     print(f"\rLoading |{'█'*50}|100% Complete")
