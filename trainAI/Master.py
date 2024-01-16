@@ -58,7 +58,7 @@ def main(input_):
     if len(set(history)) <= 2 and len(history) == 6:
         can_change_move = lambda value, bestVal: value >= bestVal
     else:
-        can_change_move = lambda value, bestVal: value == bestVal
+        can_change_move = lambda value, bestVal: value > bestVal
 
     minimax(input_, Stopdepth=6)
 
