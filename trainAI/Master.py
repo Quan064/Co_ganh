@@ -53,6 +53,7 @@ def main(input_):
 
     try:
         with open("trainAI\source_code\history.txt") as f:
+        try:
             history = eval(f.read())
     except: history = []
     if len(set(history)) <= 2 and len(history) == 6:
