@@ -41,7 +41,7 @@ def vay(opp_pos, board):
     opp_pos[:] = []
     return valid_remove
 
-def main(input_):
+def main(player):
     global move, board_pointF
     move = {"selected_pos": None, "new_pos": None}
     with open("trainAI\source_code\pos_point.txt") as f:
@@ -51,7 +51,7 @@ def main(input_):
         for j in range(5):
             board_pointF[i][j] = board_pointF[i][j]/max_pointF
 
-    minimax(input_, Stopdepth=6)
+    minimax(player, Stopdepth=6)
 
     return move
 
@@ -60,13 +60,13 @@ def CheckGamepoint(your_pos, opp_pos, depth):
     for x, y in your_pos: point += board_pointF[y][x]
     for x, y in opp_pos: point -= board_pointF[y][x]
     return point - depth
-def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
+def minimax(player, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=float("-inf"), beta=float("inf")):
 
     bestVal = float("-inf")
-    your_pos = input_["your_pos"]
-    opp_pos = input_["opp_pos"]
-    board = input_["board"]
-    your_side = input_["your_side"]
+    your_pos = player.your_pos
+    opp_pos = player.opp_pos
+    board = player.board
+    your_side = player.your_side
     opp_side = -your_side
     min_or_max = max
     
@@ -75,9 +75,9 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
 
     if not isMaximizingPlayer:
         bestVal = float("inf")
-        opp_pos = input_["your_pos"]
-        your_pos = input_["opp_pos"]
-        opp_side = input_["your_side"]
+        opp_pos = player.your_pos
+        your_pos = player.opp_pos
+        opp_side = player.your_side
         your_side = -opp_side
         min_or_max = min
 
@@ -101,7 +101,7 @@ def minimax(input_, depth=0, isMaximizingPlayer=True, Stopdepth=None, alpha=floa
                 ganh_chet(invalid_move, opp_pos, your_side, opp_side, board)
                 vay(opp_pos, board)
 
-                value = minimax(input_, depth+1, not isMaximizingPlayer, Stopdepth, alpha, beta)
+                value = minimax(player, depth+1, not isMaximizingPlayer, Stopdepth, alpha, beta)
                 if depth == 0 and value > bestVal:
                     move["selected_pos"] = pos
                     move["new_pos"] = invalid_move

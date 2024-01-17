@@ -19,7 +19,7 @@ def is_valid_move(move, current_side, board):
         return (current_x+current_y)%2==0 and (dx * dy == 1)
     return False
 
-def main(input_):
+def main(player):
 
     # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
     #  'your_side': -1,
@@ -31,12 +31,12 @@ def main(input_):
     #            [ 1, 1, 0, 1, 0]]}
 
     while True:
-        selected_pos = random.choice(input_["your_pos"])
-        board = input_["board"]
+        selected_pos = random.choice(player.your_pos)
+        board = player.board
         new_pos_select = random_move(selected_pos)
         new_pos = (new_pos_select[0], new_pos_select[1])
         move = {"selected_pos": selected_pos, "new_pos": new_pos}
-        if is_valid_move(move, input_["your_side"], board):
+        if is_valid_move(move, player.your_side, board):
             return move
 
 # Function of the game manager

@@ -1,4 +1,4 @@
-from random import choice, shuffle
+from random import choice
 import os
 from PIL import Image, ImageDraw
 from copy import deepcopy
@@ -7,8 +7,19 @@ from copy import deepcopy
 # COLUMN = x
 # ==> board[y][x] == board[ROW][COLUMN]
 
+class Player:
+    def __init__(self, your_pos=None, opp_pos=None, your_side=None, board=None):
+        self.your_pos = your_pos
+        self.opp_pos = opp_pos
+        self.your_side = your_side
+        self.board = board
 def declare():
-    global game_state, positions, static_image, point
+    global game_state, positions, static_image, point, player1, player2
+
+    player1 = Player()
+    player2 = Player()
+    player1.your_side = choice((-1, 1))
+    player2.your_side = -player1.your_side
 
     game_state = {"current_turn": 1,
                   "board": [[-1, -1, -1, -1, -1],
@@ -16,9 +27,12 @@ def declare():
                             [ 1,  0,  0,  0, -1],
                             [ 1,  0,  0,  0,  1],
                             [ 1,  1,  1,  1,  1]]}
+    player1.board = player2.board = game_state["board"]
     positions = [None,
                 [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
                 [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
+    player1.your_pos = player2.opp_pos = positions[player1.your_side]
+    player2.your_pos = player1.opp_pos = positions[player2.your_side]
 
     # Initialization board
     static_image = Image.new("RGB", (600, 600), "WHITE")
@@ -110,25 +124,13 @@ def activation(option, session_name):
 
     return run_game(UserBot, Bot2)
 def run_game(UserBot, Bot2): # Main
-    declare()
 
-    player1 = {"side": choice((-1, 1)), "operator": UserBot}
-    player2 = {"side": -player1["side"], "operator": Bot2}
+    declare()
     winner = False
     move_counter = 1
+    open("trainAI\source_code\history.txt", "w").close()
 
     init_img(positions)
-
-    player1_info = {"your_pos": positions[player1["side"]],
-                    "your_side": player1["side"],
-                    "opp_pos": positions[player2["side"]],
-                    "board": game_state["board"]}
-    player2_info = {"your_pos": positions[player2["side"]],
-                    "your_side": player2["side"],
-                    "opp_pos": positions[player1["side"]], 
-                    "board": game_state["board"]}
-
-    open("trainAI\source_code\history.txt", "w").close()
 
     while not winner:
 
@@ -136,14 +138,10 @@ def run_game(UserBot, Bot2): # Main
         print(f"\rLoading |{'█'*filled}{'-'*(50-filled)}|{move_counter//5}% Complete", end='')
 
         current_turn = game_state["current_turn"]
-        if player1["side"] == current_turn:
-            shuffle(player1_info["your_pos"])
-            shuffle(player1_info["opp_pos"])
-            move = player1["operator"].main(deepcopy(player1_info))
+        if player1.your_side == current_turn:
+            move = UserBot.main(deepcopy(player1))
         else:
-            shuffle(player2_info["your_pos"])
-            shuffle(player2_info["opp_pos"])
-            move = player2["operator"].main(deepcopy(player2_info))
+            move = Bot2.main(deepcopy(player2))
 
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
@@ -166,11 +164,21 @@ def run_game(UserBot, Bot2): # Main
         generate_image(positions, move_counter, move, remove)
 
         if not positions[1]:
-            winner = "Người chơi " + (None, "thua ", "thắng ")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
+            if player1.your_side == 1:
+                winner = "Người chơi thua (Xanh)"
+            else:
+                winner = "Người chơi thắng (Đỏ)"
         elif not positions[-1]:
-            winner = "Người chơi " + (None, "thắng ", "thua ")[player1["side"]] + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
+            if player1.your_side == 1:
+                winner = "Người chơi thắng (Xanh)"
+            else:
+                winner = "Người chơi thua (Đỏ)"
         elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 500:
-            winner = "Hòa " + (None, "(Xanh)", "(Đỏ)")[player1["side"]]
+            if player1.your_side == 1:
+                winner = "Hòa (Xanh)"
+            else:
+                winner = "Hòa (Đỏ)"
+
         game_state["current_turn"] *= -1
         move_counter += 1
 
@@ -207,10 +215,9 @@ def generate_image(positions, move_counter, move, remove):
 
 if __name__ == '__main__':
     from ursina import *
-    import trainAI.Master as Master
-    import trainAI.Master2 as Master2
+    import trainAI.Master as Master, CGEngine
 
-    winner, win_move_counter = run_game(Master, Master2)
+    winner, win_move_counter = run_game(CGEngine, Master)
     print(f"\rLoading |{'█'*50}|100% Complete")
 
     app = Ursina(title="Cờ gánh", borderless=False)
