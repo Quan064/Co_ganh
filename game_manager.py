@@ -1,4 +1,4 @@
-import random
+from random import choice, shuffle
 import os
 from PIL import Image, ImageDraw
 from copy import deepcopy
@@ -112,7 +112,7 @@ def activation(option, session_name):
 def run_game(UserBot, Bot2): # Main
     declare()
 
-    player1 = {"side": -1, "operator": UserBot}
+    player1 = {"side": choice((-1, 1)), "operator": UserBot}
     player2 = {"side": -player1["side"], "operator": Bot2}
     winner = False
     move_counter = 1
@@ -137,8 +137,12 @@ def run_game(UserBot, Bot2): # Main
 
         current_turn = game_state["current_turn"]
         if player1["side"] == current_turn:
+            shuffle(player1_info["your_pos"])
+            shuffle(player1_info["opp_pos"])
             move = player1["operator"].main(deepcopy(player1_info))
         else:
+            shuffle(player2_info["your_pos"])
+            shuffle(player2_info["opp_pos"])
             move = player2["operator"].main(deepcopy(player2_info))
 
         move_new_pos = move["new_pos"]
