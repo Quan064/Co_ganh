@@ -128,7 +128,6 @@ def run_game(UserBot, Bot2): # Main
     declare()
     winner = False
     move_counter = 1
-    open("trainAI\source_code\history.txt", "w").close()
 
     init_img(positions)
 
