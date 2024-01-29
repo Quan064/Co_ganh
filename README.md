@@ -33,7 +33,11 @@ Player.board = [[-1, -1, -1, -1, -1],
                 [ 1,  1,  1,  1,  1]]
 ```
 ## Output
-A `Dick` of:
+A **Dick** of:
 - *selected_pos*: vị trí của quân cờ được chọn
 - *new_pos*: vị trí sau khi di chuyển của quân cờ đó
 > {"selected_pos": (0, 0), "new_pos": (1, 0)}
+## Cách supmit
+Run file main -> tạo tài khoản -> nộp file -> xong!
+> [!TIP]
+> Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
