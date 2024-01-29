@@ -1,7 +1,8 @@
 # Cờ gánh
 ## Mục tiêu
 Mục tiêu của chương trình là chiến thắng đối thủ robot_alpha1 trong một ván cờ Gánh.
-**Ngôn ngữ lập trình: Python**
+> [!WARNING]
+> Ngôn ngữ lập trình: Python
 ## Luật chơi
 https://www.youtube.com/watch?v=FU3auCFYGJc&t=2s
 ## Input
