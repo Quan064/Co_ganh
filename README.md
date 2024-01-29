@@ -1,6 +1,6 @@
 # Cờ gánh
 ## Giới thiệu
-Đây là dự án AI tập sự của @Quan064 và @tuanvule
+Đây là dự án AI tập sự của [@Quan064] và [@tuanvule]
 ## Mục tiêu
 Mục tiêu của chương trình là chiến thắng đối thủ robot_alpha1 trong một ván cờ Gánh bằng cách đưa ra nước đi tối ưu của mỗi lượt.
 > [!WARNING]
