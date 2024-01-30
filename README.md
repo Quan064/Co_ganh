@@ -20,10 +20,14 @@ https://www.youtube.com/watch?v=FU3auCFYGJc&t=2s
 pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF Werkzeug WTForms pillow
 ```
 ## Input
-- *Player.your_pos*: vị trí tất cả quân cờ của bản thân
-- *Player.opp_pos*: vị trí tất cả quân cờ của đối thủ
+- *Player.your_pos*: vị trí tất cả quân cờ của bản thân (*x*, *y*)
+- *Player.opp_pos*: vị trí tất cả quân cờ của đối thủ (*x*, *y*)
 - *Player.your_side*: màu cờ của bản thân (-1:🔴 / 1:🔵)
 - *Player.board*: bàn cờ (-1:🔴 / 1:🔵 / 0:∅)
+### Ràng buộc
+- 0 ≤ *x*, *y* ≤ 4
+- *Player.your_side* in (-1, 1)
+- {i for i in *Player.board*} == {0, 1, -1}
 ### Khởi đầu ván đấu
 ```
 Player.your_pos = [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)]
