@@ -7,6 +7,18 @@ Mục tiêu của chương trình là chiến thắng đối thủ robot_alpha1 
 > Ngôn ngữ lập trình: Python
 ## Luật chơi
 https://www.youtube.com/watch?v=FU3auCFYGJc&t=2s
+## Thư viện cần thiết
+- flask
+- flask_bcrypt
+- flask_login
+- flask_sqlalchemy
+- flask_wtf
+- werkzeug
+- wtforms
+- PIL
+```
+pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF Werkzeug WTForms pillow
+```
 ## Input
 - *Player.your_pos*: vị trí tất cả quân cờ của bản thân
 - *Player.opp_pos*: vị trí tất cả quân cờ của đối thủ
