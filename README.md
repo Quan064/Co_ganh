@@ -39,6 +39,7 @@ A **Dick** of:
 - *selected_pos*: vị trí của quân cờ được chọn
 - *new_pos*: vị trí sau khi di chuyển của quân cờ đó
 > {"selected_pos": (0, 0), "new_pos": (1, 0)}
+
 > [!NOTE]
 > Diễn biến ván đấu được cập nhật tại folder **static/upload_img**
 ## Cách submit
