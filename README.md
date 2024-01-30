@@ -47,7 +47,7 @@ Run file main -> tạo tài khoản -> nộp file -> xong!
 > [!TIP]
 > Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
 > - Di chuyển lượt bằng mũi tên trái phải trên bàn phím
-> **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
+> - **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
 ## Code mẫu
 ```
 import random
