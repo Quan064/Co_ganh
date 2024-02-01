@@ -59,7 +59,7 @@ A **Dick** of:
 > [!NOTE]
 > Diễn biến ván đấu được cập nhật tại folder **static/upload_img**
 ## Cách submit
-Run file main -> tạo tài khoản -> nộp file -> xong!
+Run file main -> tạo tài khoản -> nộp file -> chọn Đấu với bot hệ thống -> xong!
 > [!TIP]
 > Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
 > - Di chuyển lượt bằng mũi tên trái phải trên bàn phím
