@@ -1,0 +1,239 @@
+:root {
+    --primary-color: #121212;
+    --secondary-color: #1E1E1E;
+    --text-primary: #000;
+    --text-secondary: #333;
+}
+
+*{ 
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    list-style: none;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    max-height: 100vh;
+    background-color: #121212;
+    color: rgba(255, 255, 255, 0.898);
+}
+
+.btn:hover {
+    filter: brightness(90%);
+}
+
+.guide_box {
+    position: fixed;
+    background-color: #fff;
+    max-width: 300px;
+    height: max-content;
+    border-radius: 5px;
+    z-index: 3000;
+    top: 78%;
+    left: -45%;
+    border: 1px solid #33333318;
+}
+
+.guide_box--arrow {
+    /* content: ""; */
+    /* position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 10px solid #fff;  */
+}
+
+.guide_box--nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background-color: #3b3a3a;
+    display: flex;
+    justify-content: right;
+    padding: 5px 0;
+}
+
+.guide_box--nav .left,
+.guide_box--nav .right {
+    color: var(--primary-color);
+    background-color: #dedede;
+    height: max-content;
+    padding: 5px 16px;
+    font-size: 15px;
+    margin: 0 15px;
+    border-radius: 5px;
+    user-select: none;
+    cursor: pointer;
+    transition: .05s linear;
+}
+
+.guide_box--nav .left:hover,
+.guide_box--nav .right:hover {
+    filter: brightness(90%);
+}
+
+/* .guide_box::before {
+    content: "1";
+    position: absolute;
+    top: 50%;
+    left: -6%;
+    transform: translateY(-50%);
+    background-color: #fff;
+    color: var(--text-primary);
+    padding: 0 10px;
+    line-height: 210%;
+    height: 80%;
+    width: 100%;
+    border-radius: 9999px;
+    z-index: -1;
+} */
+
+.guide_box--content {
+    color: var(--text-secondary);
+    padding: 5px 10px;
+    word-wrap: break-word;
+}
+
+.container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    padding: 10px 0;
+}
+
+.container_element {
+    height: 100%;
+    flex: 1;
+    display: flex;
+}
+
+.bot_display {
+    background: #1E1E1E;
+    margin: 0 5px 0 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.bot_display-video--background {
+    width: 96%;
+    height: 50%;
+    background-color: black;
+    margin: 20px 2% 0;
+    text-align: center;
+}
+
+.bot_display-video--result {
+    height: 100%;
+    padding: 10px 0;
+}
+
+.utility {
+    padding: 0 2% 0;
+}
+
+.utility_nav {
+    width: 100%;
+    height: 30px;
+}
+
+.utility_block-element.rule {
+    display: flex;
+}
+
+.utility_block-element.rule .input {
+    padding: 0 5px 0 0;
+    border-right: 1px solid #333;
+}
+
+.utility_block-element.rule .output {
+    padding: 0 0 0 5px;
+}
+
+.output {
+    margin-left: 5px;
+}
+
+.input .type,
+.output .type {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.input .content,
+.output .content {
+    color: #ccc;
+}
+
+.coding_module {
+    background: #1E1E1E;
+    margin: 0 20px 0 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.coding_module-nav {
+    width: 100%;
+    height: 7%;
+    padding: 5px 10px;
+    border-bottom: 1px solid #333;
+    display: flex;
+}
+
+.coding_module-nav--saveBtn {
+    padding: 5px 20px;
+    margin-left: auto;
+    height: max-content;
+    border-radius: 5px;
+    background-color: #121212;
+    border: 1px solid #333;
+    transition: 0.05s linear;
+    cursor: pointer;
+    user-select: none;
+}
+
+.coding_module-nav--saveBtn:hover {
+    background-color: #333;
+}
+
+#coding_module-coding_block {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+}
+
+.ace_content {
+    max-width: 500px;
+}
+
+.coding_block-coding {
+    display: flex;
+}
+
+.coding_block-coding--box {
+    flex: 1;
+}
+
+.ace_scrollbar::-webkit-scrollbar {
+    height: 7px;
+    width: 7px;
+}
+
+.ace_scrollbar::-webkit-scrollbar-track
+{
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #272822; /* Matches ace monokai */
+    border-radius: 10px;
+}
+
+.ace_scrollbar::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
+    outline: 1px solid slategrey;
+    border-radius: 10px;
+}
