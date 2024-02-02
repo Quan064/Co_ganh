@@ -66,10 +66,10 @@ Một **Dick** của:
 4. Nộp file
 5. Chọn Đấu với bot hệ thống
 6. Chờ và xem kết quả. Click vào dấu mũi tên góc trái dưới màn hình để xem chi tiết
-> [!TIP] **Chạy thử**
-> Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
-> - Di chuyển lượt bằng mũi tên trái phải trên bàn phím
-> - **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
+**Chạy thử**
+Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
+- Di chuyển lượt bằng mũi tên trái phải trên bàn phím
+- **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
 ## Code mẫu
 ```
 import random
