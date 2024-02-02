@@ -60,7 +60,7 @@ Một **Dick** của:
 > [!NOTE]
 > Diễn biến ván đấu được cập nhật tại folder **static/upload_img**
 ## Cách chơi
-1. Viết bot (cài đặt thư viện nếu chưa có!, có thể tham khảo file mẫu CGEngine.py)
+1. Viết bot (cài đặt thư viện nếu chưa có!)
 2. Run file main
 3. Tạo tài khoản
 4. Nộp file
