@@ -1,6 +1,4 @@
 import cv2
-import numpy as np
-import glob
 import os
 import moviepy.editor as mpe
 
