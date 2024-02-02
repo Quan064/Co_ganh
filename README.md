@@ -70,7 +70,7 @@ Một **Dick** của:
 Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
 - Di chuyển lượt bằng phím mũi tên trái phải trên bàn phím
 - **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
-[![Watch the video]([https://i.stack.imgur.com/Vp2cE.png](https://i9.ytimg.com/vi_webp/GsxwOXEXcoI/mq2.webp?sqp=CLSd860G-oaymwEmCMACELQB8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGBMgUSh_MA8=&rs=AOn4CLCgMjaA5_0stJKQ0J3ljwb15Aqm4A))](https://youtu.be/GsxwOXEXcoI)
+[![Watch the video](https://img.youtube.com/vi/GsxwOXEXcoI/hqdefault.jpg)](https://youtu.be/GsxwOXEXcoI)
 ## Code mẫu
 ```
 import random
