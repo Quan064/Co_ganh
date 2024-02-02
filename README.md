@@ -72,7 +72,6 @@ Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên
 - **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
 ## Code mẫu
 ```
-
 import random
 
 # Remember that board[y][x] is the tile at (x, y) when printing
