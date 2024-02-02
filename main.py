@@ -166,6 +166,17 @@ def get_image_list():
         
     return jsonify(image_filenames)
 
+# upload code từ web lên
+@app.route('/upload_code', methods=['POST'])
+def upload_code():
+    # v lấy code qua biến bên dưới v
+    code = request.json
+    return code
+
+@app.route('/create_bot')
+@login_required
+def create_bot():
+    return render_template('create_bot.html')
 
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")

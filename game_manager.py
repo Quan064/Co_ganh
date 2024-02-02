@@ -181,6 +181,9 @@ def run_game(UserBot, Bot2): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
+    import utilities.renderVD as renderVD
+    renderVD.render()
+
     return winner, move_counter-1
 
 def init_img(positions):
