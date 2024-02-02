@@ -59,13 +59,15 @@ Một **Dick** của:
 
 > [!NOTE]
 > Diễn biến ván đấu được cập nhật tại folder **static/upload_img**
-## Cách viết bot
+## Cách chơi
 1. Viết bot (cài đặt thư viện nếu chưa có!)
 2. Run file main
 3. Tạo tài khoản
 4. Nộp file
 5. Chọn Đấu với bot hệ thống
+6. Chờ và xem kết quả. Click vào dấu mũi tên góc trái dưới màn hình để xem chi tiết
 > [!TIP]
+> **Chạy thử**
 > Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
 > - Di chuyển lượt bằng mũi tên trái phải trên bàn phím
 > - **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
