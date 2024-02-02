@@ -51,7 +51,7 @@ Player.board = [[-1, -1, -1, -1, -1],
                 [ 1,  1,  1,  1,  1]]
 ```
 ## Output
-A **Dick** of:
+Một **Dick** của:
 - *selected_pos*: vị trí của quân cờ được chọn
 - *new_pos*: vị trí sau khi di chuyển của quân cờ đó
 > {"selected_pos": (0, 0), "new_pos": (1, 0)}
