@@ -158,14 +158,6 @@ def submit_bot():
     
     return redirect(url_for("menu"))
 
-
-@app.route('/image_list')
-def get_image_list():
-    img_folder = 'static/upload_img'
-    image_filenames = [f for f in os.listdir(img_folder) if os.path.isfile(os.path.join(img_folder, f))]
-        
-    return jsonify(image_filenames)
-
 # upload code từ web lên
 @app.route('/upload_code', methods=['POST'])
 def upload_code():
@@ -177,6 +169,13 @@ def upload_code():
 @login_required
 def create_bot():
     return render_template('create_bot.html')
+
+@app.route('/image_list')
+def get_image_list():
+    img_folder = 'static/upload_img'
+    image_filenames = [f for f in os.listdir(img_folder) if os.path.isfile(os.path.join(img_folder, f))]
+        
+    return jsonify(image_filenames)
 
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
