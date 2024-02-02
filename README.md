@@ -29,6 +29,7 @@ pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF Werkzeug W
 - *Player.your_side* in (-1, 1)
 - {j for i in *Player.board* for j in i} == {0, 1, -1}
 ### Khởi đầu ván đấu
+Người chơi nhận quân cờ xanh
 ```
 Player.your_pos = [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)]
 Player.opp_pos = [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]
@@ -39,7 +40,7 @@ Player.board = [[-1, -1, -1, -1, -1],
                 [ 1,  0,  0,  0,  1],
                 [ 1,  1,  1,  1,  1]]
 ```
-Hoặc
+Người chơi nhận quân cờ xanh
 ```
 Player.your_pos = [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]
 Player.opp_pos = [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)]
