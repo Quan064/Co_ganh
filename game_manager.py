@@ -181,6 +181,9 @@ def run_game(UserBot, Bot2): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
+    import utilities.renderVD as renderVD
+    renderVD.render()
+
     return winner, move_counter-1
 
 def init_img(positions):
@@ -228,22 +231,24 @@ if __name__ == '__main__':
     indexIMG = 0
     indexIMG_txt = Text("0", x=-.6, y=.43, scale=2, color=color.black)
 
-    def input(key):
-        global indexIMG
+    # --- đoạn này có vẻ không hoạt động nên em xửa ở bên javascript của file result ---
 
-        if "arrow" in key:
-            if key == "left arrow":
-                indexIMG -= 1
-            if key == "right arrow":
-                indexIMG += 1
+    # def input(key):
+    #     global indexIMG
 
-            if indexIMG < 0:
-                indexIMG = win_move_counter
-            elif indexIMG > win_move_counter:
-                indexIMG = 0
+    #     if "arrow" in key:
+    #         if key == "left arrow":
+    #             indexIMG -= 1
+    #         if key == "right arrow":
+    #             indexIMG += 1
 
-            chess_board.texture = f"chessboard{indexIMG}"
-            indexIMG_txt.text = str(indexIMG)
+    #         if indexIMG < 0:
+    #             indexIMG = win_move_counter
+    #         elif indexIMG > win_move_counter:
+    #             indexIMG = 0
+
+    #         chess_board.texture = f"chessboard{indexIMG}"
+    #         indexIMG_txt.text = str(indexIMG)
 
     def end_():
         images = os.listdir("static\\upload_img\\")

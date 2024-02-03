@@ -158,6 +158,17 @@ def submit_bot():
     
     return redirect(url_for("menu"))
 
+# upload code từ web lên
+@app.route('/upload_code', methods=['POST'])
+def upload_code():
+    # v lấy code qua biến bên dưới v
+    code = request.json
+    return code
+
+@app.route('/create_bot')
+@login_required
+def create_bot():
+    return render_template('create_bot.html')
 
 @app.route('/image_list')
 def get_image_list():
