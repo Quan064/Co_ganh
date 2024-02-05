@@ -8,7 +8,7 @@ const $$ = document.querySelectorAll.bind(document)
 const saveBtn = $(".coding_module-nav--saveBtn")
 
 var audio = document.querySelector(".bot_display-video--result");
-audio.volume = 0.1;
+audio.volume = 0.55;
 var editor = ace.edit("coding_module-coding_block");
 
 editor.setOptions({
