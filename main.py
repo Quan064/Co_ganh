@@ -1,25 +1,17 @@
-from flask import Flask, flash, request, redirect, url_for, render_template, session, jsonify
-import os
-from werkzeug.utils import secure_filename
+from flask import Flask, flash, request, redirect, url_for, render_template
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm 
 from wtforms import SubmitField, PasswordField, StringField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms.validators import Length, ValidationError, EqualTo, DataRequired
 from flask_bcrypt import Bcrypt
 from game_manager import activation
 import webbrowser
 from threading import Timer
 
-def Delete_all_images():
-    images = os.listdir("static\\upload_img\\")
-    for file in images:
-        os.remove("static\\upload_img\\"+file)
-Delete_all_images()
 
-basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SECRET_KEY'] = 'pkH{XQup/)QikTx'
 app.app_context().push()
 
@@ -27,13 +19,13 @@ app.app_context().push()
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 100  #Max file size
+app.config['MAX_CONTENT_LENGTH'] = 16_000_00  #Max file size
 app.config['UPLOAD_FOLDER'] = "static/botfiles"
-ALLOWED_EXTENSIONS = {'py'}
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view='login'    
+login_manager = LoginManager(app)
+login_manager.login_view='login'
+login_manager.login_message_category = "info"
+login_manager.login_message = "Xin hãy đăng nhập để truy cập"
 
 
 @login_manager.user_loader
@@ -48,48 +40,39 @@ class User(db.Model, UserMixin):
 
 
 class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={'placeholder': 'Username'})
-
-    password =  PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={'placeholder': 'Password'})
-    
+    username = StringField("Tên đăng nhập:", validators=[DataRequired(), Length(min=4, max=20)])
+    password =  PasswordField("Mật khẩu", validators=[DataRequired(), Length(min=4, max=20)])
     submit = SubmitField("Đăng Nhập")
 
 
 class RegisterForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={'placeholder': 'Username'})
+    username = StringField('Tên đăng nhập:', validators=[DataRequired(), Length(min=4, max=20)])
+    password =  PasswordField('Mật khẩu:',  validators=[DataRequired(), Length(min=4, max=20)])
+    conf_pass =  PasswordField('Xác nhận mật khẩu:', validators=[DataRequired(), EqualTo("password", message='Mật khẩu xác nhận không trùng khớp')])
+    submit = SubmitField(label='Tạo tài khoản')
 
-    password =  PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={'placeholder': 'Password'})
-    
-    submit = SubmitField("Đăng ký")
-
-    def validate_username(self, username):
-        existing_user_username = User.query.filter_by(username=username.data).first()
-        if existing_user_username:
+    def validate_username(self, username_to_check):
+        if User.query.filter_by(username=username_to_check.data).first(): #_existing_user_username
             raise ValidationError('Tên đăng nhập đã được sử dụng')
 
 
-def allowed_file(filename):
-    return '.' in filename and \
-    filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
 @app.route('/')
-def index():
+def home_page():
     return render_template('home.html')
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    if request.method == 'POST':
-        session['username'] = request.form['username']
-    if form.validate_on_submit():   
+    if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
+                flash("Đăng nhập thành công", category='success')
                 return redirect(url_for('menu'))
-
+            else: flash("Mật khẩu không hợp lệ! Vui lòng thử lại", category='danger')
+        else: flash("Tên đăng nhập không hợp lệ! Vui lòng thử lại", category='danger')
     return render_template('login.html', form=form)
 
 
@@ -98,87 +81,43 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
-        new_user = User(username= form.username.data, password=hashed_password)
+        new_user = User(username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
-
+    for err_msg in form.errors.values(): #If there are errors from the validations
+        flash(err_msg[0], category="danger")
     return render_template('register.html', form=form)
 
 
-@app.route('/logout', methods=['GET', 'POST'])
+@app.route('/logout')
 @login_required
 def logout():
-    session.pop('username', None)
     logout_user()
-    return redirect(url_for('login'))
+    flash("Bạn đã đăng xuất!!!", category='info')
+    return redirect(url_for('home_page'))
 
 
-@app.route('/menu', methods=['GET', 'POST'])
+@app.route('/menu')
 @login_required
 def menu():
-    if 'username' in session:
-        username_loggedin = session['username']
+    return render_template('menu.html')
 
-    return render_template('menu.html', username_loggedin=username_loggedin)
-
-
-@app.route('/submit', methods=['GET' ,'POST'])
-@login_required
-def submit_bot():
-    if 'file' not in request.files:
-        flash("chưa có file đính kèm")
-        return redirect(url_for('/menu'))
-    
-    file = request.files['file']
-    if file.filename == '':
-        flash("không có file")
-        return redirect('/menu')
-    
-    if file and not allowed_file(file.filename):
-        flash('loại file không cho phép')
-        return redirect('/menu')
-
-    if file and allowed_file(file.filename):
-        user = session['username']
-        file.filename = f'botfile_{user}.py'
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], filename))
-
-    if request.method == "POST":
-        Delete_all_images()
-        
-        if request.form.get("match_bot") == "Đấu với bot hệ thống":
-            winner, max_move_win = activation("bot", session["username"])
-    
-        if request.form.get("match_player") == "Đấu với bot của người chơi":
-            winner, max_move_win = activation("player", session["username"])
-    
-        return render_template('result.html', winner=winner, max_move_win=max_move_win)
-    
-    return redirect(url_for("menu"))
-
-# upload code từ web lên
 @app.route('/upload_code', methods=['POST'])
+@login_required
 def upload_code():
-    # v lấy code qua biến bên dưới v
-    code = request.json
-    return code
+    name = current_user.username
+    with open("static/botfiles/" + name, mode="w") as f:
+        f.write(request.get_json())
+    winner, max_move_win = activation("bot", name)
+    return redirect(url_for('create_bot'))
 
 @app.route('/create_bot')
 @login_required
 def create_bot():
     return render_template('create_bot.html')
 
-@app.route('/image_list')
-def get_image_list():
-    img_folder = 'static/upload_img'
-    image_filenames = [f for f in os.listdir(img_folder) if os.path.isfile(os.path.join(img_folder, f))]
-        
-    return jsonify(image_filenames)
-
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
     Timer(1, open_browser).start()
     app.run(port=5000, debug=True, use_reloader=False)
-    Delete_all_images()

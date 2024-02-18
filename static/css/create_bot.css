@@ -37,17 +37,6 @@ body {
     border: 1px solid #33333318;
 }
 
-.guide_box--arrow {
-    /* content: ""; */
-    /* position: absolute;
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-left: 10px solid #fff;  */
-}
-
 .guide_box--nav {
     position: fixed;
     top: 0;

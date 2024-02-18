@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-</head>
-<body>
-    <h1>Home page</h1>
-    <a href="{{url_for('login')}}">Đăng nhập</a><br>
-    <a href="{{url_for('register')}}">Đăng ký</a>
+{% extends 'base.html' %}
+{% block title %}
+    Trang chủ
+{% endblock %}
+
+{% block content %}
+<body class="text-center">
+    Giới thiệu gì đó!!!
+    <br>
+    <a href="{{ url_for('menu') }}">Menu</a>
 </body>
-</html>
+{% endblock %}
