@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw
 from copy import deepcopy
 import cv2
 import moviepy.editor as mpe
+from importlib import reload
 
 # ROW = y
 # COLUMN = x
@@ -117,6 +118,7 @@ def vay(opp_pos):
 # System
 def activation(option, session_name):
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
+    reload(UserBot)
     if option == "bot":
         Bot2 = __import__("trainAI.Master", fromlist=[None])
     elif option == "player":
