@@ -2,6 +2,8 @@ from random import choice
 import os
 from PIL import Image, ImageDraw
 from copy import deepcopy
+import cv2
+import moviepy.editor as mpe
 
 # ROW = y
 # COLUMN = x
@@ -181,6 +183,10 @@ def run_game(UserBot, Bot2): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
+    renderVD()
+    for file in os.listdir("static\\upload_img\\"):
+        os.remove("static\\upload_img\\"+file)
+
     return winner, move_counter-1
 
 def init_img(positions):
@@ -211,6 +217,19 @@ def generate_image(positions, move_counter, move, remove):
     draw.ellipse((old_x*100+80, old_y*100+80, old_x*100+120, old_y*100+120), fill=None, outline="green", width=5)
 
     image.save(os.getcwd()+f"/static/upload_img/chessboard{move_counter}.png", "PNG")
+def renderVD():
+    # biến đổi tập ảnh thành video
+    frame = cv2.imread("static\\upload_img\\chessboard0.png")
+    video = cv2.VideoWriter("static\\upload_video\\video.mp4", 0, 1, frame.shape[:2])
+    for i in range(len(os.listdir("static\\upload_img\\"))):
+        video.write(cv2.imread(f"static\\upload_img\\chessboard{i}.png"))
+    video.release()
+
+    # chèn nhạc vô video
+    my_clip = mpe.VideoFileClip("static\\upload_video\\video.mp4")
+    audio_background = mpe.AudioFileClip('static\\audio.mp3').set_duration(my_clip.duration)
+    my_clip = my_clip.set_audio(audio_background)
+    my_clip.write_videofile("static\\upload_video\\result.mp4")
 
 if __name__ == '__main__':
     from ursina import *
