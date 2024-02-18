@@ -107,7 +107,8 @@ def menu():
 @login_required
 def upload_code():
     name = current_user.username
-    with open("static/botfiles/" + name, mode="w") as f:
+    print(request.json)
+    with open(f"static/botfiles/botfile_{name}.py", mode="w") as f:
         f.write(request.get_json())
     winner, max_move_win = activation("bot", name)
     return redirect(url_for('create_bot'))
