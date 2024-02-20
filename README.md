@@ -62,7 +62,7 @@ Một **Dick** của:
 > Diễn biến ván đấu được cập nhật tại folder **static/upload_img**
 ## Cách chơi
 > [!WARNING]
-> Hiện không khả dụng!!! Vui lòng sử dụng cách **chơi thử** bên dưới ⇩⇩⇩
+> Hiện không khả dụng!!! Vui lòng sử dụng cách **Chạy thử** bên dưới ⇩⇩⇩
 1. Viết bot (cài đặt thư viện nếu chưa có!)
 2. Run file main
 3. Tạo tài khoản
