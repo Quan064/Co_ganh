@@ -5,6 +5,7 @@ from copy import deepcopy
 import cv2
 import moviepy.editor as mpe
 from importlib import reload
+import traceback
 
 # ROW = y
 # COLUMN = x
@@ -126,7 +127,8 @@ def activation(option, session_name):
         load_rand_player = random.choice(player_file_list)
         Bot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
 
-    return run_game(UserBot, Bot2)
+    try: return run_game(UserBot, Bot2)
+    except Exception: raise Exception(traceback.format_exc())
 def run_game(UserBot, Bot2): # Main
 
     declare()
@@ -149,8 +151,8 @@ def run_game(UserBot, Bot2): # Main
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
 
-        if not is_valid_move(move, current_turn, game_state["board"]):
-            raise Exception(f"Invalid move {move_counter} | {move}")
+        # if not is_valid_move(move, current_turn, game_state["board"]):
+        #     raise Exception()
         
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
