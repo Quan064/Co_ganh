@@ -110,7 +110,9 @@ def upload_code():
     code = request.get_json()
     with open(f"static/botfiles/botfile_{name}.py", mode="w") as f:
         f.write(code)
-    winner, max_move_win = activation("bot", name)
+    try: winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
+    except Exception as err:
+        err # Giá trị Trackback Error
     return code
 
 @app.route('/create_bot')
