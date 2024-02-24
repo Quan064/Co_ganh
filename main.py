@@ -114,7 +114,6 @@ def upload_code():
     try: 
         winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
     except Exception as err:
-        print("---------------()--------------------",err, "--------------------------()-----------")
         return json.dumps(f'Unknown Exception: {err}') # Giá trị Trackback Error
         exit(1)
     return json.dumps("success")
