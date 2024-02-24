@@ -125,6 +125,9 @@ body {
 
 .utility {
     padding: 0 2% 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .utility_nav {
@@ -132,8 +135,55 @@ body {
     height: 30px;
 }
 
+.utility_nav-block {
+    display: flex;
+    position: relative;
+    width: fit-content;
+    margin-left: 2px;
+}
+
+.utility_nav-block--item {
+    font-size: 18px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.utility_nav-block--item:hover {
+    filter: brightness(90%);
+}
+
+.utility_nav-block--item.rule {
+    margin: 5px 10px 5px 0;
+}
+
+.utility_nav-block--item.terminal {
+    margin: 5px 0 5px 10px;
+}
+
+.utility_nav-block .animation {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #333;
+}
+
+.utility_nav-block .animation .children {
+    position: absolute;
+    height: 2px;
+    width: 47px;
+    background-color: #fff;
+    transition: all .1s linear;
+}
+
+.utility_block {
+    flex: 1;
+    padding: 0 0 20px 0;
+}
+
 .utility_block-element.rule {
     display: flex;
+    margin-top: 5px;
 }
 
 .utility_block-element.rule .input {
@@ -143,6 +193,14 @@ body {
 
 .utility_block-element.rule .output {
     padding: 0 0 0 5px;
+}
+
+.utility_block-element.terminal {
+    background-color: #000;
+    width: 100%;
+    height: 100%;
+    margin-top: 5px;
+    padding: 5px;
 }
 
 .output {
@@ -175,7 +233,35 @@ body {
     display: flex;
 }
 
-.coding_module-nav--saveBtn {
+.coding_module-nav--backBtn {
+    background-color: #000; 
+    border: 1px solid #333; 
+    border-radius: 5px; 
+    font-size: 20px; 
+    padding: 5px 15px; 
+    line-height: 100%;
+    cursor: pointer;
+    user-select: none;
+    color: #fff;
+}
+
+.coding_module-nav--backBtn:hover {
+    filter: brightness(90%);
+}
+
+.coding_module-nav--saveBtn.btn {
+    padding: 5px 20px;
+    margin-left: auto;
+    height: max-content;
+    border-radius: 5px;
+    background-color: #121212;
+    border: 1px solid #333;
+    transition: 0.05s linear;
+    cursor: pointer;
+    user-select: none;
+}
+
+.coding_module-nav--saveBtn.loader {
     padding: 5px 20px;
     margin-left: auto;
     height: max-content;
@@ -190,6 +276,21 @@ body {
 .coding_module-nav--saveBtn:hover {
     background-color: #333;
 }
+
+.coding_module-nav--loading {
+    border: 4px solid #f3f3f3; 
+    border-top: 4px solid #000; 
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 
 #coding_module-coding_block {
     width: 100%;
