@@ -124,7 +124,7 @@ def activation(option, session_name):
         Bot2 = __import__("trainAI.Master", fromlist=[None])
     elif option == "player":
         player_file_list = [i for i in os.listdir(r"static\botfiles") if i != '__pycache__']
-        load_rand_player = random.choice(player_file_list)
+        load_rand_player = choice(player_file_list)
         Bot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
 
     try: return run_game(UserBot, Bot2)
