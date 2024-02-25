@@ -26,7 +26,7 @@ def main(player):
         new_pos = (new_pos_select[0], new_pos_select[1])
         move = {"selected_pos": selected_pos, "new_pos": new_pos}
         if is_valid_move(move, player.your_side, board):
-            return move
+            return None
 
 def random_move(position):
     movement = [(0, -1), (0, 1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]  #possible moves
