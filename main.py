@@ -113,10 +113,9 @@ def upload_code():
         f.write(code)
     try: 
         winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
+        return json.dumps("success")
     except Exception as err:
         return json.dumps(f'Unknown Exception: {err}') # Giá trị Trackback Error
-        exit(1)
-    return json.dumps("success")
 
 @app.route('/create_bot')
 @login_required
