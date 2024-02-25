@@ -1,11 +1,10 @@
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
 
-// const indexList = $(".coding_block-coding--index")
-// const codeList = $(".coding_block-coding--box")
-// const codeListChilds = [...codeList.children]
-
-const saveBtn = $(".coding_module-nav--saveBtn")
+const saveBtn = $(".coding_module-nav--saveBtn.btn")
+const terminal = $(".utility_block-element.terminal")
+const rule = $(".utility_block-element.rule")
+const loader = $(".coding_module-nav--saveBtn.loader")
 
 var audio = document.querySelector(".bot_display-video--result");
 audio.volume = 0.1;
@@ -19,6 +18,10 @@ editor.setOptions({
 
 saveBtn.onclick = () => {
     const code = editor.getValue()
+    loader.style.display = "block"
+    saveBtn.style.display = "none"
+
+    toggleMode("terminal")
 
     fetch("/upload_code", {
         method: "POST",
@@ -27,8 +30,13 @@ saveBtn.onclick = () => {
         },
         body: JSON.stringify(code),
     })
-    .then((data) => console.log(data))
-    .catch(err => console.error(err))
+    .then(res => res.json())
+    .then(data => terminal.innerHTML = `>>> ${data}`)
+    .catch(err => terminal.innerHTML = `>>> ${err}`)
+    .finally(() => {
+        loader.style.display = "none"
+        saveBtn.style.display = "block"
+    })
     
 }
 
@@ -196,6 +204,38 @@ const guides = [
     }
 ]
 
+function toggleMode(mode) {
+    if(mode == "terminal") {
+        terminal.style.display = "block"
+        rule.style.display = "none"
+    } else {
+        rule.style.display = "flex"
+        terminal.style.display = "none"
+    }
+}
+
+const ruleBtn = $(".utility_nav-block--item.rule")
+const terminalBtn = $(".utility_nav-block--item.terminal")
+const animation = $(".utility_nav-block .animation")
+const animationChild = $(".utility_nav-block .animation .children")
+
+ruleBtn.onclick = (e) => {
+    console.dir(animation)
+    ruleBtn.style.color = "#fff"
+    terminalBtn.style.color = "#ccc"
+    animationChild.style.right = `${100 - (e.target.clientWidth / animation.clientWidth * 100)}%`;
+    animationChild.style.width = e.target.clientWidth + "px";
+    toggleMode("rule")
+}
+
+terminalBtn.onclick = (e) => {
+    terminalBtn.style.color = "#fff"
+    ruleBtn.style.color = "#ccc"
+    animationChild.style.right = "0";
+    animationChild.style.width = e.target.clientWidth + "px";
+    toggleMode("terminal")
+}
+
 const box = $(".guide")
 
 const cover = $(".cover")
@@ -227,8 +267,8 @@ function isShowInstruction() {
     instruction.style.display = "none"
 }
 
-acceptBtn.onclick = isShowInstruction
-rejectBtn.onclick = () => instruction.style.display = "none";
+// acceptBtn.onclick = isShowInstruction
+// rejectBtn.onclick = () => instruction.style.display = "none";
 
 guides.forEach((guide, index) => {
     box.innerHTML += `

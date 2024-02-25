@@ -8,6 +8,7 @@ from flask_bcrypt import Bcrypt
 from game_manager import activation
 import webbrowser
 from threading import Timer
+import json
 
 
 app = Flask(__name__)
@@ -110,10 +111,12 @@ def upload_code():
     code = request.get_json()
     with open(f"static/botfiles/botfile_{name}.py", mode="w") as f:
         f.write(code)
-    try: winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
+    try: 
+        winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
     except Exception as err:
-        err # Giá trị Trackback Error
-    return code
+        return json.dumps(f'Unknown Exception: {err}') # Giá trị Trackback Error
+        exit(1)
+    return json.dumps("success")
 
 @app.route('/create_bot')
 @login_required
