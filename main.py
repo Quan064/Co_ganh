@@ -115,6 +115,7 @@ def upload_code():
         winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
         return json.dumps("success")
     except Exception as err:
+        err = "\n".join(i for i in err.replace("\n    ", "\t").split("\n") if not "game_manager" in i).replace("\t", "\n    ")
         return json.dumps(f'Unknown Exception: {err}') # Giá trị Trackback Error
 
 @app.route('/create_bot')
