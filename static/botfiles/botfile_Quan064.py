@@ -19,7 +19,7 @@ def is_valid_move(move, current_side, board):
 
 def main(player):
 
-    while True:
+    while True:#ẻ
         selected_pos = random.choice(player.your_pos)
         board = player.board
         new_pos_select = random_move(selected_pos)
@@ -27,3 +27,11 @@ def main(player):
         move = {"selected_pos": selected_pos, "new_pos": new_pos}
         if is_valid_move(move, player.your_side, board):
             return move
+
+def random_move(position):
+    movement = [(0, -1), (0, 1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]  #possible moves
+    movement_select = random.choice(movement)  #Randomize movement
+    new_pos_x = position[0] + movement_select[1]
+    new_pos_y = position[1] + movement_select[0]
+    new_pos = (new_pos_x, new_pos_y)
+    return new_pos

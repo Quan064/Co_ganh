@@ -109,7 +109,7 @@ def menu():
 def upload_code():
     name = current_user.username
     code = request.get_json()
-    with open(f"static/botfiles/botfile_{name}.py", mode="w") as f:
+    with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
         winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
