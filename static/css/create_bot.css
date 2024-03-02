@@ -189,6 +189,7 @@ body {
 .utility_block-element.rule .input {
     padding: 0 5px 0 0;
     border-right: 1px solid #333;
+    width: 180%;
 }
 
 .utility_block-element.rule .output {
