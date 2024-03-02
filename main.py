@@ -129,7 +129,7 @@ def get_code():
     name = current_user.username
     with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
         return json.dumps(f.read())
-
+    
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
     Timer(1, open_browser).start()
