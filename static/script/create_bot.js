@@ -6,8 +6,15 @@ const terminal = $(".utility_block-element.terminal")
 const rule = $(".utility_block-element.rule")
 const loader = $(".coding_module-nav--saveBtn.loader")
 
+const ruleBtn = $(".utility_nav-block--item.rule")
+const terminalBtn = $(".utility_nav-block--item.terminal")
+const animation = $(".utility_nav-block .animation")
+const animationChild = $(".utility_nav-block .animation .children")
+// const terminalLoader = $(".")
+
 var audio = document.querySelector(".bot_display-video--result");
 audio.volume = 0.1;
+
 var editor = ace.edit("coding_module-coding_block");
 
 editor.setOptions({
@@ -22,27 +29,35 @@ saveBtn.onclick = () => {
     saveBtn.style.display = "none"
 
     toggleMode("terminal")
+    terminal.style.backgroundColor = "#252525"
+    terminalBtn.style.color = "#fff"
+    ruleBtn.style.color = "#ccc"
+    animationChild.style.right = "0";
+    animationChild.style.width = terminalBtn.clientWidth + "px";
+    terminal.innerHTML = `>>> loading...`
 
     fetch("/upload_code", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(code),
+        body: JSON.stringify(code.replaceAll('\r', '')),
     })
     .then(res => res.json())
-    .then(data => terminal.innerHTML = `>>> ${data}`)
+    .then(data => {
+        const a = data.replaceAll('\n', '<br>').replaceAll('    ', '&emsp;')
+        terminal.innerHTML = `>>> ${a}`
+    })
     .catch(err => terminal.innerHTML = `>>> ${err}`)
     .finally(() => {
         loader.style.display = "none"
         saveBtn.style.display = "block"
+        terminal.style.backgroundColor = "#000"
     })
     
 }
 
-const session = editor.getSession();
-session.setMode('ace/mode/python');
-session.setValue(`
+const defaultValue = `
 import random
 
 def is_valid_move(move, current_side, board):
@@ -79,7 +94,21 @@ def random_move(position):
     new_pos_y = position[1] + movement_select[0]
     new_pos = (new_pos_x, new_pos_y)
     return new_pos
-`);
+`
+const session = editor.getSession();
+session.setMode('ace/mode/python');
+
+fetch("/get_code")
+.then(res => res.json())
+.then(data => {
+        if(data) {
+            console.log(JSON.stringify(data));
+            session.setValue(data)
+        } else {
+            session.setValue(defaultValue);
+        }
+    })
+    .catch(err => console.error(err))
 
 const guides = [
     {
@@ -213,11 +242,6 @@ function toggleMode(mode) {
         terminal.style.display = "none"
     }
 }
-
-const ruleBtn = $(".utility_nav-block--item.rule")
-const terminalBtn = $(".utility_nav-block--item.terminal")
-const animation = $(".utility_nav-block .animation")
-const animationChild = $(".utility_nav-block .animation .children")
 
 ruleBtn.onclick = (e) => {
     console.dir(animation)

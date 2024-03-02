@@ -109,20 +109,26 @@ def menu():
 def upload_code():
     name = current_user.username
     code = request.get_json()
-    with open(f"static/botfiles/botfile_{name}.py", mode="w") as f:
+    with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
         winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
+        return json.dumps("success")
     except Exception as err:
-        print("---------------()--------------------",err, "--------------------------()-----------")
-        return json.dumps(f'Unknown Exception: {err}') # Giá trị Trackback Error
-        exit(1)
-    return json.dumps("success")
+        err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
+        return json.dumps(str(err)) # Giá trị Trackback Error
 
 @app.route('/create_bot')
 @login_required
 def create_bot():
     return render_template('create_bot.html')
+
+@app.route('/get_code')
+@login_required
+def get_code():
+    name = current_user.username
+    with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
+        return json.dumps(f.read())
 
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
