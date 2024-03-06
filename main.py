@@ -38,6 +38,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
+    elo = db.Column(db.Integer)
 
 
 class LoginForm(FlaskForm):
@@ -82,7 +83,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
-        new_user = User(username=form.username.data, password=hashed_password)
+        new_user = User(username=form.username.data, password=hashed_password, elo=0)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
