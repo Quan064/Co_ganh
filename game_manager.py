@@ -63,7 +63,7 @@ def declare():
 
     point = []
 # Board manipulation
-def is_valid_move(move, current_side, board):
+def Raise_exception(move, current_side, board):
     current_x = move["selected_pos"][0]
     current_y = move["selected_pos"][1]
     new_x = move["new_pos"][0]
@@ -151,9 +151,8 @@ def run_game(UserBot, Bot2): # Main
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
 
-        # if not is_valid_move(move, current_turn, game_state["board"]):
-        #     raise Exception()
-        
+        # Raise_exception(move, current_turn, game_state["board"])
+
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
         game_state["board"][move_selected_pos[1]][move_selected_pos[0]] = 0
