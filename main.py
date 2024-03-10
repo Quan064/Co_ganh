@@ -91,7 +91,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
-        new_user = User(username=form.username.data, password=hashed_password)
+        new_user = User(username=form.username.data, password=hashed_password, elo=0)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -138,6 +138,7 @@ def get_code():
     name = current_user.username
     with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
         return json.dumps(f.read())
+<<<<<<< HEAD
 
 @app.route('/fighting_page')
 @login_required
@@ -158,6 +159,8 @@ def get_users():
     print(users[0].username)
     return jsonify(users) 
 
+=======
+>>>>>>> 2828d61b9ae75349729a619e26885c197832d3c3
     
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
