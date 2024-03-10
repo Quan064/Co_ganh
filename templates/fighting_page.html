@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/fighting.css">
+    <link rel="stylesheet" href="../static/css/animation.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="ranking"></div>
+        <div class="info">
+            <div class="info_status">You Win</div>
+            <div class="info_elo-fluc">
+                <div class="info_elo-fluc--pre">1000</div>
+                <div class="info_elo-fluc--arrow"><i class="fa-solid fa-arrow-down-long"></i></div>
+                <div class="info_elo-fluc--new"></div>
+            </div>
+        </div>
+        <div class="fight_screen">
+
+        </div>
+        <div class="side_bar">
+            <div class="side_bar-header">
+                <img src="https://static.vecteezy.com/system/resources/thumbnails/003/682/252/small/pink-blue-v-alphabet-letter-logo-icon-design-with-swoosh-for-business-and-company-vector.jpg" class="user-avatar"></img>
+                <div class="user-info">
+                    <div class="user-info--name">{{current_user.username}}</div>
+                    <div class="user-info--elo">{{current_user.elo}}</div>
+                </div>
+            </div>
+            <div class="side_bar-content">Đối thủ đề xuất</div>
+            <ul class="side_bar-player-list">
+                <!-- <li class="player">
+                    <div class="player-avatar"></div>
+                    <img src="https://static.vecteezy.com/system/resources/thumbnails/003/682/252/small/pink-blue-v-alphabet-letter-logo-icon-design-with-swoosh-for-business-and-company-vector.jpg" class="player-avatar"></img>
+                    <div class="player-info">
+                        <div class="player-info--name">mtlv23</div>
+                        <div class="player-info--elo">1000</div>
+                    </div>
+                </li> -->
+            </ul>
+            <div class="fight_btn">thách đấu</div>
+        </div>
+    </div>
+
+    <script src="../static/script/fighting.js"></script>
+</body>
+</html>

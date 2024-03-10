@@ -1,0 +1,8 @@
+@keyframes appear {
+    50% {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
