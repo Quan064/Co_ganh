@@ -1,7 +1,8 @@
-
 import random
 
-def is_valid_move(move, current_side, board):
+# Remember that board[y][x] is the tile at (x, y) when printing
+    
+def is_valid_move(move, current_side, board): # HÀM HỖ TRỢ: KIỂM TRA NƯỚC ĐI HỢP LỆ
     current_x = move["selected_pos"][0]
     current_y = move["selected_pos"][1]
     new_x = move["new_pos"][0]
@@ -17,10 +18,19 @@ def is_valid_move(move, current_side, board):
         return (current_x+current_y)%2==0 and (dx * dy == 1)
     return False
 
-def main(player):
+def main(player): # BẮT BUỘC (KHÔNG XÓA)
+
+    # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    #  'your_side': -1,
+    #  'opp_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
+    #  'board': [[-1,-1, 0,-1, 0],
+    #            [ 0,-1,-1,-1, 0],
+    #            [-1, 0, 0,-1, 1],
+    #            [ 0, 1, 1, 1, 1],
+    #            [ 1, 1, 0, 1, 0]]}
 
     while True:
-        selected_pos = random.choice(player.)
+        selected_pos = random.choice(player.your_pos)
         board = player.board
         new_pos_select = random_move(selected_pos)
         new_pos = (new_pos_select[0], new_pos_select[1])
@@ -28,7 +38,8 @@ def main(player):
         if is_valid_move(move, player.your_side, board):
             return move
 
-def random_move(position):
+# Function of the game manager
+def random_move(position): # ĐIỀU CHỈNH THUẬT TOÁN TẠI ĐÂY
     movement = [(0, -1), (0, 1), (1, 0), (-1, 0), (-1, 1), (1, -1), (1, 1), (-1, -1)]  #possible moves
     movement_select = random.choice(movement)  #Randomize movement
     new_pos_x = position[0] + movement_select[1]

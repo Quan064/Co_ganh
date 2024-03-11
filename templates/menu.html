@@ -6,7 +6,8 @@
 {% block content %}
 <body class="text-center">
     <br>
-    <a href="{{ url_for('create_bot') }}">Tạo bot</a>
+    <a style="margin-right: 30px;" href="{{ url_for('create_bot') }}">Tạo bot</a>
+    <a href="{{ url_for('fighting_page') }}">đấu bot</a>
     <div class="LoginTheme">
       Logged in as : <strong > {{ current_user.username }} </strong> | <a href='{{ url_for("login") }}'>Đăng xuất</a>
     </div class='LogginTheme'>
