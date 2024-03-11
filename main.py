@@ -1,4 +1,5 @@
-from flask import Flask, flash, request, redirect, url_for, render_template
+from dataclasses import dataclass
+from flask import Flask, flash, request, redirect, url_for, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm 
@@ -29,12 +30,19 @@ login_manager.login_message_category = "info"
 login_manager.login_message = "Xin hãy đăng nhập để truy cập"
 
 
+# user = User.query.filter_by(username='tlv23').first()
+# user.elo = '100000'
+# db.session.commit()
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
+@dataclass
 class User(db.Model, UserMixin): 
+    username:str
+    elo:str
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
@@ -113,7 +121,7 @@ def upload_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
-        winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
+        winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
         return json.dumps("success")
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
@@ -130,6 +138,25 @@ def get_code():
     name = current_user.username
     with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
         return json.dumps(f.read())
+
+@app.route('/fighting_page')
+@login_required
+def fighting_page():
+    return render_template('fighting_page.html')
+
+@app.route('/fighting', methods=['POST'])
+@login_required
+def fighting():
+    name = current_user.username
+    player = request.get_json()
+    winner, max_move_win = activation("static.botfiles.botfile_"+player['name'], name)
+    return 'success'
+
+@app.route('/get_users')
+@login_required
+def get_users():
+    users = User.query.all()
+    return jsonify(users) 
     
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")

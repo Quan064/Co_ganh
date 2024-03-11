@@ -120,13 +120,9 @@ def vay(opp_pos):
 def activation(option, session_name):
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     reload(UserBot)
-    if option == "bot":
-        Bot2 = __import__("trainAI.Master", fromlist=[None])
-    elif option == "player":
-        player_file_list = [i for i in os.listdir(r"static\botfiles") if i != '__pycache__']
-        load_rand_player = choice(player_file_list)
-        Bot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
-
+    Bot2 = __import__(option, fromlist=[None])
+    reload(Bot2)
+    
     try: return run_game(UserBot, Bot2)
     except Exception: raise Exception(traceback.format_exc())
 def run_game(UserBot, Bot2): # Main
