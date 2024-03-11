@@ -121,7 +121,7 @@ def upload_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
-        winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
+        winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
         return json.dumps("success")
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
@@ -138,7 +138,6 @@ def get_code():
     name = current_user.username
     with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
         return json.dumps(f.read())
-<<<<<<< HEAD
 
 @app.route('/fighting_page')
 @login_required
@@ -148,14 +147,15 @@ def fighting_page():
 @app.route('/fighting', methods=['POST'])
 @login_required
 def fighting():
+    name = current_user.username
     player = request.get_json()
-    # player.name -- player.elo
+    winner, max_move_win = activation("static.botfiles.botfile_"+player['name'], name)
     return 'success'
 
 @app.route('/get_users')
 @login_required
 def get_users():
-    users = User.query.limit(10).all()
+    users = User.query.all()
     return jsonify(users) 
     
 if __name__ == '__main__':
