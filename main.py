@@ -155,12 +155,8 @@ def fighting():
 @app.route('/get_users')
 @login_required
 def get_users():
-    users = User.query.all()
-    print(users[0].username)
+    users = User.query.limit(10).all()
     return jsonify(users) 
-
-=======
->>>>>>> 2828d61b9ae75349729a619e26885c197832d3c3
     
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
