@@ -233,6 +233,7 @@ def renderVD():
     audio_background = mpe.AudioFileClip('static\\audio.mp3').set_duration(my_clip.duration)
     my_clip = my_clip.set_audio(audio_background)
     my_clip.write_videofile("static\\upload_video\\result.mp4")
+    my_clip.close()
 
 if __name__ == '__main__':
     from ursina import *
