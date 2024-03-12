@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from flask import Flask, flash, request, redirect, url_for, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -38,15 +37,12 @@ login_manager.login_message = "Xin hãy đăng nhập để truy cập"
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@dataclass
 class User(db.Model, UserMixin): 
-    username:str
-    elo:str
-
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
     elo = db.Column(db.Integer)
+    fightable = db.Column(db.Boolean)
 
 
 class LoginForm(FlaskForm):
@@ -91,7 +87,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
-        new_user = User(username=form.username.data, password=hashed_password, elo=0)
+        new_user = User(username=form.username.data, password=hashed_password, elo=0, fightable=False)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -142,7 +138,8 @@ def get_code():
 @app.route('/fighting_page')
 @login_required
 def fighting_page():
-    return render_template('fighting_page.html')
+    users = [(i.username, i.elo) for i in User.query.all()]
+    return render_template('fighting_page.html', users = users)
 
 @app.route('/fighting', methods=['POST'])
 @login_required
@@ -152,11 +149,6 @@ def fighting():
     winner, max_move_win = activation("static.botfiles.botfile_"+player['name'], name)
     return 'success'
 
-@app.route('/get_users')
-@login_required
-def get_users():
-    users = User.query.all()
-    return jsonify(users) 
     
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
