@@ -41,6 +41,15 @@
                         <div class="player-info--elo">1000</div>
                     </div>
                 </li> -->
+                {% for i in users %}
+                    <li class="player" data-name={{i[0]}} data-elo={{i[1]}}>
+                        <div class="player-avatar"><p>{{i[0][0].upper()}}</p></div>
+                        <div class="player-info">
+                        <div class="player-info--name">{{i[0]}}</div>
+                        <div class="player-info--elo">{{i[1]}}</div>
+                        </div>
+                    </li>
+                {% endfor %}
             </ul>
             <div class="fight_btn">thách đấu</div>
         </div>
