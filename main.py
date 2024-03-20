@@ -42,11 +42,13 @@ def load_user(user_id):
 class User(db.Model, UserMixin): 
     username:str
     elo:str
+    fightable:str
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
     elo = db.Column(db.Integer)
+    fightable = db.Column(db.Boolean)
 
 
 class LoginForm(FlaskForm):
@@ -91,7 +93,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
-        new_user = User(username=form.username.data, password=hashed_password, elo=0)
+        new_user = User(username=form.username.data, password=hashed_password, elo=0, fightable=False)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -111,7 +113,7 @@ def logout():
 @app.route('/menu')
 @login_required
 def menu():
-    return render_template('menu.html')
+    return render_template('menu.html', current_user=current_user)
 
 @app.route('/upload_code', methods=['POST'])
 @login_required
@@ -121,10 +123,15 @@ def upload_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
-        winner, max_move_win = activation("bot", name) # người thắng / số lượng lượt chơi
+        winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
+        user = User.query.filter_by(username=current_user.username).first()
+        user.fightable = True
+        db.session.commit()
         return json.dumps("success")
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
+        user.fightable = False
+        db.session.commit()
         return json.dumps(str(err)) # Giá trị Trackback Error
 
 @app.route('/create_bot')
@@ -138,29 +145,35 @@ def get_code():
     name = current_user.username
     with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
         return json.dumps(f.read())
-<<<<<<< HEAD
 
-@app.route('/fighting_page')
+@app.route('/bot_fight_page')
 @login_required
-def fighting_page():
-    return render_template('fighting_page.html')
+def bot_fight_page():
+    users = [(i.username, i.elo) for i in User.query.all()]
+    return render_template('bot_fight_page.html', users = users)
+
+@app.route('/play_chess_page')
+@login_required
+def play_chess_page():
+    return render_template('play_chess_page.html')
 
 @app.route('/fighting', methods=['POST'])
 @login_required
 def fighting():
+    name = current_user.username
     player = request.get_json()
-    # player.name -- player.elo
-    return 'success'
+    winner, max_move_win = activation("static.botfiles.botfile_"+player['name'], name)
+    data = {
+        "max_move_win": max_move_win,
+        "status": winner,
+    }
+    return json.dumps(data)
 
 @app.route('/get_users')
 @login_required
 def get_users():
     users = User.query.all()
-    print(users[0].username)
-    return jsonify(users) 
-
-=======
->>>>>>> 2828d61b9ae75349729a619e26885c197832d3c3
+    return users
     
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")

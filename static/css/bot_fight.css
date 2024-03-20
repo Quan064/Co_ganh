@@ -1,0 +1,187 @@
+body {
+    height: 100vh;
+    max-height: 100vh;
+    background-color: #121212;
+    color: rgba(255, 255, 255, 0.898);
+}
+
+.container {
+    display: flex;
+    height: 100%;
+    padding: 10px;
+}
+
+.info {
+    margin: 0 40px 0 5px;
+    width: 20%;
+    height: 100%;
+    background-color: #242527;
+    padding: 10px 10px;
+    border-radius: 5px;
+}
+
+.info_status {
+    background-color: #007BFF;
+    padding: 10px 40px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 20px;
+    margin-top: 14px;
+}
+
+.info_elo-fluc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding: 0 40px;
+    font-size: 25px;
+}
+
+.info_elo-fluc--pre {
+    opacity: 0;
+    animation: appear 1s forwards;
+}
+
+.info_elo-fluc--arrow {
+    margin: 10px 0;
+    opacity: 0;
+    animation: appear 1s forwards;
+    animation-delay: 1s;
+}
+
+.info_elo-fluc--new {
+}
+
+.fight_screen {
+    flex: 1;
+    display: flex;
+    height: 80%;
+    background-color: #000;
+    margin: auto 40px auto auto;
+    text-align: center;
+    padding: 10px 0;
+}
+
+.fight_screen-loading {
+    color: #fff;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.fight_screen-loading .sword,
+.fight_screen-loading div {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 50px;
+    height: 50px;
+    animation: none;
+}
+
+.fight_screen-loading img.roll {
+    width: 50px;
+    height: 50px;
+    animation-name: spin;
+    animation-duration: 5000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear; 
+}
+
+.fight_screen-video {
+    height: 100%;
+    margin: auto;
+}
+
+.side_bar {
+    margin: 0 5px 0 0;
+    width: 20%;
+    height: 100%;
+    background-color: #242527;
+    padding: 10px 10px;
+    border-radius: 5px;
+}
+
+.side_bar-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 5px 10px;
+}
+
+.user-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+}
+
+.user-info {
+    padding: 5px 10px;
+}
+
+.user-info--name {
+    font-size: 20px;
+}
+
+.side_bar-content {
+    margin-left: 10px;
+}
+
+.side_bar-player-list {
+    margin: 10px 0;
+    height: 70%;
+    overflow-y: scroll;
+}
+
+.player {
+    display: flex;
+    align-items: center;
+    padding: 10px 10px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 10px;
+}
+
+.player:hover {
+    background-color: #363535;
+}
+
+.player-avatar {
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #fff;
+    color: #007BFF;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.player-info--name {
+    font-size: 17px;
+}
+
+.player-info--elo {
+
+}
+
+.fight_btn {
+    padding: 10px 30px;
+    margin: 10px 10px;
+    text-align: center;
+    background-color: #007BFF;
+    border-radius: 5px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.fight_btn:hover {
+    filter: brightness(90%);
+}

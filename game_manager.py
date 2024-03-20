@@ -63,7 +63,7 @@ def declare():
 
     point = []
 # Board manipulation
-def is_valid_move(move, current_side, board):
+def Raise_exception(move, current_side, board):
     current_x = move["selected_pos"][0]
     current_y = move["selected_pos"][1]
     new_x = move["new_pos"][0]
@@ -120,13 +120,9 @@ def vay(opp_pos):
 def activation(option, session_name):
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     reload(UserBot)
-    if option == "bot":
-        Bot2 = __import__("trainAI.Master", fromlist=[None])
-    elif option == "player":
-        player_file_list = [i for i in os.listdir(r"static\botfiles") if i != '__pycache__']
-        load_rand_player = choice(player_file_list)
-        Bot2 = __import__("static.botfiles."+load_rand_player[:-3], fromlist=[None])
-
+    Bot2 = __import__(option, fromlist=[None])
+    reload(Bot2)
+    
     try: return run_game(UserBot, Bot2)
     except Exception: raise Exception(traceback.format_exc())
 def run_game(UserBot, Bot2): # Main
@@ -151,9 +147,8 @@ def run_game(UserBot, Bot2): # Main
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
 
-        # if not is_valid_move(move, current_turn, game_state["board"]):
-        #     raise Exception()
-        
+        # Raise_exception(move, current_turn, game_state["board"])
+
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
         game_state["board"][move_selected_pos[1]][move_selected_pos[0]] = 0
@@ -234,6 +229,7 @@ def renderVD():
     audio_background = mpe.AudioFileClip('static\\audio.mp3').set_duration(my_clip.duration)
     my_clip = my_clip.set_audio(audio_background)
     my_clip.write_videofile("static\\upload_video\\result.mp4")
+    my_clip.close()
 
 if __name__ == '__main__':
     from ursina import *
