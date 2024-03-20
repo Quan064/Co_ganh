@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from flask import Flask, flash, request, redirect, url_for, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -38,12 +37,14 @@ login_manager.login_message = "Xin hãy đăng nhập để truy cập"
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@dataclass
 class User(db.Model, UserMixin): 
+<<<<<<< HEAD
     username:str
     elo:str
     fightable:str
 
+=======
+>>>>>>> 85041ba667dfb86101b6de4673d6cecfb9a20b03
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
@@ -124,9 +125,12 @@ def upload_code():
         f.write(code)
     try: 
         winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
+<<<<<<< HEAD
         user = User.query.filter_by(username=current_user.username).first()
         user.fightable = True
         db.session.commit()
+=======
+>>>>>>> 85041ba667dfb86101b6de4673d6cecfb9a20b03
         return json.dumps("success")
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
@@ -154,8 +158,14 @@ def bot_fight_page():
 
 @app.route('/play_chess_page')
 @login_required
+<<<<<<< HEAD
 def play_chess_page():
     return render_template('play_chess_page.html')
+=======
+def fighting_page():
+    users = [(i.username, i.elo) for i in User.query.all()]
+    return render_template('fighting_page.html', users = users)
+>>>>>>> 85041ba667dfb86101b6de4673d6cecfb9a20b03
 
 @app.route('/fighting', methods=['POST'])
 @login_required
@@ -163,6 +173,7 @@ def fighting():
     name = current_user.username
     player = request.get_json()
     winner, max_move_win = activation("static.botfiles.botfile_"+player['name'], name)
+<<<<<<< HEAD
     data = {
         "max_move_win": max_move_win,
         "status": winner,
@@ -174,6 +185,10 @@ def fighting():
 def get_users():
     users = User.query.all()
     return users
+=======
+    return 'success'
+
+>>>>>>> 85041ba667dfb86101b6de4673d6cecfb9a20b03
     
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
