@@ -11,13 +11,17 @@ body {
     padding: 10px;
 }
 
-.info {
+.side_bar-left {
     margin: 0 40px 0 5px;
     width: 20%;
     height: 100%;
     background-color: #242527;
     padding: 10px 10px;
     border-radius: 5px;
+
+}
+
+.info {
 }
 
 .info_status {
@@ -54,14 +58,75 @@ body {
 .info_elo-fluc--new {
 }
 
-.fight_screen {
+.content {
     flex: 1;
     display: flex;
-    height: 80%;
-    background-color: #000;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
     margin: auto 40px auto auto;
+}
+
+.user, .enemy {
+    display: flex;
+    align-items: center;
+    margin: 0 0 10px 0;
+    padding: 5px 40px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    transition: all .5s linear;
+}
+
+.enemy {
+    margin: 10px 0 0 0;
+}
+
+.user_ava, .enemy_ava {
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 15px;
+    background-color: #fff;
+    color: #007BFF;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.user-name, .enemy-name {
+    font-size: 18px;
+}
+
+.user-elo, .enemy-elo {
+    font-size: 16px;
+}
+
+.fight_screen {
+    display: flex;
+    flex: 1;
     text-align: center;
     padding: 10px 0;
+    border-radius: 10px;
+    background-color: #000;
+    height: 80%;
+    width: 100%;
+}
+
+.fight_screen-standby {
+    margin: 10% auto auto auto;
+    display: flex;
+    flex-direction: column;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.fight_screen-standby i {
+    font-size: 70px;
+    margin-bottom: 40px;
 }
 
 .fight_screen-loading {

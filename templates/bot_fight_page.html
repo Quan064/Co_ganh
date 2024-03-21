@@ -12,23 +12,45 @@
 <body>
     <div class="container">
         <div class="ranking"></div>
-        <div class="info">
-            <div class="info_status">You Win</div>
-            <div class="info_elo-fluc">
-                <div class="info_elo-fluc--pre">1000</div>
-                <div class="info_elo-fluc--arrow"><i class="fa-solid fa-arrow-down-long"></i></div>
-                <div class="info_elo-fluc--new"></div>
+        <div class="side_bar-left">
+            <div style="display: none;" class="info">
+                <div class="info_status">You Win</div>
+                <div class="info_elo-fluc">
+                    <div class="info_elo-fluc--pre">{{current_user.elo}}</div>
+                    <div class="info_elo-fluc--arrow"><i class="fa-solid fa-arrow-down-long"></i></div>
+                    <div class="info_elo-fluc--new"></div>
+                </div>
             </div>
         </div>
-        <div class="fight_screen">
-            <div class="fight_screen-loading">
-                <img class="fight_screen-loading--img sword" src="{{url_for('static', filename='img/sword.png')}}" alt="">
-                <div><img class="fight_screen-loading--img roll" src="{{url_for('static', filename='img/roll.png')}}" alt=""></div>
+        <div class="content">
+            <div class="user">
+                <div class="user_ava">{{current_user.username[0].upper()}}</div>
+                <div class="user_info">
+                    <div class="user-name">{{current_user.username}}</div>
+                    <div class="user-elo">{{current_user.elo}}</div>
+                </div>
             </div>
-            <video style="display: none;" class="fight_screen-video" controls>
-                <source src="{{ url_for('static', filename='upload_video/result.mp4') }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+            <div class="fight_screen">
+                <div class="fight_screen-standby">
+                    <i class="fa-solid fa-face-laugh-beam"></i>
+                    CHỌN ĐỐI THỦ ĐỂ ĐẤU
+                </div>
+                <div style="display: none;" class="fight_screen-loading">
+                    <img class="fight_screen-loading--img sword" src="{{url_for('static', filename='img/sword.png')}}" alt="">
+                    <div><img class="fight_screen-loading--img roll" src="{{url_for('static', filename='img/roll.png')}}" alt=""></div>
+                </div>
+                <video style="display: none;" class="fight_screen-video" controls>
+                    <source src="{{ url_for('static', filename='upload_video/result.mp4') }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="enemy">
+                <div class="enemy_ava">X</div>
+                <div class="enemy_info">
+                    <div class="enemy-name">No enemy</div>
+                    <div class="enemy-elo"></div>
+                </div>
+            </div>
         </div>
         <div class="side_bar">
             <div class="side_bar-header">
