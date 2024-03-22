@@ -12,7 +12,7 @@ const animation = $(".utility_nav-block .animation")
 const animationChild = $(".utility_nav-block .animation .children")
 // const terminalLoader = $(".")
 
-var audio = document.querySelector(".bot_display-video--result");
+var audio = $(".bot_display-video--result");
 audio.volume = 0.1;
 
 var editor = ace.edit("coding_module-coding_block");
@@ -47,12 +47,16 @@ saveBtn.onclick = () => {
     .then(data => {
         const a = data.replaceAll('\n', '<br>').replaceAll('    ', '&emsp;')
         terminal.innerHTML = `>>> ${a}`
+        console.log("hello")
     })
     .catch(err => terminal.innerHTML = `>>> ${err}`)
     .finally(() => {
         loader.style.display = "none"
         saveBtn.style.display = "block"
         terminal.style.backgroundColor = "#000"
+        const src = audio.querySelector("source").src
+        audio.querySelector("source").src = src
+        audio.load()
     })
     
 }
@@ -102,7 +106,6 @@ fetch("/get_code")
 .then(res => res.json())
 .then(data => {
         if(data) {
-            console.log(JSON.stringify(data));
             session.setValue(data)
         } else {
             session.setValue(defaultValue);

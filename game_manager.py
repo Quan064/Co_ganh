@@ -165,19 +165,19 @@ def run_game(UserBot, Bot2): # Main
 
         if not positions[1]:
             if player1.your_side == 1:
-                winner = "Người chơi thua (Xanh)"
+                winner = "loose"
             else:
-                winner = "Người chơi thắng (Đỏ)"
+                winner = "win"
         elif not positions[-1]:
             if player1.your_side == 1:
-                winner = "Người chơi thắng (Xanh)"
+                winner = "win"
             else:
-                winner = "Người chơi thua (Đỏ)"
+                winner = "loose"
         elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 500:
             if player1.your_side == 1:
-                winner = "Hòa (Xanh)"
+                winner = "draw"
             else:
-                winner = "Hòa (Đỏ)"
+                winner = "draw"
 
         game_state["current_turn"] *= -1
         move_counter += 1

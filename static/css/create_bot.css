@@ -240,7 +240,7 @@ body {
     margin-left: auto;
     height: max-content;
     border-radius: 5px;
-    background-color: #121212;
+    background-color: #007BFF;
     border: 1px solid #333;
     transition: 0.05s linear;
     cursor: pointer;
@@ -260,7 +260,7 @@ body {
 }
 
 .coding_module-nav--saveBtn:hover {
-    background-color: #333;
+    filter: brightness(90%);
 }
 
 .coding_module-nav--loading {

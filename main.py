@@ -38,6 +38,10 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin): 
+    username:str
+    elo:str
+    fightable:str
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
@@ -107,7 +111,7 @@ def logout():
 @app.route('/menu')
 @login_required
 def menu():
-    return render_template('menu.html')
+    return render_template('menu.html', current_user=current_user)
 
 @app.route('/upload_code', methods=['POST'])
 @login_required
@@ -118,9 +122,14 @@ def upload_code():
         f.write(code)
     try: 
         winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
+        user = User.query.filter_by(username=current_user.username).first()
+        user.fightable = True
+        db.session.commit()
         return json.dumps("success")
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
+        user.fightable = False
+        db.session.commit()
         return json.dumps(str(err)) # Giá trị Trackback Error
 
 @app.route('/create_bot')
@@ -135,11 +144,17 @@ def get_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
         return json.dumps(f.read())
 
-@app.route('/fighting_page')
+@app.route('/bot_fight_page')
 @login_required
-def fighting_page():
+def bot_fight_page():
     users = [(i.username, i.elo) for i in User.query.all()]
-    return render_template('fighting_page.html', users = users)
+    return render_template('bot_fight_page.html', users = users)
+
+@app.route('/play_chess_page')
+@login_required
+def play_chess_page():
+    users = [(i.username, i.elo) for i in User.query.all()]
+    return render_template('play_chess_page.html', users = users)
 
 @app.route('/fighting', methods=['POST'])
 @login_required
@@ -147,7 +162,13 @@ def fighting():
     name = current_user.username
     player = request.get_json()
     winner, max_move_win = activation("static.botfiles.botfile_"+player['name'], name)
-    return 'success'
+    
+    data = {
+        "status": winner,
+        "max_move_win": max_move_win
+    }
+
+    return data
 
     
 if __name__ == '__main__':

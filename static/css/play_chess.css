@@ -1,0 +1,78 @@
+body {
+    height: 100vh;
+    max-height: 100vh;
+    background-color: #121212;
+    color: rgba(255, 255, 255, 0.898);
+    position: relative;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 4px;
+    row-gap: 4px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 500px;
+    height: 500px;
+    background-color: #242527;
+}
+
+.grid {
+    height: 250px;
+    width: 250px;
+    background-color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.row2 {
+    position: absolute;
+    top: -22%;
+    left: 49%;
+    width: 4px;
+    height: 360px;
+    transform: rotate(45deg);
+    background-color: #242527;
+}
+
+.row1 {
+    position: absolute;
+    top: -22%;
+    left: 49%;
+    width: 4px;
+    height: 360px;
+    transform: rotate(135deg);
+    background-color: #242527;
+}
+
+.row3 {
+    position: absolute;
+    left: 49%;
+    width: 4px;
+    height: 250px;
+    background-color: #242527;
+}
+
+.row4 {
+    position: absolute;
+    left: 49%;
+    width: 4px;
+    height: 250px;
+    transform: rotate(90deg);
+    background-color: #242527;
+}
+
+.chess {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.chess:hover {
+    filter: brightness(90%);
+}
