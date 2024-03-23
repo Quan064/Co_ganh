@@ -14,7 +14,7 @@ pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms pi
 ## Input
 - *Player.your_pos*: vị trí tất cả quân cờ của bản thân [(*x*, *y*), . . .]
 - *Player.opp_pos*: vị trí tất cả quân cờ của đối thủ  [(*x*, *y*), . . .]
-- *Player.your_side*: màu quân cờ của bản thân (-1:🔴 / 1:🔵)
+- *Player.your_side*: màu quân cờ của bản thân (1:🔵)
 - *Player.board*: bàn cờ (-1:🔴 / 1:🔵 / 0:∅)
 ### Ràng buộc
 - 0 ≤ *x*, *y* ≤ 4
