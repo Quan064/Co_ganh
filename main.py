@@ -154,7 +154,8 @@ def bot_fight_page():
 @login_required
 def play_chess_page():
     users = [(i.username, i.elo) for i in User.query.all()]
-    return render_template('play_chess_page.html', users = users)
+    rank_board = sorted(users, key=lambda i: i[1], reverse=True)
+    return render_template('play_chess_page.html', users = users, rank_board = rank_board)
 
 @app.route('/fighting', methods=['POST'])
 @login_required
