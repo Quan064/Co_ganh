@@ -22,10 +22,10 @@ def declare():
 
     player1 = Player()
     player2 = Player()
-    player1.your_side = choice((-1, 1))
-    player2.your_side = -player1.your_side
+    player1.your_side = 1
+    player2.your_side = -1
 
-    game_state = {"current_turn": 1,
+    game_state = {"current_turn": choice((-1, 1)),
                   "board": [[-1, -1, -1, -1, -1],
                             [-1,  0,  0,  0, -1],
                             [ 1,  0,  0,  0, -1],
@@ -62,22 +62,22 @@ def declare():
     draw.line((300, 500, 100, 300), fill="black", width=3)
 
     point = []
+
 # Board manipulation
 def Raise_exception(move, current_side, board):
-    current_x = move["selected_pos"][0]
-    current_y = move["selected_pos"][1]
-    new_x = move["new_pos"][0]
-    new_y = move["new_pos"][1]
+    current_x, current_y = move["selected_pos"]
+    new_x, new_y = move["new_pos"]
 
-    if (current_x%1==0 and current_y%1==0 and new_x%1==0 and new_y%1==0 and # Checking if pos is integer
-        0 <= current_x <= 4 and 0 <= current_y <= 4 and # Checking if move is out of bounds
-        0 <= new_x     <= 4 and 0 <= new_y     <= 4 and
-        board[new_y][new_x] == 0 and board[current_y][current_x] == current_side): # Checking if selected position and new position is legal
-        dx = abs(new_x-current_x)
-        dy = abs(new_y-current_y)
-        if (dx + dy == 1): return True # Checking if the piece has moved one position away
-        return (current_x+current_y)%2==0 and (dx * dy == 1)
-    return False
+    if current_x%1!=0 or current_y%1!=0 or new_x%1!=0 or new_y%1!=0:
+        raise Exception(f"Position must be an integer (not {[i for i in (current_x, current_y, new_x, new_y) if i%1!=0]})")
+    elif not (0 <= current_x <= 4 and 0 <= current_y <= 4 and 0 <= new_x <= 4 and 0 <= new_y <= 4):
+        raise Exception(f"x / y must be within the range 0 to 4 (not {[i for i in (current_x, current_y, new_x, new_y) if not 0 <= i <= 4]})")
+    elif board[new_y][new_x] != 0:
+        raise Exception("new_pos must be empty")
+    elif board[current_y][current_x] != current_side:
+        raise Exception("selected_pos should be your position")
+    elif {(dx := abs(new_x-current_x)), (dy := abs(new_y-current_y))} - {1, 0} != set() or dy==dy==0:
+        raise Exception("Can only move into adjacent cells")
 
 def ganh_chet(move, opp_pos, side, opp_side):
 
@@ -139,15 +139,17 @@ def run_game(UserBot, Bot2): # Main
         print(f"\rLoading |{'█'*filled}{'-'*(50-filled)}|{move_counter//5}% Complete", end='')
 
         current_turn = game_state["current_turn"]
-        if player1.your_side == current_turn:
-            move = UserBot.main(deepcopy(player1))
-        else:
-            move = Bot2.main(deepcopy(player2))
+        try:
+            if player1.your_side == current_turn:
+                move = UserBot.main(deepcopy(player1))
+            else:
+                move = Bot2.main(deepcopy(player2))
 
-        move_new_pos = move["new_pos"]
-        move_selected_pos = move["selected_pos"]
+            move_new_pos = move["new_pos"]
+            move_selected_pos = move["selected_pos"]
+        except: raise Exception(r"The return value must be in the form: {'selected_pos': (x, y), 'new_pos': (x, y)} " + f"(not {move})")
 
-        # Raise_exception(move, current_turn, game_state["board"])
+        Raise_exception(move, current_turn, game_state["board"])
 
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
@@ -161,7 +163,7 @@ def run_game(UserBot, Bot2): # Main
         remove += vay(opp_pos)
         if remove: point[:] += [move_selected_pos]*len(remove)
 
-        generate_image(positions, move_counter, move, remove)
+        generate_image(positions, move_counter, move, remove, current_turn)
 
         if not positions[1]:
             if player1.your_side == 1:
@@ -198,7 +200,7 @@ def init_img(positions):
         draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
         
     image.save(os.getcwd()+"/static/upload_img/chessboard0.png", "PNG")
-def generate_image(positions, move_counter, move, remove):
+def generate_image(positions, move_counter, move, remove, current_turn):
     image = static_image.copy()
     draw = ImageDraw.Draw(image)
 
@@ -212,7 +214,7 @@ def generate_image(positions, move_counter, move, remove):
     new_y = move["new_pos"][1]
     old_x = move["selected_pos"][0]
     old_y = move["selected_pos"][1]
-    draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=("red", "blue")[move_counter%2], outline="green", width=5)
+    draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=(None, "blue", "red")[current_turn], outline="green", width=5)
     draw.ellipse((old_x*100+80, old_y*100+80, old_x*100+120, old_y*100+120), fill=None, outline="green", width=5)
 
     image.save(os.getcwd()+f"/static/upload_img/chessboard{move_counter}.png", "PNG")
@@ -232,59 +234,5 @@ def renderVD():
     my_clip.close()
 
 if __name__ == '__main__':
-    from ursina import *
     import trainAI.Master as Master, CGEngine
-
     winner, win_move_counter = run_game(CGEngine, Master)
-    print(f"\rLoading |{'█'*50}|100% Complete")
-
-    app = Ursina(title="Cờ gánh", borderless=False)
-
-    application.compressed_textures_folder = "static/upload_img"
-
-    chess_board = Sprite("chessboard0", scale=2.5)
-    winner_txt = Text(winner, x=-.6, y=.48, scale=2, color=color.black)
-    indexIMG = 0
-    indexIMG_txt = Text("0", x=-.6, y=.43, scale=2, color=color.black)
-
-    def input(key):
-        global indexIMG
-
-        if "arrow" in key:
-            if key == "left arrow":
-                indexIMG -= 1
-            if key == "right arrow":
-                indexIMG += 1
-
-            if indexIMG < 0:
-                indexIMG = win_move_counter
-            elif indexIMG > win_move_counter:
-                indexIMG = 0
-
-            chess_board.texture = f"chessboard{indexIMG}"
-            indexIMG_txt.text = str(indexIMG)
-
-    def end_():
-        images = os.listdir("static\\upload_img\\")
-        for file in images:
-            os.remove("static\\upload_img\\"+file)
-
-        with open("trainAI\source_code\pos_point.txt") as f:
-            max_pointF = int(f.readline()[:-1])
-            board_pointF = eval(f.read())
-            for x, y in point:
-                board_pointF[y][x] += 1
-                max_pointF = max(max_pointF, board_pointF[y][x])
-        with open("trainAI\source_code\pos_point.txt", "w") as f:
-            f.write(str(max_pointF)+"\n")
-            f.write(str(board_pointF).replace("], [", "],\n["))
-
-        return application.quit()
-
-    window.size = (600,600)
-    window.fps_counter.enabled = False
-    window.entity_counter.enabled = False
-    window.collider_counter.enabled = False
-    window.exit_button.on_click = end_
-
-    app.run()

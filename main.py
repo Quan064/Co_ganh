@@ -6,10 +6,15 @@ from wtforms import SubmitField, PasswordField, StringField
 from wtforms.validators import Length, ValidationError, EqualTo, DataRequired
 from flask_bcrypt import Bcrypt
 from game_manager import activation
+import trainAI.Master
 import webbrowser
 from threading import Timer
 import json
 
+class Player:
+    def __init__(self, dict):
+        for key, value in dict:
+            setattr(self, key, value)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -156,6 +161,13 @@ def bot_fight_page():
 def play_chess_page():
     users = [(i.username, i.elo) for i in User.query.all()]
     return render_template('play_chess_page.html', users = users)
+
+@app.route('/get_pos_of_playing_chess')
+@login_required
+def get_pos_of_playing_chess():
+    player = Player(request.get_json())
+    move = trainAI.Master.main(player)
+    return move
 
 @app.route('/fighting', methods=['POST'])
 @login_required
