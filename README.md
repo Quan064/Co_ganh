@@ -8,17 +8,8 @@ Mục tiêu của chương trình là chiến thắng đối thủ robot_alpha1 
 ## Luật chơi
 https://www.youtube.com/watch?v=FU3auCFYGJc&t=2s
 ## Thư viện cần thiết
-- flask
-- flask_bcrypt
-- flask_login
-- flask_sqlalchemy
-- flask_wtf
-- wtforms
-- PIL
-- cv2
-- moviepy
 ```
-pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms pillow opencv-python moviepy ursina
+pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms pillow opencv-python moviepy
 ```
 ## Input
 - *Player.your_pos*: vị trí tất cả quân cờ của bản thân [(*x*, *y*), . . .]
