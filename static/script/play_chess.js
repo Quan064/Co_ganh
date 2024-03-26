@@ -87,8 +87,8 @@ function getBotmove() {
 
     grid.forEach((row,i) => {
         row.forEach((__,j) => {
-            if(grid[i][j] === 1) data.your_pos.push([i,j])
-            if(grid[i][j] === -1) data.opp_pos.push([i,j])
+            if(grid[i][j] === 1) data.your_pos.push([j,i])
+            if(grid[i][j] === -1) data.opp_pos.push([j,i])
         })
     })
 
