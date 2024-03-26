@@ -12,8 +12,8 @@ from threading import Timer
 import json
 
 class Player:
-    def __init__(self, dict):
-        for key, value in dict:
+    def __init__(self, dict: dict):
+        for key, value in dict.items():
             setattr(self, key, value)
 
 app = Flask(__name__)
