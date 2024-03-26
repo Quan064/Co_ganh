@@ -12,8 +12,8 @@ from threading import Timer
 import json
 
 class Player:
-    def __init__(self, dict):
-        for key, value in dict:
+    def __init__(self, dict: dict):
+        for key, value in dict.items():
             setattr(self, key, value)
 
 app = Flask(__name__)
@@ -165,7 +165,7 @@ def play_chess_page():
 @app.route('/get_pos_of_playing_chess')
 @login_required
 def get_pos_of_playing_chess():
-    player = Player(eval(request.get_json()))
+    player = Player(request.get_json())
     move = trainAI.Master.main(player)
     return move
 
