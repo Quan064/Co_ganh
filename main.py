@@ -10,10 +10,11 @@ import trainAI.Master
 import webbrowser
 from threading import Timer
 import json
+from types import SimpleNamespace
 
 class Player:
-    def __init__(self, dict):
-        for key, value in dict:
+    def __init__(self, dict: dict):
+        for key, value in dict.items():
             setattr(self, key, value)
 
 app = Flask(__name__)
@@ -123,11 +124,11 @@ def menu():
 def upload_code():
     name = current_user.username
     code = request.get_json()
+    user = User.query.filter_by(username=current_user.username).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
         winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
-        user = User.query.filter_by(username=current_user.username).first()
         user.fightable = True
         db.session.commit()
         return json.dumps("success")
@@ -136,6 +137,15 @@ def upload_code():
         user.fightable = False
         db.session.commit()
         return json.dumps(str(err)) # Giá trị Trackback Error
+
+@app.route('/save_code', methods=['POST'])
+@login_required
+def save_code():
+    name = current_user.username
+    code = request.get_json()
+    with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
+        f.write(code)
+    return json.dumps("success")
 
 @app.route('/create_bot')
 @login_required
@@ -162,10 +172,12 @@ def play_chess_page():
     users = [(i.username, i.elo) for i in User.query.all()]
     return render_template('play_chess_page.html', users = users)
 
-@app.route('/get_pos_of_playing_chess')
+@app.route('/get_pos_of_playing_chess', methods=['POST'])
 @login_required
 def get_pos_of_playing_chess():
+    # data = json.loads(eval(request.get_json()))
     player = Player(request.get_json())
+    print(request.get_json())
     move = trainAI.Master.main(player)
     return move
 

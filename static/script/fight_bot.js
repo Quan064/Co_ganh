@@ -61,6 +61,8 @@ fightBtn.onclick = () => {
     loading.style.display = "block";
     user.style.backgroundColor = "#121212"
     enemy.style.backgroundColor = "#121212"
+    video.innerHTML = `<source type="video/mp4">
+    // Your browser does not support the video tag.`
     fetch("/fighting", {
         method: "POST",
         headers: {
@@ -95,14 +97,16 @@ fightBtn.onclick = () => {
             info_elo_fluc_new.style.color = "#fff"
             newValue = parseInt(userElo.innerHTML)
         }
-
-        loading.style.display = "none"
-        video.style.display = "block"
-        video.load()
-        console.log("h1llo")
-        setTimeout(() => info.style.display = "block", 1000)
     })
     .catch(err => console.log(err))
+    .finally(() => {
+        loading.style.display = "none"
+        video.innerHTML = `<source src="/static/upload_video/result.mp4" type="video/mp4">
+        // Your browser does not support the video tag.`
+        video.load()
+        video.style.display = "block"
+        setTimeout(() => info.style.display = "block", 1000)
+    })
 }
 
 

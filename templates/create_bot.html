@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="../static/css/style.css">
-    <link rel="stylesheet" href="../static/css/create_bot.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/create_bot.css">
 </head>
 <body>
 
@@ -74,8 +74,9 @@
         <div class="container_element coding_module">
             <div class="coding_module-nav">
                 <a href="{{ url_for('menu') }}" class="coding_module-nav--backBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
-                <div class="coding_module-nav--saveBtn loader" style="display: none; animation: none;"><div class="coding_module-nav--loading"></div></div>
-                <div class="coding_module-nav--saveBtn btn">save</div>
+                <div class="coding_module-nav--saveBtn btn" data-saved="false">save</div>
+                <div class="coding_module-nav--runBtn loader" style="display: none; animation: none;"><div class="coding_module-nav--loading"></div></div>
+                <div class="coding_module-nav--runBtn btn">run</div>
             </div>
             <div class="a" style="height: 100%; position: relative;">
                 <div id="coding_module-coding_block"></div>

@@ -17,7 +17,7 @@ def is_valid_move(move, current_side, board): # HÀM HỖ TRỢ: KIỂM TRA NƯ�
         if (dx + dy == 1): return True # Checking if the piece has moved one position away
         return (current_x+current_y)%2==0 and (dx * dy == 1)
     return False
-
+    
 def main(player): # BẮT BUỘC (KHÔNG XÓA)
 
     # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],

@@ -1,10 +1,11 @@
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
 
+const runBtn = $(".coding_module-nav--runBtn.btn")
 const saveBtn = $(".coding_module-nav--saveBtn.btn")
 const terminal = $(".utility_block-element.terminal")
 const rule = $(".utility_block-element.rule")
-const loader = $(".coding_module-nav--saveBtn.loader")
+const loader = $(".coding_module-nav--runBtn.loader")
 
 const ruleBtn = $(".utility_nav-block--item.rule")
 const terminalBtn = $(".utility_nav-block--item.terminal")
@@ -25,8 +26,27 @@ editor.setOptions({
 
 saveBtn.onclick = () => {
     const code = editor.getValue()
+    saveBtn.dataset.saved = "true"
+    fetch("/save_code", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(code.replaceAll('\r', '')),
+    })
+    .then(res => res.json())
+    .then(data => {
+        saveBtn.style.backgroundColor = "#fff"
+        saveBtn.style.color = "#000"
+        const a = data.replaceAll('\n', '<br>').replaceAll('    ', '&emsp;')
+        terminal.innerHTML = `>>> ${a}`
+    })
+}
+
+runBtn.onclick = () => {
+    const code = editor.getValue()
     loader.style.display = "block"
-    saveBtn.style.display = "none"
+    runBtn.style.display = "none"
 
     toggleMode("terminal")
     terminal.style.backgroundColor = "#252525"
@@ -52,7 +72,7 @@ saveBtn.onclick = () => {
     .catch(err => terminal.innerHTML = `>>> ${err}`)
     .finally(() => {
         loader.style.display = "none"
-        saveBtn.style.display = "block"
+        runBtn.style.display = "block"
         terminal.style.backgroundColor = "#000"
         const src = audio.querySelector("source").src
         audio.querySelector("source").src = src
@@ -101,6 +121,13 @@ def random_move(position):
 `
 const session = editor.getSession();
 session.setMode('ace/mode/python');
+
+editor.getSession().on('change', function() {
+    if(saveBtn.dataset.saved = "true") {
+        saveBtn.style.backgroundColor = "#1E1E1E"
+        saveBtn.style.color = "#fff"
+    }
+});
 
 fetch("/get_code")
 .then(res => res.json())

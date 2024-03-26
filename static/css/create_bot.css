@@ -235,21 +235,34 @@ body {
     filter: brightness(90%);
 }
 
-.coding_module-nav--saveBtn.btn {
+.btn {
     padding: 5px 20px;
-    margin-left: auto;
     height: max-content;
     border-radius: 5px;
-    background-color: #007BFF;
     border: 1px solid #333;
     transition: 0.05s linear;
     cursor: pointer;
     user-select: none;
 }
 
-.coding_module-nav--saveBtn.loader {
-    padding: 5px 20px;
+.coding_module-nav--runBtn {
+    margin-left: 20px;
+    background-color: #007BFF;
+}
+
+.coding_module-nav--saveBtn {
     margin-left: auto;
+    border: 1px solid #fff;
+}
+
+.coding_module-nav--saveBtn:hover {
+    background-color: #fff;
+    color: #000;
+}
+
+.coding_module-nav--runBtn.loader {
+    padding: 5px 20px;
+    margin-left: 20px;
     height: max-content;
     border-radius: 5px;
     background-color: #121212;
@@ -259,7 +272,7 @@ body {
     user-select: none;
 }
 
-.coding_module-nav--saveBtn:hover {
+.coding_module-nav--runBtn:hover {
     filter: brightness(90%);
 }
 
