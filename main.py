@@ -165,7 +165,7 @@ def play_chess_page():
 @app.route('/get_pos_of_playing_chess')
 @login_required
 def get_pos_of_playing_chess():
-    player = Player(request.get_json())
+    player = Player(eval(request.get_json()))
     move = trainAI.Master.main(player)
     return move
 
