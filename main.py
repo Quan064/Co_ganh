@@ -177,7 +177,8 @@ def play_chess_page():
 def get_pos_of_playing_chess():
     # data = json.loads(eval(request.get_json()))
     player = Player(request.get_json())
-    print(request.get_json())
+    player.your_pos = [tuple(i) for i in player.your_pos]
+    player.opp_pos = [tuple(i) for i in player.opp_pos]
     move = trainAI.Master.main(player)
     return move
 

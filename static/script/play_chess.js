@@ -62,14 +62,34 @@ for(let i = 0; i < grid.length; i++) {
     }
 }
 
-function swap(chess, box) {
-    chess.style.left = box.offsetLeft + 10 + "px"
-    chess.style.top = box.offsetTop + 10 + "px"
-    chess.dataset.posx = box.dataset.posx
-    chess.dataset.posy = box.dataset.posy
+function changeBoard(x, y, newX, newY) {
+    const chessX = Number(x)
+    const chessY = Number(y)
+    const boxX = Number(newX)
+    const boxY = Number(newY)
+    let path = grid[chessY][chessX]
+    grid[chessY][chessX] = grid[boxY][boxX]
+    grid[boxY][boxX] = path
+}
+
+function swap(chess, box, newPos) {
+    if(box) {
+        chess.style.left = box.offsetLeft + 10 + "px"
+        chess.style.top = box.offsetTop + 10 + "px"
+        changeBoard(chess.dataset.posx,chess.dataset.posy, box.dataset.posx, box.dataset.posy)
+        chess.dataset.posx = box.dataset.posx
+        chess.dataset.posy = box.dataset.posy
+    } else {
+        chess.style.left = newPos[1] * chessGrapX - 34 + "px"
+        chess.style.top = newPos[0] * chessGrapX - 34 + "px"
+        changeBoard(chess.dataset.posx, chess.dataset.posy, newPos[1], newPos[0])
+        chess.dataset.posx = `${newPos[1]}`
+        chess.dataset.posy = `${newPos[0]}`
+    }
 }
 
 const boxes = $$(".box")
+const chessEnemy = $$(".chess.enemy")
 
 function clearBox() {
     boxes.forEach(box => {
@@ -85,12 +105,15 @@ function getBotmove() {
         board : grid,
     }
 
+    
     grid.forEach((row,i) => {
         row.forEach((__,j) => {
-            if(grid[i][j] === 1) data.your_pos.push([i,j])
-            if(grid[i][j] === -1) data.opp_pos.push([i,j])
+            if(grid[i][j] === 1) data.your_pos.push([j,i])
+            if(grid[i][j] === -1) data.opp_pos.push([j,i])
         })
-    })
+})
+// console.log(data.opp_pos)
+// console.log(grid)
 
     fetch("/get_pos_of_playing_chess", {
         method: "POST",
@@ -100,21 +123,21 @@ function getBotmove() {
         body: JSON.stringify(data),
     })
     .then(res => res.json(data))
-    .then(data => {
-        console.log(data)
+    .then(resData => {
+        console.log(resData)
+        const {selected_pos, new_pos} = resData
+        const selectedChess = Array.from(chessEnemy).find(e => {
+            return Number(e.dataset.posx) === selected_pos[1] && Number(e.dataset.posy) === selected_pos[0]
+        })
+        swap(selectedChess, null, new_pos)
     })
+
 }
 
 boxes.forEach((e) => {
     e.onclick = () => {
         if(e.dataset.choosable === "true" && selectedChess) {
-            const chessX = Number(selectedChess.dataset.posx)
-            const chessY = Number(selectedChess.dataset.posy)
-            const boxX = Number(e.dataset.posx)
-            const boxY = Number(e.dataset.posy)
-            let path = grid[chessY][chessX]
-            grid[chessY][chessX] = grid[boxY][boxX]
-            grid[boxY][boxX] = path
+            // changeBoard(selectedChess.dataset.posx,selectedChess.dataset.posy, e.dataset.posx, e.dataset.posy)
             swap(selectedChess, e)
             clearBox()
             getBotmove()
