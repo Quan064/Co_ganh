@@ -8,22 +8,13 @@ Mục tiêu của chương trình là chiến thắng đối thủ robot_alpha1 
 ## Luật chơi
 https://www.youtube.com/watch?v=FU3auCFYGJc&t=2s
 ## Thư viện cần thiết
-- flask
-- flask_bcrypt
-- flask_login
-- flask_sqlalchemy
-- flask_wtf
-- wtforms
-- PIL
-- cv2
-- moviepy
 ```
-pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms pillow opencv-python moviepy ursina
+pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms pillow opencv-python moviepy
 ```
 ## Input
 - *Player.your_pos*: vị trí tất cả quân cờ của bản thân [(*x*, *y*), . . .]
 - *Player.opp_pos*: vị trí tất cả quân cờ của đối thủ  [(*x*, *y*), . . .]
-- *Player.your_side*: màu quân cờ của bản thân (-1:🔴 / 1:🔵)
+- *Player.your_side*: màu quân cờ của bản thân (1:🔵)
 - *Player.board*: bàn cờ (-1:🔴 / 1:🔵 / 0:∅)
 ### Ràng buộc
 - 0 ≤ *x*, *y* ≤ 4
@@ -71,8 +62,8 @@ Một **Dick** của:
 6. Chờ và xem kết quả. Click vào dấu mũi tên góc trái dưới màn hình để xem chi tiết
 ### Chạy thử
 Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
-- Di chuyển lượt bằng phím mũi tên trái phải trên bàn phím
-- **Lưu ý:** phải tắt cửa sổ pop up bằng dấu X ở bên trong cửa sổ
+> [!NOTE]
+> Xem trận đấu tại **static/upload_video/result.mp4**
 
 [![Watch the video](https://img.youtube.com/vi/GsxwOXEXcoI/hqdefault.jpg)](https://youtu.be/GsxwOXEXcoI)
 

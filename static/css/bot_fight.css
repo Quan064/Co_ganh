@@ -21,8 +21,6 @@ body {
 
 }
 
-.info {
-}
 
 .info_status {
     background-color: #007BFF;
@@ -78,7 +76,7 @@ body {
     transition: all .5s linear;
 }
 
-.enemy {
+.user {
     margin: 10px 0 0 0;
 }
 
