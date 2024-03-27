@@ -166,6 +166,8 @@ def play_chess_page():
 @login_required
 def get_pos_of_playing_chess():
     player = Player(request.get_json())
+    player.your_pos = [tuple(i) for i in player.your_pos]
+    player.opp_pos = [tuple(i) for i in player.opp_pos]
     move = trainAI.Master.main(player)
     return move
 
