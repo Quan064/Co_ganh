@@ -263,6 +263,8 @@ const guides = [
     }
 ]
 
+const utility_nav_block = $(".utility_nav-block")
+
 function toggleMode(mode) {
     if(mode == "terminal") {
         terminal.style.display = "block"
@@ -283,9 +285,16 @@ ruleBtn.onclick = (e) => {
 }
 
 terminalBtn.onclick = (e) => {
+    console.dir(utility_nav_block)
+    const {offsetLeft, offsetWidth} = utility_nav_block
+    // offsetLeft offsetWidth
+    // x
+    const {terOffsetLeft, terOffsetWidth} = terminalBtn
+    const left = (terminalBtn.offsetLeft - utility_nav_block.offsetLeft) / utility_nav_block.offsetWidth * 100
+    // console.log(left)
     terminalBtn.style.color = "#fff"
     ruleBtn.style.color = "#ccc"
-    animationChild.style.right = "0";
+    animationChild.style.left = left + "%";
     animationChild.style.width = e.target.clientWidth + "px";
     toggleMode("terminal")
 }

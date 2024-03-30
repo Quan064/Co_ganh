@@ -162,13 +162,16 @@ def play_chess_page():
     users = [(i.username, i.elo) for i in User.query.all()]
     return render_template('play_chess_page.html', users = users)
 
-@app.route('/get_pos_of_playing_chess')
+@app.route('/get_pos_of_playing_chess', methods=['POST'])
 @login_required
 def get_pos_of_playing_chess():
     player = Player(request.get_json())
     player.your_pos = [tuple(i) for i in player.your_pos]
     player.opp_pos = [tuple(i) for i in player.opp_pos]
+    player.your_pos, player.opp_pos = player.opp_pos, player.your_pos
     move = trainAI.Master.main(player)
+    move['selected_pos'] = tuple(reversed(list(move['selected_pos'])))
+    move['new_pos'] = tuple(reversed(list(move['new_pos'])))
     return move
 
 @app.route('/fighting', methods=['POST'])

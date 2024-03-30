@@ -98,6 +98,10 @@ body {
     z-index: 1000;
 }
 
+.chess.not_ready {
+    cursor: not-allowed;
+}
+
 .chess:hover {
     filter: brightness(90%);
 }

@@ -145,6 +145,10 @@ body {
     margin: 5px 0 5px 10px;
 }
 
+.utility_nav-block--item.result {
+    margin: 5px 0 5px 15px;
+}
+
 .utility_nav-block .animation {
     position: absolute;
     bottom: 0;

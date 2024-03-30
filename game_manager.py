@@ -80,7 +80,7 @@ def Raise_exception(move, current_side, board):
         raise Exception("Can only move into adjacent cells")
 
 def ganh_chet(move, opp_pos, side, opp_side):
-
+    
     valid_remove = []
     board = game_state["board"]
     at_8intction = (move[0]+move[1])%2==0
