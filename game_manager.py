@@ -65,6 +65,9 @@ def declare():
 
 # Board manipulation
 def Raise_exception(move, current_side, board):
+    if not (move.__class__ == dict and tuple(move.keys()) == ('selected_pos', 'new_pos') and move['selected_pos'].__class__ == tuple and move['new_pos'].__class__ == tuple):
+        raise Exception(r"The return value must be in the form: {'selected_pos': (x, y), 'new_pos': (x, y)} " + f"(not {move})")
+
     current_x, current_y = move["selected_pos"]
     new_x, new_y = move["new_pos"]
 
@@ -139,17 +142,15 @@ def run_game(UserBot, Bot2): # Main
         print(f"\rLoading |{'█'*filled}{'-'*(50-filled)}|{move_counter//5}% Complete", end='')
 
         current_turn = game_state["current_turn"]
-        try:
-            if player1.your_side == current_turn:
-                move = UserBot.main(deepcopy(player1))
-            else:
-                move = Bot2.main(deepcopy(player2))
-
-            move_new_pos = move["new_pos"]
-            move_selected_pos = move["selected_pos"]
-        except: raise Exception(r"The return value must be in the form: {'selected_pos': (x, y), 'new_pos': (x, y)} " + f"(not {move})")
+        if player1.your_side == current_turn:
+            move = UserBot.main(deepcopy(player1))
+        else:
+            move = Bot2.main(deepcopy(player2))
 
         Raise_exception(move, current_turn, game_state["board"])
+
+        move_new_pos = move["new_pos"]
+        move_selected_pos = move["selected_pos"]
 
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
