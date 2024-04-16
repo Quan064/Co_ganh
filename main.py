@@ -1,5 +1,6 @@
 from flask import Flask, flash, request, redirect, url_for, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm 
 from wtforms import SubmitField, PasswordField, StringField
@@ -55,14 +56,14 @@ class User(db.Model, UserMixin):
 
 
 class LoginForm(FlaskForm):
-    username = StringField("Tên đăng nhập:", validators=[DataRequired(), Length(min=4, max=20)])
+    username = StringField("Tên đăng nhập", validators=[DataRequired(), Length(min=4, max=20)])
     password =  PasswordField("Mật khẩu", validators=[DataRequired(), Length(min=4, max=20)])
     submit = SubmitField("Đăng Nhập")
 
 
 class RegisterForm(FlaskForm):
-    username = StringField('Tên đăng nhập:', validators=[DataRequired(), Length(min=4, max=20)])
-    password =  PasswordField('Mật khẩu:',  validators=[DataRequired(), Length(min=4, max=20)])
+    username = StringField('Tên đăng nhập', validators=[DataRequired(), Length(min=4, max=20)])
+    password =  PasswordField('Mật khẩu',  validators=[DataRequired(), Length(min=4, max=20)])
     conf_pass =  PasswordField('Xác nhận mật khẩu:', validators=[DataRequired(), EqualTo("password", message='Mật khẩu xác nhận không trùng khớp')])
     submit = SubmitField(label='Tạo tài khoản')
 
@@ -123,19 +124,38 @@ def menu():
 def upload_code():
     name = current_user.username
     code = request.get_json()
+    user = User.query.filter_by(username=current_user.username).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
-        winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
-        user = User.query.filter_by(username=current_user.username).first()
+        winner, max_move_win, new_url = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
         user.fightable = True
         db.session.commit()
-        return json.dumps("success")
+        data = {
+            "code": 200,
+            "status": winner,
+            "max_move_win": max_move_win,
+            "new_url": new_url
+        }
+        return json.dumps(data)
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
         user.fightable = False
         db.session.commit()
-        return json.dumps(str(err)) # Giá trị Trackback Error
+        data = {
+            "code": 400,
+            "err": err,
+        }
+        return json.dumps(data) # Giá trị Trackback Error
+    
+@app.route('/save_code', methods=['POST'])
+@login_required
+def save_code():
+    name = current_user.username
+    code = request.get_json()
+    with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
+        f.write(code)
+    return json.dumps("succeed")
 
 @app.route('/create_bot')
 @login_required
@@ -148,12 +168,21 @@ def get_code():
     name = current_user.username
     with open(f"static/botfiles/botfile_{name}.py", mode="r", encoding="utf-8") as f:
         return json.dumps(f.read())
+    
+@app.route('/get_users')
+@login_required
+def get_users():
+    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
+    return users
 
 @app.route('/bot_fight_page')
 @login_required
 def bot_fight_page():
-    users = [(i.username, i.elo) for i in User.query.all()]
-    rank_board = sorted(users, key=lambda i: i[1], reverse=True)
+    # users = User.query.order_by(User.elo.desc()).limit(10).all()
+    # rank_board = User.query.order_by(User.elo.desc()).limit(5).all()
+    # return render_template('bot_fight_page.html', users = users, rank_board = rank_board)
+    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
+    rank_board = [(i.username, i.elo) for i in User.query.order_by(User.elo.desc()).limit(5).all()]
     return render_template('bot_fight_page.html', users = users, rank_board = rank_board)
 
 @app.route('/play_chess_page')
@@ -179,16 +208,32 @@ def get_pos_of_playing_chess():
 def fighting():
     name = current_user.username
     player = request.get_json()
-    winner, max_move_win = activation("static.botfiles.botfile_"+player['name'], name)
+    winner, max_move_win, new_url = activation("static.botfiles.botfile_"+player['name'], name)
     
     data = {
         "status": winner,
-        "max_move_win": max_move_win
+        "max_move_win": max_move_win,
+        "new_url": new_url
     }
 
     return data
 
-    
+@app.route('/update_rank_board', methods=['POST'])
+@login_required
+def update_rank_board():
+    # name = current_user.username
+    data = request.get_json()
+    print(data)
+    enemy = User.query.filter_by(username=data['enemy']['name']).first()
+    player = User.query.filter_by(username=data['player']['name']).first()
+    enemy.elo = data['enemy']['elo']
+    player.elo = data['player']['elo']
+    db.session.commit()
+    # print(enemy.elo, player.elo)
+    users = [(i.username, i.elo) for i in User.query.order_by(User.elo.desc()).limit(5).all()]
+
+    return users
+
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
     Timer(1, open_browser).start()
