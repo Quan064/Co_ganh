@@ -13,6 +13,13 @@ let chessPosition = [
     [[0, 2],[0, 3],[2, 4],[4, 3],[0, 4],[1, 4],[3, 4],[4, 4]]
 ]
 let selectedChess
+const gameResult = $(".game_result")
+const gameStatus = $(".game_status")
+const play_again_btn = $(".play_again_btn")
+const moveSound = $(".move_sound")
+const captureSound = $(".capture_sound")
+
+play_again_btn.onclick = () => location.reload()
 
 const gridHTML = `
 <div class="grid">
@@ -75,6 +82,10 @@ for(let i = 0; i < grid.length; i++) {
     }
 }
 
+window.addEventListener('beforeunload', (event) => {
+    event.returnValue = `Những thay đổi trên bàn cờ chưa được lưu. Bạn muốn đi khỏi đây?`;
+});
+
 const boxes = $$(".box")
 const chessEnemy = $$(".chess.enemy")
 
@@ -112,16 +123,16 @@ function getPos(e) {
     }
 }
 
+function changeTurn(ob1, ob2) {
+    $(ob1).classList.add("unavalable")
+    $(ob2).classList.remove("unavalable")
+}
+
 function findI(e) {
     return e[0] === this[0]  && e[1] === this[1]
 }
 
 function changeBoard(newBoard, valid_remove) {
-    // console.log(grid)
-    // console.log(newBoard)
-    console.log("new board here")
-    console.log(newBoard)
-    console.log(curBoard)
 
     const chesses = $$(".chess")
     for(let i = 0; i < 5; i++) {
@@ -137,14 +148,31 @@ function changeBoard(newBoard, valid_remove) {
                                 chessPosition[index].splice(es.findIndex(findI, [j,i]),1)
                             }
                         }))
-                        changedChess.remove()
+                        captureSound.play()
+                        changedChess.classList.add("disappear")
+                        setTimeout(() => changedChess.remove(), 200)
+                        
                     }
                 }
             }
             curBoard[i][j] = newBoard[i][j];
         }
     }
-    console.log(curBoard)
+    if(chessPosition[0].length === 0) {
+        gameStatus.innerHTML = "You Win"
+        gameStatus.style.backgroundColor = "green"
+        gameStatus.style.display = "block"
+        gameStatus.style.opacity = "1";
+    } else if(chessPosition[1].length === 0) {
+        gameStatus.innerHTML = "You lost"
+        gameStatus.style.backgroundColor = "red"
+        gameStatus.style.opacity = "1";
+    } else if(chessPosition[0].length === 1 && chessPosition[1].length === 1) {
+        gameStatus.innerHTML = "draw"
+        gameStatus.style.backgroundColor = "#ccc"
+        gameStatus.style.display = "block"
+        gameStatus.style.opacity = "1";
+    }
 }
 
 function ganh_chet(move, opp_pos, side, opp_side) {
@@ -203,8 +231,10 @@ function isReady(bol) {
     const chesses = $$(".chess")
     if(bol) {
         chesses.forEach(chess => chess.classList.remove("not_ready"))
+        changeTurn(".game_turn-bot", ".game_turn-player")
     } else {
         chesses.forEach(chess => chess.classList.add("not_ready"))
+        changeTurn(".game_turn-player", ".game_turn-bot")
     }
     ready = bol
 }
@@ -221,6 +251,7 @@ function changePos(x, y, newX, newY) {
 
 function swap(chess, box, newPos) {
     let valid_remove
+    moveSound.play()
     if(box) {
         chess.style.left = box.offsetLeft + 10 + "px"
         chess.style.top = box.offsetTop + 10 + "px"
