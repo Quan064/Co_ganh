@@ -145,6 +145,10 @@ body {
     margin: 5px 0 5px 10px;
 }
 
+.utility_nav-block--item.result {
+    margin: 5px 0 5px 15px;
+}
+
 .utility_nav-block .animation {
     position: absolute;
     bottom: 0;
@@ -187,6 +191,7 @@ body {
     height: 100%;
     margin-top: 5px;
     padding: 5px;
+    overflow-y: scroll;
 }
 
 .output {
@@ -202,6 +207,48 @@ body {
 .input .content,
 .output .content {
     color: #ccc;
+}
+
+.utility_block-element.result {
+    display: flex;
+    height: 100%;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    height: 100%;
+    font-size: 40px;
+}
+
+.status {
+    background-color: #007BFF;
+    /* padding: 10px 40px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    height: 100%;
+    border-radius: 10px;
+    margin-top: 14px;
+    font-size: 40px;
+}
+
+.info_move-count {
+    font-size: 30px;
+}
+
+.player, .enemy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player {
+    margin: 10px 0;
 }
 
 .coding_module {
@@ -326,3 +373,4 @@ body {
     outline: 1px solid slategrey;
     border-radius: 10px;
 }
+

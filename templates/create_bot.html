@@ -26,7 +26,7 @@
         <div class="container_element bot_display">
             <div class="bot_display-video--background">
                 <video class="bot_display-video--result" controls>
-                    <source src="{{ url_for('static', filename='upload_video/result.mp4') }}" type="video/mp4">
+                    <source data-href="{{ url_for('static', filename='upload_video/video.mp4') }}" src="{{ url_for('static', filename='upload_video/video.mp4') }}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
             </div>
@@ -35,6 +35,7 @@
                     <div class="utility_nav-block">
                         <div class="utility_nav-block--item rule">RULE</div>
                         <div class="utility_nav-block--item terminal">TERMINAL</div>
+                        <div class="utility_nav-block--item result">RESULT</div>
                         <div class="animation">
                             <div class="children"></div>
                         </div>
@@ -68,6 +69,14 @@
                         </div>
                     </div>
                     <div style="display: none;" class="utility_block-element terminal">>>></div>
+                    <div style="display: none;" class="utility_block-element result">
+                        <div class="status">Winner</div>
+                        <div class="info">
+                            <div class="info_move-count">moves: 100</div>
+                            <div class="player">you: <hr> <div style="width: 40px; height: 40px; border-radius: 50%; background-color: blue;"></div></div>
+                            <div class="enemy">bot: <hr> <div style="width: 40px; height: 40px; border-radius: 50%; background-color: red;"></div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

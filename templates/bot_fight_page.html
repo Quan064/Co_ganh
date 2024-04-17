@@ -11,8 +11,27 @@
 </head>
 <body>
     <div class="container">
-        <div class="ranking"></div>
+        <div class="ranking">
+        </div>
         <div class="side_bar-left">
+            <a href="{{ url_for('menu') }}" class="menu_btn">Menu</a>
+            <ul class="rank_board_list">
+                <div class="rank_board_header">Top 5</div>
+                {% for i in rank_board %}
+                    <li class="warrior" data-name={{i[0]}} data-elo={{i[1]}}>
+                        <div class="warrior_rank">
+                            <i class="fa-solid fa-crown crown"></i>
+                            <div class="rank">1</div>
+                        </div>
+                        <div class="warrior-avatar"><p>{{i[0][0].upper()}}</p></div>
+                        <div class="warrior-info">
+                            <div class="warrior-info--name">{{i[0]}}</div>
+                            <div class="warrior-info--elo">{{i[1]}}</div>
+                        </div>
+                    </li>        
+                {% endfor %}
+            </ul>
+            <div class="info_header">Kết quả ván đấu</div>
             <div style="display: none;" class="info">
                 <div class="info_status">You Win</div>
                 <div class="info_elo-fluc">
@@ -39,8 +58,8 @@
                     <img class="fight_screen-loading--img sword" src="{{url_for('static', filename='img/sword.png')}}" alt="">
                     <div><img class="fight_screen-loading--img roll" src="{{url_for('static', filename='img/roll.png')}}" alt=""></div>
                 </div>
-                <video style="display: none;" class="fight_screen-video" controls>
-                    <source type="video/mp4">
+                <video data-isreload="false" style="display: none;" class="fight_screen-video" controls>
+                    <source data-href="{{ url_for('static', filename='upload_video/video.mp4') }}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
             </div>
@@ -80,7 +99,7 @@
                     </li>
                 {% endfor %}
             </ul>
-            <div class="fight_btn">thách đấu</div>
+            <div class="fight_btn">chọn đối thủ để đấu</div>
         </div>
     </div>
 

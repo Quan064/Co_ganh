@@ -5,12 +5,19 @@ const runBtn = $(".coding_module-nav--runBtn.btn")
 const saveBtn = $(".coding_module-nav--saveBtn.btn")
 const terminal = $(".utility_block-element.terminal")
 const rule = $(".utility_block-element.rule")
+const result = $(".utility_block-element.result")
+const uniBlock = $$(".utility_block-element")
 const loader = $(".coding_module-nav--runBtn.loader")
+const video = $(".bot_display-video--result")
 
+const uniNavItem = $$(".utility_nav-block--item")
 const ruleBtn = $(".utility_nav-block--item.rule")
 const terminalBtn = $(".utility_nav-block--item.terminal")
+const resultBtn = $(".utility_nav-block--item.result")
 const animation = $(".utility_nav-block .animation")
 const animationChild = $(".utility_nav-block .animation .children")
+
+let gameResult;
 // const terminalLoader = $(".")
 
 var audio = $(".bot_display-video--result");
@@ -23,7 +30,6 @@ editor.setOptions({
     selectionStyle: "text",
     theme: "ace/theme/dracula",
 });
-
 saveBtn.onclick = () => {
     const code = editor.getValue()
     saveBtn.dataset.saved = "true"
@@ -44,6 +50,7 @@ saveBtn.onclick = () => {
 }
 
 runBtn.onclick = () => {
+    const source = $("source")
     const code = editor.getValue()
     loader.style.display = "block"
     runBtn.style.display = "none"
@@ -52,10 +59,14 @@ runBtn.onclick = () => {
     terminal.style.backgroundColor = "#252525"
     terminalBtn.style.color = "#fff"
     ruleBtn.style.color = "#ccc"
-    animationChild.style.right = "0";
-    animationChild.style.width = terminalBtn.clientWidth + "px";
+    resultBtn.style.color = "#ccc"
+    changeAnimation(terminalBtn, `${((terminalBtn.clientWidth - 10) / animation.clientWidth * 100)}%`, terminalBtn.clientWidth + "px", "terminal")
+    // animationChild.style.right = "0";
+    // animationChild.style.width = terminalBtn.clientWidth + "px";
     terminal.innerHTML = `>>> loading...`
-
+    video.innerHTML = `<source data-href="${source.dataset.href}" type="video/mp4">
+    // Your browser does not support the video tag.`
+    video.load()
     fetch("/upload_code", {
         method: "POST",
         headers: {
@@ -65,18 +76,30 @@ runBtn.onclick = () => {
     })
     .then(res => res.json())
     .then(data => {
-        const a = data.replaceAll('\n', '<br>').replaceAll('    ', '&emsp;')
-        terminal.innerHTML = `>>> ${a}`
-        console.log("hello")
+        if(data.code === 200) {
+            gameResult = data
+            terminal.innerHTML = ">>> success"
+            // console.log(data)
+        } else {
+            const a = data.err.replaceAll('\n', '<br>').replaceAll('    ', '&emsp;')
+            terminal.innerHTML = `>>> ${a}`
+        }
     })
     .catch(err => terminal.innerHTML = `>>> ${err}`)
     .finally(() => {
+        const source = $("source")
         loader.style.display = "none"
         runBtn.style.display = "block"
         terminal.style.backgroundColor = "#000"
-        const src = audio.querySelector("source").src
-        audio.querySelector("source").src = src
-        audio.load()
+        setTimeout(() => {
+            video.innerHTML = `<source src="${source.dataset.href}" type="video/mp4">
+            // Your browser does not support the video tag.`
+            video.load()
+        },1000)
+        if(gameResult) {
+            changeAnimation(resultBtn, "0", resultBtn.clientWidth + "px", "result")
+            toggleMode("result")
+        }
     })
     
 }
@@ -263,31 +286,53 @@ const guides = [
     }
 ]
 
+const utility_nav_block = $(".utility_nav-block")
+
 function toggleMode(mode) {
-    if(mode == "terminal") {
-        terminal.style.display = "block"
-        rule.style.display = "none"
-    } else {
-        rule.style.display = "flex"
-        terminal.style.display = "none"
+    switch (mode) {
+        case "terminal":           
+            uniBlock.forEach(ele => ele.style.display = "none")
+            terminal.style.display = "block"
+            break;
+        case "rule":
+            uniBlock.forEach(ele => ele.style.display = "none")
+            rule.style.display = "flex"
+        case "result": 
+            if(gameResult) {
+                uniBlock.forEach(ele => ele.style.display = "none")
+                console.log(gameResult)
+                const {max_move_win, status} = gameResult
+                const moveCount = $(".info_move-count")
+                const statusNoti = $(".status")
+                let win_lost = status === "win" ? "blue" : "red"
+                statusNoti.style.backgroundColor = status === "win" || status === "lost" ? win_lost : "#ccc"
+                moveCount.innerHTML = `moves: ${max_move_win}`
+                result.style.display = "flex"
+            }
+        default:
+            break;
     }
+
+}
+
+function changeAnimation(e, right, width, mode) {
+    uniNavItem.forEach(ele => ele.style.color = "#ccc")
+    e.style.color = "#fff"
+    animationChild.style.right = right;
+    animationChild.style.width = width;
+    toggleMode(mode)
 }
 
 ruleBtn.onclick = (e) => {
-    console.dir(animation)
-    ruleBtn.style.color = "#fff"
-    terminalBtn.style.color = "#ccc"
-    animationChild.style.right = `${100 - (e.target.clientWidth / animation.clientWidth * 100)}%`;
-    animationChild.style.width = e.target.clientWidth + "px";
-    toggleMode("rule")
+    changeAnimation(ruleBtn, `${100 - (e.target.clientWidth / animation.clientWidth * 100)}%`, e.target.clientWidth + "px", "rule")
 }
 
 terminalBtn.onclick = (e) => {
-    terminalBtn.style.color = "#fff"
-    ruleBtn.style.color = "#ccc"
-    animationChild.style.right = "0";
-    animationChild.style.width = e.target.clientWidth + "px";
-    toggleMode("terminal")
+    changeAnimation(terminalBtn, `${((e.target.clientWidth - 10) / animation.clientWidth * 100)}%`, e.target.clientWidth + "px", "terminal")
+}
+
+resultBtn.onclick = (e) => {
+    if(gameResult) changeAnimation(result, "0", e.target.clientWidth + "px", "result")
 }
 
 const box = $(".guide")
