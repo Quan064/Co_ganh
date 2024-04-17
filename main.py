@@ -55,14 +55,14 @@ class User(db.Model, UserMixin):
 
 
 class LoginForm(FlaskForm):
-    username = StringField("Tên đăng nhập:", validators=[DataRequired(), Length(min=4, max=20)])
+    username = StringField("Tên đăng nhập", validators=[DataRequired(), Length(min=4, max=20)])
     password =  PasswordField("Mật khẩu", validators=[DataRequired(), Length(min=4, max=20)])
     submit = SubmitField("Đăng Nhập")
 
 
 class RegisterForm(FlaskForm):
-    username = StringField('Tên đăng nhập:', validators=[DataRequired(), Length(min=4, max=20)])
-    password =  PasswordField('Mật khẩu:',  validators=[DataRequired(), Length(min=4, max=20)])
+    username = StringField('Tên đăng nhập', validators=[DataRequired(), Length(min=4, max=20)])
+    password =  PasswordField('Mật khẩu',  validators=[DataRequired(), Length(min=4, max=20)])
     conf_pass =  PasswordField('Xác nhận mật khẩu:', validators=[DataRequired(), EqualTo("password", message='Mật khẩu xác nhận không trùng khớp')])
     submit = SubmitField(label='Tạo tài khoản')
 
@@ -123,19 +123,37 @@ def menu():
 def upload_code():
     name = current_user.username
     code = request.get_json()
+    user = User.query.filter_by(username=current_user.username).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
         winner, max_move_win = activation("trainAI.Master", name) # người thắng / số lượng lượt chơi
-        user = User.query.filter_by(username=current_user.username).first()
         user.fightable = True
         db.session.commit()
-        return json.dumps("success")
+        data = {
+            "code": 200,
+            "status": winner,
+            "max_move_win": max_move_win
+        }
+        return json.dumps(data)
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
         user.fightable = False
         db.session.commit()
-        return json.dumps(str(err)) # Giá trị Trackback Error
+        data = {
+            "code": 400,
+            "err": err,
+        }
+        return json.dumps(data) # Giá trị Trackback Error
+    
+@app.route('/save_code', methods=['POST'])
+@login_required
+def save_code():
+    name = current_user.username
+    code = request.get_json()
+    with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
+        f.write(code)
+    return json.dumps("succeed")
 
 @app.route('/create_bot')
 @login_required
@@ -154,7 +172,7 @@ def get_code():
 def bot_fight_page():
     users = [(i.username, i.elo) for i in User.query.all()]
     rank_board = sorted(users, key=lambda i: i[1], reverse=True)
-    return render_template('bot_fight_page.html', users = users, rank_board = rank_board)
+    return render_template('bot_fight_page.html', users = users, rank_board = rank_board[:5])
 
 @app.route('/play_chess_page')
 @login_required
@@ -168,7 +186,10 @@ def get_pos_of_playing_chess():
     player = Player(request.get_json())
     player.your_pos = [tuple(i) for i in player.your_pos]
     player.opp_pos = [tuple(i) for i in player.opp_pos]
+    player.your_pos, player.opp_pos = player.opp_pos, player.your_pos
     move = trainAI.Master.main(player)
+    move['selected_pos'] = tuple(reversed(list(move['selected_pos'])))
+    move['new_pos'] = tuple(reversed(list(move['new_pos'])))
     return move
 
 @app.route('/fighting', methods=['POST'])
@@ -185,7 +206,17 @@ def fighting():
 
     return data
 
-    
+# @app.route('/update_rank_board', methods=['POST'])
+# @login_required
+# def update_rank_board():
+#     name = current_user.username
+#     player = request.get_json()
+#     data = User.query.where(fightable = True).all()
+#     users = [(i.username, i.elo) for i in User.query.all()]
+#     rank_board = sorted(users, key=lambda i: i[1], reverse=True)
+
+#     return data 
+
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")
     Timer(1, open_browser).start()
