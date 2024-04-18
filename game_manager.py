@@ -113,6 +113,10 @@ def activation(option, session_name):
     reload(UserBot)
     Bot2 = __import__(option, fromlist=[None])
     reload(Bot2)
+
+    with open(f"static.botfiles.botfile_{session_name}".replace(".", "/")+".py", encoding="utf-8") as f:
+        if "import os" in f.read():
+            raise Exception("os module is not allowed")
     
     try: return run_game(UserBot, Bot2)
     except Exception: raise Exception(traceback.format_exc())
@@ -198,5 +202,6 @@ def generate_image(positions, move, remove):
     video.append(mpe.ImageClip(frame_cop).set_duration(1))
 
 if __name__ == '__main__':
-    import trainAI.Master as Master, CGEngine
-    winner, win_move_counter = run_game(CGEngine, Master)
+    # import trainAI.Master as Master, CGEngine
+    # winner, win_move_counter = run_game(CGEngine, Master)
+    activation("trainAI.Master", "Quan064")
