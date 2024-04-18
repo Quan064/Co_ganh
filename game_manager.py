@@ -1,14 +1,11 @@
 from random import choice
 import os
 from copy import deepcopy
-import cv2
+from PIL import Image, ImageDraw
+import numpy as np
 import moviepy.editor as mpe
 from importlib import reload
 import traceback
-
-# ROW = y
-# COLUMN = x
-# ==> board[y][x] == board[ROW][COLUMN]
 
 class Player:
     def __init__(self, your_pos=None, opp_pos=None, your_side=None, board=None):
@@ -39,16 +36,18 @@ def __init__():
 
     point = []
 
-    frame = cv2.imread("static\\img\\chessboard.png")
+    frame = Image.open(os.getcwd() + "\\static\\img\\chessboard.png")
     frame_cop = frame.copy()
-    video = cv2.VideoWriter("static\\upload_video\\video.mp4", 0, 1, (600, 600))
-    for x, y in positions[1]:
-        cv2.circle(frame_cop, (100*x+100,100*y+100), 22, (255,0,0), -1)
-    for x, y in positions[-1]:
-        cv2.circle(frame_cop, (100*x+100,100*y+100), 22, (0,0,255), -1)
-    video.write(frame_cop)
+    draw = ImageDraw.Draw(frame_cop)
 
-# Board manipulation
+    for x, y in positions[1]:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
+    for x, y in positions[-1]:
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
+
+    frame_cop = np.array(frame_cop)
+    video = [mpe.ImageClip(frame_cop).set_duration(1)]
+
 def Raise_exception(move, current_side, board):
     if not (move.__class__ == dict and tuple(move.keys()) == ('selected_pos', 'new_pos') and move['selected_pos'].__class__ == tuple and move['new_pos'].__class__ == tuple):
         raise Exception(r"The return value must be in the form: {'selected_pos': (x, y), 'new_pos': (x, y)} " + f"(not {move})")
@@ -144,53 +143,47 @@ def run_game(UserBot, Bot2): # Main
         remove += vay(opp_pos)
         if remove: point[:] += [move_selected_pos]*len(remove)
 
-        renderVD(positions, move, remove)
+        generate_image(positions, move, remove)
 
         if not positions[1]:
-            if player1.your_side == 1:
-                winner = "loose"
-            else:
-                winner = "win"
+            winner = "loose"
         elif not positions[-1]:
-            if player1.your_side == 1:
-                winner = "win"
-            else:
-                winner = "loose"
+            winner = "win"
         elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 500:
-            if player1.your_side == 1:
-                winner = "draw"
-            else:
-                winner = "draw"
+            winner = "draw"
 
         game_state["current_turn"] *= -1
         move_counter += 1
 
-    video.release()
+    concat_video = mpe.concatenate_videoclips(video, method="compose")
+
     # chèn nhạc vô video
-    my_clip = mpe.VideoFileClip("static\\upload_video\\video.mp4")
-    audio_background = mpe.AudioFileClip('static\\audio.mp3').set_duration(my_clip.duration)
-    my_clip = my_clip.set_audio(audio_background)
-    my_clip.write_videofile("static\\upload_video\\result.mp4")
+    audio_background = mpe.AudioFileClip(os.getcwd() + '\\static\\audio.mp3').set_duration(concat_video.duration)
+    my_clip = concat_video.set_audio(audio_background)
+    my_clip.write_videofile(os.getcwd() + "\\static/upload_video/video.mp4", 1)
     my_clip.close()
 
     return winner, move_counter-1
 
-def renderVD(positions, move, remove):
-
+def generate_image(positions, move, remove):
     frame_cop = frame.copy()
+    draw = ImageDraw.Draw(frame_cop)
+
     for x, y in remove:
-        cv2.circle(frame_cop, (100*x+100,100*y+100), 22, (0,201,255), 3)
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill=None, outline="#FFC900", width=4)
     for x, y in positions[1]:
-        cv2.circle(frame_cop, (100*x+100,100*y+100), 22, (255,0,0), -1)
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
     for x, y in positions[-1]:
-        cv2.circle(frame_cop, (100*x+100,100*y+100), 22, (0,0,255), -1)
+        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
     new_x = move["new_pos"][0]
     new_y = move["new_pos"][1]
     old_x = move["selected_pos"][0]
     old_y = move["selected_pos"][1]
-    cv2.circle(frame_cop, (100*new_x+100,100*new_y+100), 22, (0,128,0), 3)
-    cv2.circle(frame_cop, (100*old_x+100,100*old_y+100), 22, (0,128,0), 3)
-    video.write(frame_cop)
+    draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=None, outline="green", width=5)
+    draw.ellipse((old_x*100+80, old_y*100+80, old_x*100+120, old_y*100+120), fill=None, outline="green", width=5)
+
+    frame_cop = np.array(frame_cop)
+    video.append(mpe.ImageClip(frame_cop).set_duration(1))
 
 if __name__ == '__main__':
     import trainAI.Master as Master, CGEngine
