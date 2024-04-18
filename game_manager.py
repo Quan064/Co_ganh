@@ -154,7 +154,7 @@ def run_game(UserBot, Bot2): # Main
         generate_image(positions, move, remove)
 
         if not positions[1]:
-            winner = "loose"
+            winner = "lost"
         elif not positions[-1]:
             winner = "win"
         elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 500:
@@ -164,8 +164,8 @@ def run_game(UserBot, Bot2): # Main
         move_counter += 1
 
     current_time = datetime.datetime.now().microsecond
-    new_url = f"/static/upload_video/result{current_time}.mp4"
-    url = absolute_path + new_url
+    new_url = f"static/upload_video/result{current_time}.mp4"
+    url = absolute_path + "/" + new_url
 
     old_video = glob.glob(os.path.join(absolute_path, "static/upload_video/result*.mp4"))
     for vid in old_video:
@@ -179,6 +179,7 @@ def run_game(UserBot, Bot2): # Main
     my_clip.write_videofile(url, 1)
     my_clip.close()
 
+    print(winner, move_counter-1, new_url)
     return winner, move_counter-1, new_url
 
 def generate_image(positions, move, remove):

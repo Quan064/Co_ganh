@@ -11,6 +11,7 @@ import trainAI.Master
 import webbrowser
 from threading import Timer
 import json
+import secrets
 
 class Player:
     def __init__(self, dict: dict):
@@ -19,7 +20,7 @@ class Player:
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SECRET_KEY'] = 'pkH{XQup/)QikTx'
+app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['WTF_CSRF_ENABLED'] = False
 app.app_context().push()
 
@@ -30,7 +31,8 @@ db = SQLAlchemy(app)
 app.config['MAX_CONTENT_LENGTH'] = 16_000_00  #Max file size
 app.config['UPLOAD_FOLDER'] = "static/botfiles"
 
-login_manager = LoginManager(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 login_manager.login_view='login'
 login_manager.login_message_category = "info"
 login_manager.login_message = "Xin hãy đăng nhập để truy cập"
@@ -87,13 +89,14 @@ def login():
             if bcrypt.check_password_hash(user.password, form.password.data):
                 secret_key = generate_secret_key(form.username.data)
                 session['secret_key'] = secret_key
+                session['username'] = form.username.data
+                # print(session['secret_key'])
                 login_user(user)
                 flash("Đăng nhập thành công", category='success')
                 return redirect(url_for('menu'))
             else: flash("Mật khẩu không hợp lệ! Vui lòng thử lại", category='danger')
         else: flash("Tên đăng nhập không hợp lệ! Vui lòng thử lại", category='danger')
     return render_template('login.html', form=form)
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -106,8 +109,6 @@ def register():
         return redirect(url_for('login'))
     for err_msg in form.errors.values(): #If there are errors from the validations
         flash(err_msg[0], category="danger")
-
-    print("\n--------------deobt------------------\n")
 
     return render_template('register.html', form=form)
 
@@ -123,7 +124,16 @@ def logout():
 @app.route('/menu')
 @login_required
 def menu():
-    return render_template('menu.html', current_user=current_user)
+    if 'secret_key' in session:
+        print(session['secret_key'])
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+        return render_template('menu.html', current_user=current_user)
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
+        
 
 @app.route('/upload_code', methods=['POST'])
 @login_required
