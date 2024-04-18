@@ -1,11 +1,15 @@
 from random import choice
 import os
 from copy import deepcopy
+import glob
 from PIL import Image, ImageDraw
 import numpy as np
 import moviepy.editor as mpe
 from importlib import reload
 import traceback
+import datetime
+
+absolute_path = os.getcwd()
 
 class Player:
     def __init__(self, your_pos=None, opp_pos=None, your_side=None, board=None):
@@ -36,7 +40,7 @@ def __init__():
 
     point = []
 
-    frame = Image.open(os.getcwd() + "\\static\\img\\chessboard.png")
+    frame = Image.open(absolute_path + "\\static\\img\\chessboard.png")
     frame_cop = frame.copy()
     draw = ImageDraw.Draw(frame_cop)
 
@@ -155,15 +159,23 @@ def run_game(UserBot, Bot2): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
+    current_time = datetime.datetime.now().microsecond
+    new_url = f"/static/upload_video/result{current_time}.mp4"
+    url = absolute_path + new_url
+
+    old_video = glob.glob(os.path.join(absolute_path, "static/upload_video/result*.mp4"))
+    for vid in old_video:
+        os.remove(vid)
+
     concat_video = mpe.concatenate_videoclips(video, method="compose")
 
     # chèn nhạc vô video
-    audio_background = mpe.AudioFileClip(os.getcwd() + '\\static\\audio.mp3').set_duration(concat_video.duration)
+    audio_background = mpe.AudioFileClip(absolute_path + '/static/audio.mp3').set_duration(concat_video.duration)
     my_clip = concat_video.set_audio(audio_background)
-    my_clip.write_videofile(os.getcwd() + "\\static/upload_video/video.mp4", 1)
+    my_clip.write_videofile(url, 1)
     my_clip.close()
 
-    return winner, move_counter-1
+    return winner, move_counter-1, new_url
 
 def generate_image(positions, move, remove):
     frame_cop = frame.copy()
