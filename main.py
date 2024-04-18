@@ -1,4 +1,4 @@
-from flask import Flask, flash, request, redirect, url_for, render_template, jsonify
+from flask import Flask, flash, request, redirect, url_for, render_template, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -35,10 +35,10 @@ login_manager.login_view='login'
 login_manager.login_message_category = "info"
 login_manager.login_message = "Xin hãy đăng nhập để truy cập"
 
-
-# user = User.query.filter_by(username='tlv23').first()
-# user.elo = '100000'
-# db.session.commit()
+def generate_secret_key(user_name):
+    # Tạo secret key dựa trên ID của người dùng và secret key mặc định
+    secret_key = f"{app.config['SECRET_KEY']}_{user_name}"
+    return secret_key
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -85,6 +85,8 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
+                secret_key = generate_secret_key(form.username.data)
+                session['secret_key'] = secret_key
                 login_user(user)
                 flash("Đăng nhập thành công", category='success')
                 return redirect(url_for('menu'))
@@ -104,6 +106,9 @@ def register():
         return redirect(url_for('login'))
     for err_msg in form.errors.values(): #If there are errors from the validations
         flash(err_msg[0], category="danger")
+
+    print("\n--------------deobt------------------\n")
+
     return render_template('register.html', form=form)
 
 
@@ -176,21 +181,21 @@ def get_users():
     users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
     return users
 
-@app.route('/bot_fight_page')
+@app.route('/bot_bot')
 @login_required
-def bot_fight_page():
+def bot_bot():
     # users = User.query.order_by(User.elo.desc()).limit(10).all()
     # rank_board = User.query.order_by(User.elo.desc()).limit(5).all()
-    # return render_template('bot_fight_page.html', users = users, rank_board = rank_board)
+    # return render_template('bot_bot.html', users = users, rank_board = rank_board)
     users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
     rank_board = [(i.username, i.elo) for i in User.query.order_by(User.elo.desc()).limit(5).all()]
-    return render_template('bot_fight_page.html', users = users, rank_board = rank_board)
+    return render_template('bot_bot.html', users = users, rank_board = rank_board)
 
-@app.route('/play_chess_page')
+@app.route('/human_bot')
 @login_required
-def play_chess_page():
+def human_bot():
     users = [(i.username, i.elo) for i in User.query.all()]
-    return render_template('play_chess_page.html', users = users)
+    return render_template('human_bot.html', users = users)
 
 @app.route('/get_pos_of_playing_chess', methods=['POST'])
 @login_required
