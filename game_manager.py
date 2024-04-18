@@ -202,6 +202,5 @@ def generate_image(positions, move, remove):
     video.append(mpe.ImageClip(frame_cop).set_duration(1))
 
 if __name__ == '__main__':
-    # import trainAI.Master as Master, CGEngine
-    # winner, win_move_counter = run_game(CGEngine, Master)
-    activation("trainAI.Master", "Quan064")
+    import trainAI.Master as Master, CGEngine
+    winner, win_move_counter = run_game(CGEngine, Master)
