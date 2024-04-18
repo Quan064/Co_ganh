@@ -1,5 +1,4 @@
 import random
-import os
 
 # Remember that board[y][x] is the tile at (x, y) when printing
     
