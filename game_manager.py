@@ -58,7 +58,7 @@ def declare():
 
     point = []
 
-    frame = Image.open(absolute_path + "\\static\\img\\chessboard.png")
+    frame = Image.open(absolute_path + "static/img/chessboard.png")
     frame_cop = frame.copy()
     draw = ImageDraw.Draw(frame_cop)
 
