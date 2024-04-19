@@ -1,14 +1,31 @@
 from random import choice
 import os
-from copy import deepcopy
 import glob
 from PIL import Image, ImageDraw
-import numpy as np
+from copy import deepcopy
+# import cv2
 import moviepy.editor as mpe
 from importlib import reload
 import traceback
 import datetime
+import numpy as np
+from flask_login import current_user
 
+# import firebase_admin
+# from firebase_admin import credentials
+# from firebase_admin import firestore
+
+# cred = credentials.Certificate("firebase-adminsdk-354yy@coganh-6ab73.iam.gserviceaccount.com")
+# firebase_admin.initialize_app(cred, {
+#     'databaseUTL': 'https://coganh-6ab73-default-rtdb.asia-southeast1.firebasedatabase.app/'
+# })
+
+# fdb = firestore.client()
+
+
+# ROW = y
+# COLUMN = x
+# ==> board[y][x] == board[ROW][COLUMN]
 absolute_path = os.getcwd()
 
 class Player:
@@ -17,7 +34,8 @@ class Player:
         self.opp_pos = opp_pos
         self.your_side = your_side
         self.board = board
-def __init__():
+
+def declare():
     global game_state, positions, point, player1, player2, frame, video
 
     player1 = Player()
@@ -52,10 +70,8 @@ def __init__():
     frame_cop = np.array(frame_cop)
     video = [mpe.ImageClip(frame_cop).set_duration(1)]
 
+# Board manipulation
 def Raise_exception(move, current_side, board):
-    if not (move.__class__ == dict and tuple(move.keys()) == ('selected_pos', 'new_pos') and move['selected_pos'].__class__ == tuple and move['new_pos'].__class__ == tuple):
-        raise Exception(r"The return value must be in the form: {'selected_pos': (x, y), 'new_pos': (x, y)} " + f"(not {move})")
-
     current_x, current_y = move["selected_pos"]
     new_x, new_y = move["new_pos"]
 
@@ -71,7 +87,7 @@ def Raise_exception(move, current_side, board):
         raise Exception("Can only move into adjacent cells")
 
 def ganh_chet(move, opp_pos, side, opp_side):
-
+    
     valid_remove = []
     board = game_state["board"]
     at_8intction = (move[0]+move[1])%2==0
@@ -113,16 +129,11 @@ def activation(option, session_name):
     reload(UserBot)
     Bot2 = __import__(option, fromlist=[None])
     reload(Bot2)
-
-    with open(f"static.botfiles.botfile_{session_name}".replace(".", "/")+".py", encoding="utf-8") as f:
-        if "import os" in f.read():
-            raise Exception("os module is not allowed")
-    
     try: return run_game(UserBot, Bot2)
     except Exception: raise Exception(traceback.format_exc())
 def run_game(UserBot, Bot2): # Main
 
-    __init__()
+    declare()
     winner = False
     move_counter = 1
 
@@ -164,10 +175,11 @@ def run_game(UserBot, Bot2): # Main
         move_counter += 1
 
     current_time = datetime.datetime.now().microsecond
-    new_url = f"static/upload_video/result{current_time}.mp4"
-    url = absolute_path + "/" + new_url
+    new_url = f"/static/upload_video/result_{current_user.username}_{current_time}.mp4"
+    url = absolute_path + new_url
 
-    old_video = glob.glob(os.path.join(absolute_path, "static/upload_video/result*.mp4"))
+    old_video = glob.glob(os.path.join(absolute_path, f"static/upload_video/result_{current_user.username}_*.mp4"))
+    print(old_video)
     for vid in old_video:
         os.remove(vid)
 
@@ -179,7 +191,6 @@ def run_game(UserBot, Bot2): # Main
     my_clip.write_videofile(url, 1)
     my_clip.close()
 
-    print(winner, move_counter-1, new_url)
     return winner, move_counter-1, new_url
 
 def generate_image(positions, move, remove):
