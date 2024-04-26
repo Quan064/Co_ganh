@@ -2,14 +2,14 @@
 ## Giới thiệu
 Đây là dự án AI tập sự của @Quan064 và @tuanvule
 ## Mục tiêu
-Mục tiêu của chương trình là chiến thắng đối thủ robot_alpha1 trong một ván cờ Gánh bằng cách đưa ra nước đi tối ưu của mỗi lượt.
+Mục tiêu của chương trình là chiến thắng đối thủ robot_alpha1 trong một ván cờ Gánh hoặc đạt hạng cao trong bảng xếp hạng bot bằng cách đưa ra nước đi tối ưu của mỗi lượt.
 > [!WARNING]
 > Ngôn ngữ lập trình: Python
 ## Luật chơi
 https://www.youtube.com/watch?v=FU3auCFYGJc&t=2s
 ## Thư viện cần thiết
 ```
-pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms pillow opencv-python moviepy
+pip install Flask Flask-Bcrypt Flask-Login Flask-SQLAlchemy Flask-WTF WTForms pillow moviepy
 ```
 ## Input
 - *Player.your_pos*: vị trí tất cả quân cờ của bản thân [(*x*, *y*), . . .]
@@ -32,7 +32,7 @@ Player.board = [[-1, -1, -1, -1, -1],
                 [ 1,  0,  0,  0,  1],
                 [ 1,  1,  1,  1,  1]]
 ```
-Người chơi nhận quân cờ xanh
+Người chơi nhận quân cờ đỏ
 ```
 Player.your_pos = [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]
 Player.opp_pos = [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)]
@@ -57,13 +57,13 @@ Một **Dick** của:
 1. Viết bot (cài đặt thư viện nếu chưa có!)
 2. Run file main
 3. Tạo tài khoản
-4. Nộp file
-5. Chọn Đấu với bot hệ thống
-6. Chờ và xem kết quả. Click vào dấu mũi tên góc trái dưới màn hình để xem chi tiết
+4. vào create_bot và viết code tạo bot
+5. Chọn Đấu với bot hệ thống (nút Run) và đợi
+6. xem kết quả qua video
 ### Chạy thử
 Một cách tiện hơn để chạy thử là chỉnh sửa trực tiếp trên file **CGEngine.py** rồi run file **game_manager.py**
 > [!NOTE]
-> Xem trận đấu tại **static/upload_video/result.mp4**
+> Xem trận đấu tại **static/upload_video/result_(...).mp4**
 
 [![Watch the video](https://img.youtube.com/vi/GsxwOXEXcoI/hqdefault.jpg)](https://youtu.be/GsxwOXEXcoI)
 
@@ -91,14 +91,14 @@ def is_valid_move(move, current_side, board): # HÀM HỖ TRỢ: KIỂM TRA NƯ�
 
 def main(player): # BẮT BUỘC (KHÔNG XÓA)
 
-    # {'your_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
-    #  'your_side': -1,
+    # {'your_pos': [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
+    #  'your_side': 1,
     #  'opp_pos': [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)],
-    #  'board': [[-1,-1, 0,-1, 0],
-    #            [ 0,-1,-1,-1, 0],
-    #            [-1, 0, 0,-1, 1],
-    #            [ 0, 1, 1, 1, 1],
-    #            [ 1, 1, 0, 1, 0]]}
+    #  'board': [[-1, -1, -1, -1, -1],
+    #           [-1,  0,  0,  0, -1],
+    #           [ 1,  0,  0,  0, -1],
+    #           [ 1,  0,  0,  0,  1],
+    #           [ 1,  1,  1,  1,  1]]
 
     while True:
         selected_pos = random.choice(player.your_pos)
