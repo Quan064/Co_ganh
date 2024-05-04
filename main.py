@@ -12,6 +12,14 @@ import webbrowser
 from threading import Timer
 import json
 import secrets
+from fdb.firestore_config import fdb
+
+doc_ref = fdb.collection("app").document("User")
+
+doc = doc_ref.get()
+
+if doc.exists:
+    print(f"Document data: {doc.to_dict()}")
 
 class Player:
     def __init__(self, dict: dict):
@@ -49,7 +57,7 @@ def load_user(user_id):
 class User(db.Model, UserMixin): 
     username:str
     elo:str
-    fightable:str
+    fightable:bool
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
@@ -183,7 +191,15 @@ def save_code():
 @app.route('/create_bot')
 @login_required
 def create_bot():
-    return render_template('create_bot.html')
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+        return render_template('create_bot.html')
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
+        
 
 @app.route('/get_code')
 @login_required
@@ -195,18 +211,23 @@ def get_code():
 @app.route('/get_users')
 @login_required
 def get_users():
-    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
+    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username, User.fightable == True).order_by(User.elo.desc()).limit(10).all()]
     return users
 
 @app.route('/bot_bot')
 @login_required
 def bot_bot():
-    # users = User.query.order_by(User.elo.desc()).limit(10).all()
-    # rank_board = User.query.order_by(User.elo.desc()).limit(5).all()
-    # return render_template('bot_bot.html', users = users, rank_board = rank_board)
-    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
-    rank_board = [(i.username, i.elo) for i in User.query.order_by(User.elo.desc()).limit(5).all()]
-    return render_template('bot_bot.html', users = users, rank_board = rank_board)
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+        users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username, User.fightable == True).order_by(User.elo.desc()).limit(10).all()]
+        rank_board = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
+        return render_template('bot_bot.html', users = users, rank_board = rank_board)
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
+    
 
 @app.route('/human_bot')
 @login_required
@@ -253,7 +274,7 @@ def update_rank_board():
     player.elo = data['player']['elo']
     db.session.commit()
     # print(enemy.elo, player.elo)
-    users = [(i.username, i.elo) for i in User.query.order_by(User.elo.desc()).limit(5).all()]
+    users = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
 
     return users
 

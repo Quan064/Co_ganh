@@ -363,6 +363,9 @@ function isShowInstruction() {
     instruction.style.display = "none"
 }
 
+// acceptBtn.onclick = isShowInstruction
+// rejectBtn.onclick = () => instruction.style.display = "none";
+
 guides.forEach((guide, index) => {
     box.innerHTML += `
         <div class="guide_box" style="${guide.pos + (guide?.style ? guide.style : "")} display: ${guide.display}">
