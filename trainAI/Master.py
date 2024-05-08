@@ -17,7 +17,7 @@ def ganh_chet(move, opp_pos, your_board, opp_board):
         opp_board ^= (1<<5*(4-y)+(4-x))
         opp_pos.remove((x, y))
 
-    return opp_board
+    return opp_board, opp_pos
 def vay(opp_pos, your_board, opp_board):
     
     for pos in opp_pos:
@@ -29,12 +29,9 @@ def vay(opp_pos, your_board, opp_board):
             new_valid_x = pos[0] + move[0]
             new_valid_y = pos[1] + move[1]
             if 0<=new_valid_x<=4 and 0<=new_valid_y<=4 and (your_board|opp_board)&(1<<5*(4-new_valid_y)+(4-new_valid_x)) == 0:
-                return opp_board
+                return opp_board, opp_pos
 
-    opp_board = 0
-    opp_pos[:] = []
-
-    return opp_board
+    return 0, []
 
 def main(player):
     global move, board_pointF
@@ -52,7 +49,7 @@ def main(player):
 
     your_board = int("0b"+"".join("1" if ele == -1 else "0" for row in player.board for ele in row),2)
     opp_board = int("0b"+"".join("1" if ele == 1 else "0" for row in player.board for ele in row),2)
-    minimax(player, your_board, opp_board, Stopdepth=6, cache=cache)
+    minimax(player, player.your_pos, player.opp_pos, your_board, opp_board, Stopdepth=6, cache=cache)
 
     with open(os.path.join(dirname, f"source_code/bit_board.txt"), mode="w") as f:
         [f.write( f"{' '.join(map(str, i[0])).replace('False', '0').replace('True', '1')} {' '.join(map(str, i[1]))}\n" ) for i in cache.items()]
