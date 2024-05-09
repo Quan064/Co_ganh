@@ -14,12 +14,12 @@ import json
 import secrets
 from fdb.firestore_config import fdb
 
-doc_ref = fdb.collection("app").document("User")
+# doc_ref = fdb.collection("app").document("User")
 
-doc = doc_ref.get()
+# doc = doc_ref.get()
 
-if doc.exists:
-    print(f"Document data: {doc.to_dict()}")
+# if doc.exists:
+#     print(f"Document data: {doc.to_dict()}")
 
 class Player:
     def __init__(self, dict: dict):
@@ -267,7 +267,6 @@ def fighting():
 def update_rank_board():
     # name = current_user.username
     data = request.get_json()
-    print(data)
     enemy = User.query.filter_by(username=data['enemy']['name']).first()
     player = User.query.filter_by(username=data['player']['name']).first()
     enemy.elo = data['enemy']['elo']
