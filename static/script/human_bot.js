@@ -1,20 +1,33 @@
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
 
-const board = $(".board")
-const boardValue = board.getBoundingClientRect()
-const chessGrapX = boardValue.width / 4
-const chessGrapY = boardValue.height / 4
+let board = $(".board")
+let boardValue = board.getBoundingClientRect()
+let chessGrapX = boardValue.width / 4
+let chessGrapY = boardValue.height / 4
 let ready = true
-const d1 = [[1,0],[0,1],[0,-1],[-1,0]]
-const d2 = [[1,0],[0,1],[0,-1],[-1,0],[-1,-1],[-1,1],[1,1],[1,-1]]
+let d1 = [[1,0],[0,1],[0,-1],[-1,0]]
+let d2 = [[1,0],[0,1],[0,-1],[-1,0],[-1,-1],[-1,1],[1,1],[1,-1]]
 let radius = 16
-const canvas = $("canvas")
+let canvas = $("canvas")
 canvas.style.left = board.offsetLeft - radius - 5 + "px"
 canvas.style.top = board.offsetTop - radius - 5 + "px"
 canvas.width = boardValue.width + 2 * radius + 10
 canvas.height = boardValue.height + 2 * radius + 10
-const cv2 = canvas.getContext("2d")
+let cv2 = canvas.getContext("2d")
+let rs = 1
+// let chessPosition = [
+//     [[0, 0],[1, 1],[2, 2],[3, 1],[4, 0],[0, 1],[4, 1],[4, 2]], 
+//     [[0, 2],[1, 2],[2, 3],[4, 3],[0, 4],[1, 4],[3, 3],[4, 4]]
+// ]
+// let chessPosition = [
+//     [[1,1],[2,2]], 
+//     [[0,0],[1,2],[3,3],[0,3],[0,4],[2,4]]
+// ]
+// let chessPosition = [
+//     [[1,0],[3,1],[4,1]], 
+//     [[3,0],[2,1],[2,2],[4,2]]
+// ]
 let chessPosition = [
     [[0, 0],[1, 0],[2, 0],[3, 0],[4, 0],[0, 1],[4, 1],[4, 2]], 
     [[0, 2],[0, 3],[2, 4],[4, 3],[0, 4],[1, 4],[3, 4],[4, 4]]
@@ -56,6 +69,52 @@ const gridHTML = `
 <div class="row4"></div>
 </div>
 `
+// let grid = [
+//     [-1,0,0,0,-1],
+//     [-1, -1, 0, -1,-1],
+//     [1, 1, -1, 0, -1],
+//     [0, 0, 1, 1, 1],
+//     [1, 1, 0, 0, 1]
+// ]
+// let curBoard = [
+//     [-1,0,0,0,-1],
+//     [-1, -1, 0, -1,-1],
+//     [1, 1, -1, 0, -1],
+//     [0, 0, 1, 1, 1],
+//     [1, 1, 0, 0, 1]
+// ]
+
+// let grid = [
+//     [1,0,0,0,0],
+//     [0, -1, 0, 0,0],
+//     [0, 1, -1, 0, 0],
+//     [1, 0, 0, 1, 0],
+//     [1, 0, 1, 0, 0]
+// ]
+
+// let curBoard = [
+//     [1,0,0,0,0],
+//     [0, -1, 0, 0,0],
+//     [0, 1, -1, 0, 0],
+//     [1, 0, 0, 1, 0],
+//     [1, 0, 1, 0, 0]
+// ]
+
+// let grid = [
+//     [0, -1, 0, 1,0],
+//     [0, 0, 1, -1, -1],
+//     [0, 0, 1, 0, 1],
+//     [0, 0, 0, 0, 0],
+//     [0,0,0,0,0],
+// ]
+
+// let curBoard = [
+//     [0, -1, 0, 1,0],
+//     [0, 0, 1, -1, -1],
+//     [0, 0, 1, 0, 1],
+//     [0, 0, 0, 0, 0],
+//     [0,0,0,0,0],
+// ]
 
 let grid = [
     [-1,-1,-1,-1,-1],
@@ -80,25 +139,40 @@ const type = [
     [1,0,1,0,1]
 ]
 
-board.innerHTML = gridHTML
-let dem = 0
-for(let i = 0; i < grid.length; i++) {
-    for(let j = 0; j < grid[i].length; j++) {
-        board.innerHTML += `<div data-choosable="false" data-posx="${j}" data-posy="${i}" class="box" style="top:${chessGrapY*i - 40}px; left:${chessGrapX*j - 40}px;"></div>`
-        if(grid[i][j] === -1) {
-            board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: red; top:${chessGrapY*i - 30}px; left:${chessGrapX*j - 30}px;" class="chess enemy"></div>`
-        } else if(grid[i][j] === 1) {
-            board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: blue; top:${chessGrapY*i - 30}px; left:${chessGrapX*j - 30}px;" class="chess player"></div>`
+function resetBoard() {
+    board = $(".board")
+    boardValue = board.getBoundingClientRect()
+    chessGrapX = boardValue.width / 4
+    chessGrapY = boardValue.height / 4
+    canvas = $("canvas")
+    canvas.style.left = board.offsetLeft - radius - 5 + "px"
+    canvas.style.top = board.offsetTop - radius - 5 + "px"
+    canvas.width = boardValue.width + 2 * radius + 10
+    canvas.height = boardValue.height + 2 * radius + 10
+    cv2 = canvas.getContext("2d")
+    board.innerHTML = gridHTML
+    dem = 0
+    for(let i = 0; i < grid.length; i++) {
+        for(let j = 0; j < grid[i].length; j++) {
+            board.innerHTML += `<div data-choosable="false" data-posx="${j}" data-posy="${i}" class="box" style="top:${chessGrapY*i - 40 * rs}px; left:${chessGrapX*j - 40 * rs}px;"></div>`
+            if(grid[i][j] === -1) {
+                board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: red; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess enemy"></div>`
+            } else if(grid[i][j] === 1) {
+                board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: blue; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess player"></div>`
+            }
+            dem++
         }
-        dem++
     }
 }
+
+resetBoard()
+
 
 window.addEventListener('beforeunload', (event) => {
     event.returnValue = `Những thay đổi trên bàn cờ chưa được lưu. Bạn muốn đi khỏi đây?`;
 });
 
-const boxes = $$(".box")
+let boxes = $$(".box")
 // const chessEnemy = $$(".chess.enemy")
 
 function getPos(e) {
@@ -155,6 +229,14 @@ function changeBoard(newBoard, valid_remove, selected_pos, new_pos) {
                         return Number(e.dataset.posx) === j && Number(e.dataset.posy) === i
                     })
                     if(changedChess) {
+                        // if(selected_pos) {
+                        //     console.log({j: selected_pos[0], i: selected_pos[1]})
+                        //     console.log({j: new_pos[1], i: new_pos[0]})
+                        //     if((j === selected_pos[0] && i === selected_pos[1]) || j === new_pos[1] && i === new_pos[0]) {
+                        //         isBlock = true
+                        //     }
+                        // }
+                        // if(!isBlock) {
                         console.log("changedChess: ",changedChess)
                         chessPosition.forEach((es,index) => es.forEach((e, indx)=> {
                             if(es.findIndex(findI, [j,i]) !== -1) {
@@ -166,7 +248,7 @@ function changeBoard(newBoard, valid_remove, selected_pos, new_pos) {
                         // changedChess.classList.add("disappear")
                         const fire = document.createElement("img")
                         fire.setAttribute("src", "./static/img/fire.webp")
-                        fire.setAttribute("style", `top:${chessGrapY*i - 30}px; left:${chessGrapX*j - 30}px;`)
+                        fire.setAttribute("style", `top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;`)
                         fire.setAttribute("class", "fire")
                         let newFire = board.appendChild(fire)
                         console.log("removeChess: " + "(" + j + ",", + i + ")")
@@ -284,8 +366,8 @@ function swap(chess, box, newPos, selected_pos) {
         cv2.fill()
         cv2.strokeStyle = "#577DFF";
         cv2.stroke();
-        chess.style.left = box.offsetLeft + 10 + "px"
-        chess.style.top = box.offsetTop + 10 + "px"
+        chess.style.left = box.offsetLeft + 10 * rs + "px"
+        chess.style.top = box.offsetTop + 10 * rs + "px"
         chessPosition[1][chessPosition[1].findIndex(findI, [Number(chess.dataset.posx), Number(chess.dataset.posy)])] = [Number(box.dataset.posx), Number(box.dataset.posy)]
         changePos(chess.dataset.posx,chess.dataset.posy, box.dataset.posx, box.dataset.posy)
         let opp_pos = chessPosition[0]
@@ -301,8 +383,8 @@ function swap(chess, box, newPos, selected_pos) {
         cv2.strokeStyle = "#FC6666";
         cv2.stroke();
         chessPosition[0][chessPosition[0].findIndex(findI, [selected_pos[1], selected_pos[0]])] = [newPos[1], newPos[0]]
-        chess.style.left = newPos[1] * chessGrapX - 30 + "px"
-        chess.style.top = newPos[0] * chessGrapX - 30 + "px"
+        chess.style.left = newPos[1] * chessGrapX - 30 * rs + "px"
+        chess.style.top = newPos[0] * chessGrapX - 30 * rs + "px"
         console.log(chessPosition)
         console.log(grid)
         console.log(curBoard)
@@ -378,10 +460,97 @@ boxes.forEach((e) => {
             getBotmove()
         }
     }
+    e.ontouchend = () => {
+        if(e.dataset.choosable === "true" && selectedChess) {
+            isReady(false)
+            swap(selectedChess, e)
+            clearBox()
+            getBotmove()
+        }
+    }
 })
 
 const chess = $$(".chess.player")
 
 chess.forEach(e => {
     e.onclick = () => {getPos(e);cv2.clearRect(0, 0, canvas.width, canvas.height)}
+    e.ontouchend = () => {getPos(e);cv2.clearRect(0, 0, canvas.width, canvas.height);console.log("touch")}
 });
+
+window.addEventListener('resize', function(event) {
+    // console.log(event)
+    if(window.outerWidth <= 500) {
+        rs = 0.5
+        radius = radius / 2
+    } else {
+        rs = 1
+        radius = radius * 2
+    }
+    resetBoard()
+    boxes = $$(".box")
+    console.log("resize")
+    boxes.forEach((e) => {
+        e.onclick = () => {
+            if(e.dataset.choosable === "true" && selectedChess) {
+                isReady(false)
+                swap(selectedChess, e)
+                clearBox()
+                getBotmove()
+            }
+        }
+        e.ontouchend = () => {
+            if(e.dataset.choosable === "true" && selectedChess) {
+                isReady(false)
+                swap(selectedChess, e)
+                clearBox()
+                getBotmove()
+            }
+        }
+    })
+    
+    const chess = $$(".chess.player")
+    
+    chess.forEach(e => {
+        e.onclick = () => {getPos(e);cv2.clearRect(0, 0, canvas.width, canvas.height)}
+        e.ontouchend = () => {getPos(e);cv2.clearRect(0, 0, canvas.width, canvas.height);console.log("touch")}
+    });
+}, true);
+
+window.addEventListener("load", (event) => {
+    console.log(event)
+    if(window.outerWidth <= 500) {
+        rs = 0.5
+        radius = 8
+    } else {
+        rs = 1
+        radius = 16
+    }
+    resetBoard()
+    boxes = $$(".box")
+    console.log("reload")
+    boxes.forEach((e) => {
+        e.onclick = () => {
+            if(e.dataset.choosable === "true" && selectedChess) {
+                isReady(false)
+                swap(selectedChess, e)
+                clearBox()
+                getBotmove()
+            }
+        }
+        e.ontouchend = () => {
+            if(e.dataset.choosable === "true" && selectedChess) {
+                isReady(false)
+                swap(selectedChess, e)
+                clearBox()
+                getBotmove()
+            }
+        }
+    })
+    
+    const chess = $$(".chess.player")
+    
+    chess.forEach(e => {
+        e.onclick = () => {getPos(e);cv2.clearRect(0, 0, canvas.width, canvas.height)}
+        e.ontouchend = () => {getPos(e);cv2.clearRect(0, 0, canvas.width, canvas.height);console.log("touch")}
+    });
+  });
