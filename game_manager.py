@@ -95,9 +95,10 @@ def activation(option, session_name):
     reload(UserBot)
     Bot2 = __import__(option, fromlist=[None])
     reload(Bot2)
-    try: return run_game(UserBot, Bot2, session_name)
+    try:
+        return *run_game(UserBot, Bot2), requests.post("http://tlv23.pythonanywhere.com//generate_video", json={"username": session_name, "img": img}).text
     except Exception: raise Exception(traceback.format_exc())
-def run_game(UserBot, Bot2, session_name): # Main
+def run_game(UserBot, Bot2): # Main
 
     __init__()
     winner = False
@@ -140,8 +141,7 @@ def run_game(UserBot, Bot2, session_name): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
-    new_url = requests.post("http://tlv23.pythonanywhere.com//generate_video", json={"username": session_name, "img": img}).text
-    return winner, move_counter-1, new_url
+    return winner, move_counter-1
 
 if __name__ == '__main__':
     import trainAI.Master as Master, CGEngine
