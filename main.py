@@ -1,6 +1,5 @@
 from flask import Flask, flash, request, redirect, url_for, render_template, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm 
 from wtforms import SubmitField, PasswordField, StringField
@@ -49,7 +48,7 @@ def load_user(user_id):
 class User(db.Model, UserMixin): 
     username:str
     elo:str
-    fightable:str
+    fightable:bool
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
@@ -77,6 +76,11 @@ class RegisterForm(FlaskForm):
 
 @app.route('/')
 def home_page():
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+    elif current_user:
+        logout_user()
     return render_template('home.html')
 
 
@@ -90,7 +94,6 @@ def login():
                 secret_key = generate_secret_key(form.username.data)
                 session['secret_key'] = secret_key
                 session['username'] = form.username.data
-                # print(session['secret_key'])
                 login_user(user)
                 flash("Đăng nhập thành công", category='success')
                 return redirect(url_for('menu'))
@@ -117,6 +120,7 @@ def register():
 @login_required
 def logout():
     logout_user()
+    session.clear()
     flash("Bạn đã đăng xuất!!!", category='info')
     return redirect(url_for('home_page'))
 
@@ -125,7 +129,6 @@ def logout():
 @login_required
 def menu():
     if 'secret_key' in session:
-        print(session['secret_key'])
         user = User.query.where(User.username == session['username']).first()
         login_user(user)
         return render_template('menu.html', current_user=current_user)
@@ -176,7 +179,15 @@ def save_code():
 @app.route('/create_bot')
 @login_required
 def create_bot():
-    return render_template('create_bot.html')
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+        return render_template('create_bot.html')
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
+        
 
 @app.route('/get_code')
 @login_required
@@ -188,18 +199,22 @@ def get_code():
 @app.route('/get_users')
 @login_required
 def get_users():
-    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
+    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username, User.fightable == True).order_by(User.elo.desc()).limit(10).all()]
     return users
 
 @app.route('/bot_bot')
 @login_required
 def bot_bot():
-    # users = User.query.order_by(User.elo.desc()).limit(10).all()
-    # rank_board = User.query.order_by(User.elo.desc()).limit(5).all()
-    # return render_template('bot_bot.html', users = users, rank_board = rank_board)
-    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username).order_by(User.elo.desc()).limit(10).all()]
-    rank_board = [(i.username, i.elo) for i in User.query.order_by(User.elo.desc()).limit(5).all()]
-    return render_template('bot_bot.html', users = users, rank_board = rank_board)
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+        users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username, User.fightable == True).order_by(User.elo.desc()).limit(10).all()]
+        rank_board = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
+        return render_template('bot_bot.html', users = users, rank_board = rank_board)
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
 
 @app.route('/human_bot')
 @login_required
@@ -239,14 +254,12 @@ def fighting():
 def update_rank_board():
     # name = current_user.username
     data = request.get_json()
-    print(data)
     enemy = User.query.filter_by(username=data['enemy']['name']).first()
     player = User.query.filter_by(username=data['player']['name']).first()
     enemy.elo = data['enemy']['elo']
     player.elo = data['player']['elo']
     db.session.commit()
-    # print(enemy.elo, player.elo)
-    users = [(i.username, i.elo) for i in User.query.order_by(User.elo.desc()).limit(5).all()]
+    users = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
 
     return users
 
