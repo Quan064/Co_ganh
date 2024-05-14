@@ -1,6 +1,5 @@
 from flask import Flask, flash, request, redirect, url_for, render_template, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm 
 from wtforms import SubmitField, PasswordField, StringField
@@ -12,14 +11,6 @@ import webbrowser
 from threading import Timer
 import json
 import secrets
-from fdb.firestore_config import fdb
-
-# doc_ref = fdb.collection("app").document("User")
-
-# doc = doc_ref.get()
-
-# if doc.exists:
-#     print(f"Document data: {doc.to_dict()}")
 
 class Player:
     def __init__(self, dict: dict):
@@ -88,9 +79,8 @@ def home_page():
     if 'secret_key' in session:
         user = User.query.where(User.username == session['username']).first()
         login_user(user)
-    else:
-        if current_user:
-            logout_user()
+    elif current_user:
+        logout_user()
     return render_template('home.html')
 
 
@@ -104,7 +94,6 @@ def login():
                 secret_key = generate_secret_key(form.username.data)
                 session['secret_key'] = secret_key
                 session['username'] = form.username.data
-                # print(session['secret_key'])
                 login_user(user)
                 flash("Đăng nhập thành công", category='success')
                 return redirect(url_for('menu'))
@@ -120,17 +109,6 @@ def register():
         new_user = User(username=form.username.data, password=hashed_password, elo=0, fightable=False)
         db.session.add(new_user)
         db.session.commit()
-        code = '''
-# Remember that player.board[y][x] is the tile at (x, y) when printing
-def main(player):
-    for x,y, in player.your_pos:
-        move = ((0,-1),(0,1),(1,0),(-1,0)) 
-        for mx, my in move:
-            if 0 <= x+mx <=4 and 0 <= y+my <= 4 and player.board[y+my][x+mx] == 0: #check if new position is valid
-                return {"selected_pos": (x,y), "new_pos": (x+mx, y+my)}
-'''
-        with open(f"static/botfiles/botfile_{form.username.data}.py", mode="w", encoding="utf-8") as f:
-            f.write(code)
         return redirect(url_for('login'))
     for err_msg in form.errors.values(): #If there are errors from the validations
         flash(err_msg[0], category="danger")
@@ -151,7 +129,6 @@ def logout():
 @login_required
 def menu():
     if 'secret_key' in session:
-        print(session['secret_key'])
         user = User.query.where(User.username == session['username']).first()
         login_user(user)
         return render_template('menu.html', current_user=current_user)
@@ -238,7 +215,6 @@ def bot_bot():
         if current_user:
             logout_user()
         return redirect(url_for('login'))
-    
 
 @app.route('/human_bot')
 @login_required
@@ -283,7 +259,6 @@ def update_rank_board():
     enemy.elo = data['enemy']['elo']
     player.elo = data['player']['elo']
     db.session.commit()
-    # print(enemy.elo, player.elo)
     users = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
 
     return users
