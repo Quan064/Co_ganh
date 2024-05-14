@@ -136,7 +136,10 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
         body["img"].append([deepcopy(positions), move, remove])
 
-        if not positions[1]:
+        if debugNum > 0 and move_counter == debugNum:
+            img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
+            return img_url
+        elif not positions[1]:
             winner = "lost"
         elif not positions[-1]:
             winner = "win"
@@ -146,8 +149,6 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
-    return winner, move_counter-1
-
-if __name__ == '__main__':
-    import trainAI.Master as Master, CGEngine
-    winner, win_move_counter = run_game(CGEngine, Master)
+    # res = requests.post("http://127.0.0.1:4000//generate_video", json=body)
+    new_url = requests.post("http://tlv23.pythonanywhere.com//generate_video", json=body).text
+    return winner, move_counter-1, new_url
