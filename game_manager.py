@@ -1,7 +1,10 @@
+import os
 import requests
 from copy import deepcopy
 from importlib import reload
 import traceback
+from fdb.firestore_config import fdb
+# from fdb.uti.upload import upload_video_to_storage
 
 class Player:
     def __init__(self, your_pos=None, opp_pos=None, your_side=None, board=None):
@@ -9,8 +12,8 @@ class Player:
         self.opp_pos = opp_pos
         self.your_side = your_side
         self.board = board
-def __init__():
-    global game_state, positions, point, player1, player2, frame, img
+def declare():
+    global game_state, positions, point, player1, player2
 
     player1 = Player()
     player2 = Player()
@@ -31,7 +34,6 @@ def __init__():
     player2.your_pos = player1.opp_pos = positions[player2.your_side]
 
     point = []
-    img = [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
 
 # Board manipulation
 def Raise_exception(move, current_side, board):
@@ -90,19 +92,22 @@ def vay(opp_pos):
     return valid_remove
 
 # System
-def activation(option, session_name):
+def activation(option, session_name, debugNum):
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     reload(UserBot)
     Bot2 = __import__(option, fromlist=[None])
     reload(Bot2)
-    try:
-        return *run_game(UserBot, Bot2), requests.post("http://tlv23.pythonanywhere.com//generate_video", json={"username": session_name, "img": img}).text
+    try: return run_game(UserBot, Bot2, session_name, debugNum)
     except Exception: raise Exception(traceback.format_exc())
-def run_game(UserBot, Bot2): # Main
+def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
-    __init__()
+    declare()
     winner = False
     move_counter = 1
+    body = {
+        "username": session_name,
+        "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
+    }
 
     while not winner:
 
@@ -129,13 +134,13 @@ def run_game(UserBot, Bot2): # Main
         remove += vay(opp_pos)
         if remove: point[:] += [move_selected_pos]*len(remove)
 
-        img.append([deepcopy(positions), move, remove])
+        body["img"].append([deepcopy(positions), move, remove])
 
         if not positions[1]:
             winner = "lost"
         elif not positions[-1]:
             winner = "win"
-        elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 400:
+        elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 200:
             winner = "draw"
 
         game_state["current_turn"] *= -1
