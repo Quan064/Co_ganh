@@ -35,8 +35,8 @@ def main(player):
     global move
     move = {"selected_pos": None, "new_pos": None}
 
-    your_board = int("0b"+"".join("1" if ele == -1 else "0" for row in player.board for ele in row),2)
-    opp_board = int("0b"+"".join("1" if ele == 1 else "0" for row in player.board for ele in row),2)
+    your_board = int("0b"+"".join("1" if ele == 1 else "0" for row in player.board for ele in row),2)
+    opp_board = int("0b"+"".join("1" if ele == -1 else "0" for row in player.board for ele in row),2)
 
     minimax(player.your_pos, player.opp_pos, your_board, opp_board, Stopdepth=6)
 
