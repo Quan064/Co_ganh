@@ -199,7 +199,6 @@ def upload_code():
 def debug_code():
     name = current_user.username
     data = request.get_json()
-    print(data)
     user = User.query.filter_by(username=name).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
