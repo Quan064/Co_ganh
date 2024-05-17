@@ -120,6 +120,10 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         code = '''
+from tool import enable_move, distance
+# enable_move(x, y, board)
+# distance(x1, y1, x2, y2)
+
 # Remember that player.board[y][x] is the tile at (x, y) when printing
 def main(player):
     for x,y, in player.your_pos:
@@ -150,7 +154,7 @@ def logout():
 @login_required
 def menu():
     if 'secret_key' in session:
-        print(session['secret_key'])
+        # print(session['secret_key'])
         user = User.query.where(User.username == session['username']).first()
         login_user(user)
         return render_template('menu.html', current_user=current_user)
@@ -170,8 +174,8 @@ def upload_code():
         f.write(code)
     try: 
         winner, max_move_win, new_url = activation("trainAI.Master", name, 0) # người thắng / số lượng lượt chơi
-        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
-            txt = f.read()
+        # with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
+        #     txt = f.read()
         user.fightable = True
         db.session.commit()
         data = {
@@ -179,7 +183,6 @@ def upload_code():
             "status": winner,
             "max_move_win": max_move_win,
             "new_url": new_url,
-            "err": txt
         }
         return json.dumps(data)
     except Exception as err:
@@ -199,6 +202,7 @@ def upload_code():
 def debug_code():
     name = current_user.username
     data = request.get_json()
+    # print(data)
     user = User.query.filter_by(username=name).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
@@ -209,18 +213,18 @@ def debug_code():
         data = {
             "code": 200,
             "img_url": img_url,
-            "err": txt
+            "output": txt
         }
         return json.dumps(data)
     except Exception as err:
-        err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
+        # err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
         with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
             txt = f.read()
         user.fightable = False
         db.session.commit()
         data = {
             "code": 400,
-            "err": txt,
+            "output": txt,
         }
         return json.dumps(data) # Giá trị Trackback Error
     
@@ -240,6 +244,18 @@ def create_bot():
         user = User.query.where(User.username == session['username']).first()
         login_user(user)
         return render_template('create_bot.html')
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
+    
+@app.route('/challenge_mode')
+@login_required
+def challenge_mode():
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+        return render_template('challenge_mode.html')
     else:
         if current_user:
             logout_user()
@@ -272,7 +288,6 @@ def bot_bot():
         if current_user:
             logout_user()
         return redirect(url_for('login'))
-    
 
 @app.route('/human_bot')
 @login_required
