@@ -101,11 +101,11 @@ def activation(option, session_name, debugNum):
         f = open(f"static/output/stdout_{session_name}.txt", mode="a", encoding="utf-8")
         sys.stdout = f
 
-    UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
-    reload(UserBot)
-    Bot2 = __import__(option, fromlist=[None])
-    reload(Bot2)
     try:
+        UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
+        reload(UserBot)
+        Bot2 = __import__(option, fromlist=[None])
+        reload(Bot2)
         temp = run_game(UserBot, Bot2, session_name, debugNum)
         if debugNum > 0:
             sys.stdout = org_stdout
