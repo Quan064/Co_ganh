@@ -4,6 +4,7 @@ from copy import deepcopy
 from importlib import reload
 import traceback
 from fdb.firestore_config import fdb
+import sys
 # from fdb.uti.upload import upload_video_to_storage
 
 class Player:
@@ -93,12 +94,29 @@ def vay(opp_pos):
 
 # System
 def activation(option, session_name, debugNum):
+    global org_stdout
+    if debugNum > 0:
+        open(f"static/output/stdout_{session_name}.txt", mode="w", encoding="utf-8")
+        org_stdout = sys.stdout
+        f = open(f"static/output/stdout_{session_name}.txt", mode="a", encoding="utf-8")
+        sys.stdout = f
+
     UserBot = __import__("static.botfiles.botfile_"+session_name, fromlist=[None])
     reload(UserBot)
     Bot2 = __import__(option, fromlist=[None])
     reload(Bot2)
-    try: return run_game(UserBot, Bot2, session_name, debugNum)
-    except Exception: raise Exception(traceback.format_exc())
+    try:
+        temp = run_game(UserBot, Bot2, session_name, debugNum)
+        if debugNum > 0:
+            sys.stdout = org_stdout
+            f.close()
+        return temp
+    except Exception:
+        if debugNum > 0:
+            f.write(traceback.format_exc())
+            sys.stdout = org_stdout
+            f.close()
+        raise Exception()
 def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
     declare()

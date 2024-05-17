@@ -170,22 +170,27 @@ def upload_code():
         f.write(code)
     try: 
         winner, max_move_win, new_url = activation("trainAI.Master", name, 0) # người thắng / số lượng lượt chơi
+        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
+            txt = f.read()
         user.fightable = True
         db.session.commit()
         data = {
             "code": 200,
             "status": winner,
             "max_move_win": max_move_win,
-            "new_url": new_url
+            "new_url": new_url,
+            "err": txt
         }
         return json.dumps(data)
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
+        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
+            txt = f.read()
         user.fightable = False
         db.session.commit()
         data = {
             "code": 400,
-            "err": err,
+            "err": txt
         }
         return json.dumps(data) # Giá trị Trackback Error
     
@@ -200,18 +205,23 @@ def debug_code():
         f.write(data["code"])
     try: 
         img_url = activation("trainAI.Master", name, data["debugNum"]) # người thắng / số lượng lượt chơi
+        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
+            txt = f.read()
         data = {
             "code": 200,
-            "img_url": img_url
+            "img_url": img_url,
+            "err": txt
         }
         return json.dumps(data)
     except Exception as err:
         err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
+        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
+            txt = f.read()
         user.fightable = False
         db.session.commit()
         data = {
             "code": 400,
-            "err": err,
+            "err": txt,
         }
         return json.dumps(data) # Giá trị Trackback Error
     
