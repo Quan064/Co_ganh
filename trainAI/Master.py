@@ -75,7 +75,7 @@ def check_pos_point(your_board, opp_board):
     return sum
 
 def main(player):
-    global move, board_pointF, cache, Stopdepth
+    global move, cache, cacheUser, Stopdepth
     move = {"selected_pos": None, "new_pos": None}
 
     your_board = int("0b"+"".join("1" if ele == -1 else "0" for row in player.board for ele in row),2)
