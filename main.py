@@ -180,7 +180,7 @@ def upload_code():
             "code": 200,
             "status": winner,
             "max_move_win": max_move_win,
-            "new_url": new_url,
+            "new_url": new_url
         }
         return json.dumps(data)
     except Exception:

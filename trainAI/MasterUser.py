@@ -89,12 +89,12 @@ def main(player):
 
     return move
 
-def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlayer=True, alpha=(float("-inf"),), beta=(float("inf"),)):
+def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlayer=False, alpha=(float("-inf"),), beta=(float("inf"),)):
 
     if your_board == 0 or opp_board == 0:
         return (-8, depth, 0) if isMaximizingPlayer else (8, -depth, 0)
     if depth == Stopdepth:
-        return (len(your_pos) - len(opp_pos)), -depth, check_pos_point(your_board, opp_board)
+        return (len(opp_pos) - len(your_pos)), depth, check_pos_point(opp_board, your_board)
 
     bestVal = (float("-inf"),) if isMaximizingPlayer else (float("inf"),)
 
@@ -116,10 +116,6 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
                 value = minimax(opp_new_pos, your_new_pos, opp_new_board, your_new_board, depth+1, not isMaximizingPlayer, alpha, beta)
 
                 if isMaximizingPlayer:
-                    if depth == 0 and value > bestVal:
-                        move["selected_pos"] = pos
-                        move["new_pos"] = invalid_move
-
                     alpha = max(alpha, value)
                     bestVal = max(bestVal, value)
                 else:
