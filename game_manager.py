@@ -94,7 +94,7 @@ def vay(opp_pos):
 # System
 def activation(option, session_name, debugNum):
     global org_stdout
-    if debugNum > 0:
+    if debugNum:
         open(f"static/output/stdout_{session_name}.txt", mode="w", encoding="utf-8")
         org_stdout = sys.stdout
         f = open(f"static/output/stdout_{session_name}.txt", mode="a", encoding="utf-8")
@@ -106,12 +106,12 @@ def activation(option, session_name, debugNum):
         Bot2 = __import__(option, fromlist=[None])
         reload(Bot2)
         temp = run_game(UserBot, Bot2, session_name, debugNum)
-        if debugNum > 0:
+        if debugNum:
             sys.stdout = org_stdout
             f.close()
         return temp
     except Exception:
-        if debugNum > 0:
+        if debugNum:
             f.write(traceback.format_exc())
             sys.stdout = org_stdout
             f.close()
@@ -121,11 +121,11 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
     declare()
     winner = False
     move_counter = 1
+    body = {
+        "username": session_name,
+        "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
+    }
     if debugNum:
-        body = {
-            "username": session_name,
-            "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
-        }
         inp_oup = []
         rate = []
         Userpp = 0
@@ -141,17 +141,13 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
                     deepcopy(((player1.your_pos, player1.opp_pos, player1.board, player1.your_side),
                               (move["selected_pos"], move["new_pos"])))
                 )
-                with open("trainAI/source_code/bit_boardUser.txt") as f:
-                    cacheUser = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
+                Userp = __import__("trainAI.MasterUser", fromlist=[None]).main(deepcopy(player1), move)
 
-                your_board = int("0b"+"".join("1" if ele == -1 else "0" for row in player1.board for ele in row),2)
-                opp_board = int("0b"+"".join("1" if ele == 1 else "0" for row in player1.board for ele in row),2)
-                Userp = cacheUser[f"{your_board} {opp_board}"].split(" ")[0]
-                if Userp < Userpp:
+                if Userp > Userpp:
                     rate.append("Tệ")
                 elif Userp == Userpp:
                     rate.append("Bình thường")
-                elif Userp >= Userpp + 3:
+                elif Userp <= Userpp - 3:
                     rate.append("Thiên tài")
                 else:
                     rate.append("Tốt")
@@ -175,8 +171,8 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         remove += vay(opp_pos)
         if remove: point[:] += [move_selected_pos]*len(remove)
 
+        body["img"].append([deepcopy(positions), move, remove])
         if debugNum:
-            body["img"].append([deepcopy(positions), move, remove])
             if move_counter == debugNum:
                 img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
                 return img_url, inp_oup, rate

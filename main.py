@@ -205,6 +205,7 @@ def debug_code():
         f.write(data["code"])
     try: 
         img_url, inp_oup, rate = activation("trainAI.Master", name, data["debugNum"]) # người thắng / số lượng lượt chơi
+        print(rate)
         with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
             txt = f.read()
         data = {

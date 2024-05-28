@@ -1,24 +1,11 @@
 
-16548864 16703  0 -6 -10
-
-24937472 16703  0 -6 -10
-
-29000704 16703  -2 -6 -1
-
-29131776 16703  0 -6 -10
-
-28935168 16703  0 -6 -10
-
-31032320 16703  0 -6 -10
-
-32080896 16703  0 -6 -10
-
-32801792 16703  0 -6 -10
-
-33096704 16703  0 -6 -10
-
-33064960 16703  0 -6 -10
-
-33062976 16703  0 -6 -10
-
-33128448 16703  0 -6 -10
+16959 33063936  0 6 10 0212:(0,6,17),0211:(1,6,20),0213:(0,6,18),0313:(0,6,10),4333:(0,6,10),0413:(0,6,10),1413:(0,6,10),2423:(2,6,17),2433:(0,6,12),2413:(0,6,12),3433:(0,6,10),4433:(0,6,10)
+Traceback (most recent call last):
+  File "c:\Users\Hello\OneDrive\Code Tutorial\Python\Co_ganh\game_manager.py", line 108, in activation
+    temp = run_game(UserBot, Bot2, session_name, debugNum)
+  File "c:\Users\Hello\OneDrive\Code Tutorial\Python\Co_ganh\game_manager.py", line 144, in run_game
+    Userp = __import__("trainAI.MasterUser", fromlist=[None]).main(deepcopy(player1), move)
+  File "c:\Users\Hello\OneDrive\Code Tutorial\Python\Co_ganh\trainAI\MasterUser.py", line 28
+    return rate[f"{move["selected_pos"][0]}{move["selected_pos"][1]}{move["new_pos"][0]}{move["new_pos"][1]}"]
+                         ^^^^^^^^^^^^
+SyntaxError: f-string: unmatched '['

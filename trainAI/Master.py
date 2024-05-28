@@ -92,7 +92,6 @@ def main(player):
 
     with open(os.path.join(dirname, "source_code/bit_boardUser.txt")) as f:
         cacheUser = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
-    cacheUser = {}
 
     Stopdepth = 6
     v = minimax(player.your_pos, player.opp_pos, your_board, opp_board)
@@ -106,7 +105,7 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
 
     if isMaximizingPlayer:
         if (state := f"{opp_board} {your_board}") in cacheUser and depth:
-            temp = cache[state].split(' ')
+            temp = cacheUser[state].split(' ')
             return float(temp[0]), float(temp[1])+depth, float(temp[2])
     elif (state := f"{your_board} {opp_board}") in cache:
         temp = cache[state].split(' ')
