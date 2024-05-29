@@ -58,7 +58,7 @@ def main(player, move):
         cacheUser = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
 
     if f"{your_board} {opp_board}" in cacheUser:
-        return eval(cacheUser[f"{your_board} {opp_board}"].split(' ')[3])[f"{move["selected_pos"][0]}{move["selected_pos"][1]}{move["new_pos"][0]}{move["new_pos"][1]}"]
+        return eval(cacheUser[f"{your_board} {opp_board}"].split(' ')[3])[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"]
 
     else:
         rate = {}
