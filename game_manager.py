@@ -92,7 +92,7 @@ def vay(opp_pos):
     return valid_remove
 
 # System
-def activation(option, session_name, debugNum):
+def activation(option, session_name, debugNum, level=0):
     global org_stdout
     if debugNum:
         open(f"static/output/stdout_{session_name}.txt", mode="w", encoding="utf-8")
@@ -105,7 +105,7 @@ def activation(option, session_name, debugNum):
         reload(UserBot)
         Bot2 = __import__(option, fromlist=[None])
         reload(Bot2)
-        temp = run_game(UserBot, Bot2, session_name, debugNum)
+        temp = run_game(UserBot, Bot2, session_name, debugNum, level)
         if debugNum:
             sys.stdout = org_stdout
             f.close()
@@ -116,7 +116,7 @@ def activation(option, session_name, debugNum):
             sys.stdout = org_stdout
             f.close()
         raise Exception()
-def run_game(UserBot, Bot2, session_name, debugNum): # Main
+def run_game(UserBot, Bot2, session_name, debugNum, level): # Main
 
     declare()
     winner = False
@@ -153,7 +153,7 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
                     rate.append("Tốt")
                 Userpp = Userp
         else:
-            move = Bot2.main(deepcopy(player2))
+            move, Userpp = Bot2.main(deepcopy(player2), level)
             Raise_exception(move, current_turn, game_state["board"])
 
         move_new_pos = move["new_pos"]
