@@ -14,7 +14,7 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
     if your_board == 0 or opp_board == 0:
         return (-8, depth, 0) if isMaximizingPlayer else (8, -depth, 0)
     if depth == Stopdepth:
-        return (len(your_pos) - len(opp_pos)), -depth, check_pos_point(your_board, opp_board)
+        return (len(opp_pos) - len(your_pos)), depth, check_pos_point(opp_board, your_board)
 
     bestVal = (float("-inf"),) if isMaximizingPlayer else (float("inf"),)
 
@@ -65,7 +65,7 @@ def main(player):
 
         with open(os.path.join(dirname, "source_code/bit_board.txt")) as f:
             cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
-        Stopdepth = 6
+        Stopdepth = 5
 
         for pos in player.your_pos:
             for movement in ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1)):
