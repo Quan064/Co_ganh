@@ -47,7 +47,7 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
 
     return bestVal
 
-def main(player, move):
+def main(player):
     global cache, cacheUser, Stopdepth
 
     your_board = int("0b"+"".join("1" if ele == 1 else "0" for row in player.board for ele in row),2)
@@ -58,9 +58,7 @@ def main(player, move):
         cacheUser = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
 
     if f"{your_board} {opp_board}" in cacheUser:
-        return int(cacheUser[f"{your_board} {opp_board}"][cacheUser[f"{your_board} {opp_board}"].index(
-            f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"
-        ) + 5])
+        return eval(cacheUser[f"{your_board} {opp_board}"].split(' ')[3])
 
     else:
         rate = {}
@@ -86,12 +84,12 @@ def main(player, move):
 
                     rate.update({
                         f"{pos[0]}{pos[1]}{invalid_move[0]}{invalid_move[1]}" : cache[state].split(' ')[:3]
-                                                                                if (state := f"{your_board} {opp_board}") in cache else
+                                                                                if (state := f"{opp_new_board} {your_new_board}") in cache else
                                                                                 minimax(opp_new_pos, your_new_pos, opp_new_board, your_new_board)
                     })
 
         with open(os.path.join(dirname, f"source_code/bit_boardUser.txt"), mode="a") as f:
             rate0 = {i:j[0] for i,j in rate.items()}
-            f.write( f'''\n{your_board} {opp_board}  {' '.join(map(str, min(rate.values())))} {str(rate0)[1:-1].replace(' ', '').replace("'", "")}''' )
+            f.write( f"\n{your_board} {opp_board}  " + ' '.join(map(str, min(rate.values()))) + " " + str(rate0).replace(' ', '') )
 
-        return rate[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"][0]
+        return rate0
