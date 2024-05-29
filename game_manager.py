@@ -143,6 +143,7 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
                 )
                 Userp = __import__("trainAI.MasterUser", fromlist=[None]).main(deepcopy(player1), move)
 
+                rate.append((Userpp, Userp))
                 if Userp > Userpp:
                     rate.append("Tệ")
                 elif Userp == Userpp:

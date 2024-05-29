@@ -1,9 +1,0 @@
-Traceback (most recent call last):
-  File "c:\Users\Hello\OneDrive\Code Tutorial\Python\Co_ganh\game_manager.py", line 108, in activation
-    temp = run_game(UserBot, Bot2, session_name, debugNum)
-  File "c:\Users\Hello\OneDrive\Code Tutorial\Python\Co_ganh\game_manager.py", line 144, in run_game
-    Userp = __import__("trainAI.MasterUser", fromlist=[None]).main(deepcopy(player1), move)
-  File "c:\Users\Hello\OneDrive\Code Tutorial\Python\Co_ganh\trainAI\MasterUser.py", line 61
-    return eval(cacheUser[f"{your_board} {opp_board}"].split(' ')[3])[f"{move["selected_pos"][0]}{move["selected_pos"][1]}{move["new_pos"][0]}{move["new_pos"][1]}"]
-                                                                               ^^^^^^^^^^^^
-SyntaxError: f-string: unmatched '['

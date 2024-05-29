@@ -83,13 +83,13 @@ def main(player, move):
                         opp_new_board, opp_new_pos = vay(opp_new_pos, your_new_board, opp_new_board)
 
                     rate.update({
-                        f"{pos[0]}{pos[1]}{invalid_move[0]}{invalid_move[1]}" : cache[state].split(' ')
+                        f"{pos[0]}{pos[1]}{invalid_move[0]}{invalid_move[1]}" : tuple(map(int , cache[state].split(' ')[1:4]))
                                                                                 if (state := f"{opp_new_board} {your_new_board}") in cache else
                                                                                 minimax(opp_new_pos, your_new_pos, opp_new_board, your_new_board)
                     })
 
         with open(os.path.join(dirname, f"source_code/bit_boardUser.txt"), mode="a") as f:
             rate0 = {i:j[0] for i,j in rate.items()}
-            f.write( f'''\n{your_board} {opp_board}  {' '.join(map(str, min(rate.values())))} {str(rate0)[1:-1].replace(' ', '')}''' )
+            f.write( f'''\n{your_board} {opp_board}  {' '.join(map(str, min(rate.values())))} {str(rate0).replace(' ', '')}''' )
 
         return rate[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"][0]

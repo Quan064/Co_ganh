@@ -85,10 +85,10 @@ def main(player):
     with open(os.path.join(dirname, "source_code/bit_board.txt")) as f:
         cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
     if (state := f"{your_board} {opp_board}") in cache:
-        temp = cache[state].split(' ')[0]
-        move["selected_pos"] = tuple(map(int, temp[:2]))
-        move["new_pos"] = tuple(map(int, temp[2:]))
-        return move
+        temp = cache[state].split(' ')
+        move["selected_pos"] = tuple(map(int, temp[0][:2]))
+        move["new_pos"] = tuple(map(int, temp[0][2:]))
+        return move, int(temp[1])
 
     with open(os.path.join(dirname, "source_code/bit_boardUser.txt")) as f:
         cacheUser = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
