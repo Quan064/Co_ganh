@@ -173,7 +173,7 @@ def upload_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(code)
     try: 
-        winner, max_move_win, new_url = activation("trainAI.Master", name, 0, level=6) # người thắng / số lượng lượt chơi
+        winner, max_move_win, new_url = activation("trainAI.Master", name, 0) # người thắng / số lượng lượt chơi
         user.fightable = True
         db.session.commit()
         data = {
@@ -204,7 +204,7 @@ def debug_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
     try: 
-        img_url, inp_oup, rate = activation("trainAI.Master", name, data["debugNum"], level=6) # người thắng / số lượng lượt chơi
+        img_url, inp_oup, rate = activation("trainAI.Master", name, data["debugNum"]) # người thắng / số lượng lượt chơi
         print(rate)
         with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
             txt = f.read()
