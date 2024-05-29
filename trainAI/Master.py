@@ -99,7 +99,7 @@ def main(player):
     with open(os.path.join(dirname, f"source_code/bit_board.txt"), mode="a") as f:
         f.write( f"\n{your_board} {opp_board}  {move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]} {' '.join(map(str, v))}" )
 
-    return move
+    return move, v[0]
 
 def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlayer=True, alpha=(float("-inf"),), beta=(float("inf"),)):
 
