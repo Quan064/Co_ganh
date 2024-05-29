@@ -151,9 +151,8 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
                     rate.append("Thiên tài")
                 else:
                     rate.append("Tốt")
-                Userpp = Userp
         else:
-            move = Bot2.main(deepcopy(player2))
+            move, Userpp = Bot2.main(deepcopy(player2))
             Raise_exception(move, current_turn, game_state["board"])
 
         move_new_pos = move["new_pos"]
