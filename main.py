@@ -204,10 +204,7 @@ def debug_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
     try: 
-        img_url, inp_oup, rate = activation("trainAI.Master", name, data["debugNum"]) # người thắng / số lượng lượt chơi
-        # NOTE: inp_oup
-        # ((player1.your_pos, player1.opp_pos, player1.board, player1.your_side),
-        #  (move["selected_pos"], move["new_pos"]))
+        img_url = activation("trainAI.Master", name, data["debugNum"]) # người thắng / số lượng lượt chơi
 
         with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
             txt = f.read()
@@ -215,8 +212,6 @@ def debug_code():
             "code": 200,
             "img_url": img_url,
             "output": txt,
-            "inp_oup": inp_oup,
-            "rate": rate
         }
         return json.dumps(data)
     except Exception:
@@ -304,7 +299,7 @@ def get_pos_of_playing_chess():
     player.your_pos = [tuple(i) for i in player.your_pos]
     player.opp_pos = [tuple(i) for i in player.opp_pos]
     player.your_pos, player.opp_pos = player.opp_pos, player.your_pos
-    move = trainAI.Master.main(player)[0]
+    move = trainAI.Master.main(player)
     move['selected_pos'] = tuple(reversed(list(move['selected_pos'])))
     move['new_pos'] = tuple(reversed(list(move['new_pos'])))
     return move
