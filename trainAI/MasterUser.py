@@ -1,5 +1,5 @@
 import os
-from trainAI.Master import ganh_chet, vay, check_pos_point
+from Master import ganh_chet, vay, check_pos_point
 
 def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlayer=True, alpha=(float("-inf"),), beta=(float("inf"),)):
 
@@ -47,18 +47,18 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
 
     return bestVal
 
-def main(player, move):
+def main(move_listi):
     global cache, cacheUser, Stopdepth
 
-    your_board = int("0b"+"".join("1" if ele == 1 else "0" for row in player.board for ele in row),2)
-    opp_board = int("0b"+"".join("1" if ele == -1 else "0" for row in player.board for ele in row),2)
+    your_board = int("0b"+"".join("1" if ele == 1 else "0" for row in move_listi["board"] for ele in row),2)
+    opp_board = int("0b"+"".join("1" if ele == -1 else "0" for row in move_listi["board"] for ele in row),2)
 
     dirname = os.path.dirname(__file__)
     with open(os.path.join(dirname, "source_code/bit_boardUser.txt")) as f:
         cacheUser = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
 
-    if f"{your_board} {opp_board}" in cacheUser:
-        return eval(cacheUser[f"{your_board} {opp_board}"].split(' ')[3])[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"]
+    if (state := f"{your_board} {opp_board}") in cacheUser:
+        rate = eval(cacheUser[state].split(' ')[3])
 
     else:
         rate = {}
@@ -67,7 +67,7 @@ def main(player, move):
             cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
         Stopdepth = 5
 
-        for pos in player.your_pos:
+        for pos in move_listi['your_pos']:
             for movement in ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1)):
                 invalid_move = (pos[0] + movement[0], pos[1] + movement[1])
                 if 0 <= invalid_move[0] <= 4 and 0 <= invalid_move[1] <= 4 and (your_board|opp_board)&(1<<24-5*invalid_move[1]-invalid_move[0]) == 0 and ((True, sum(pos)%2==0)[movement[0]*movement[1]]):
@@ -75,10 +75,10 @@ def main(player, move):
                     # Update move to board
                     your_new_board = your_board^(1<<24-5*pos[1]-pos[0])|(1<<24-5*invalid_move[1]-invalid_move[0])
                     # Update move to positions
-                    your_new_pos = player.your_pos.copy()
-                    your_new_pos[player.your_pos.index(pos)] = invalid_move
+                    your_new_pos = move_listi['your_pos'].copy()
+                    your_new_pos[move_listi['your_pos'].index(pos)] = invalid_move
 
-                    opp_new_board, opp_new_pos = ganh_chet(invalid_move, player.opp_pos.copy(), your_new_board, opp_board)
+                    opp_new_board, opp_new_pos = ganh_chet(invalid_move, move_listi['opp_pos'].copy(), your_new_board, opp_board)
                     if len(your_new_pos) > len(opp_new_pos) or len(your_new_pos) == len(opp_new_pos) == 3:
                         opp_new_board, opp_new_pos = vay(opp_new_pos, your_new_board, opp_new_board)
 
@@ -89,7 +89,18 @@ def main(player, move):
                     })
 
         with open(os.path.join(dirname, f"source_code/bit_boardUser.txt"), mode="a") as f:
-            rate0 = {i:j[0] for i,j in rate.items()}
-            f.write( f'''\n{your_board} {opp_board}  {' '.join(map(str, min(rate.values())))} {str(rate0).replace(' ', '')}''' )
+            f.write( f'''\n{your_board} {opp_board}  {' '.join(map(str, min(rate.values())))} {str(rate).replace(' ', '')}''' )
 
-        return rate[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"][0]
+    move = move_listi["move"]
+    p = sorted(list(rate.values())).index(rate[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"])
+    l = len(rate.values())
+    print(rate.values(), p, l)
+
+    if p*3 > l*2:
+        return "Tệ"
+    elif p*3 >= l:
+        return "Bình thường"
+    elif p == 0:
+        return "Thiên tài"
+    else:
+        return "Tốt"

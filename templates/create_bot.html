@@ -109,7 +109,7 @@
                                 <br>
                                 0 ≤ x, y ≤ 4 <hr>
                                 Player.your_side in (-1, 1) <hr>
-                                {i for i in Player.board} == {0, 1, -1}
+                                {j for i in Player.board for j in i} == {0, 1, -1}
                             </div>
                         </div>
                         <div class="output">
@@ -176,7 +176,9 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.34.2/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.34.2/ext-searchbox.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.34.2/ext-language_tools.min.js"></script>
     <script src="../static/script/create_bot.js"></script>
 </body>
 </html>

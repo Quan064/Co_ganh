@@ -12,6 +12,7 @@ from threading import Timer
 import json
 import secrets
 from fdb.firestore_config import fdb
+import trainAI.MasterUser
 
 # doc_ref = fdb.collection("app").document("User")
 
@@ -204,7 +205,7 @@ def debug_code():
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
     try: 
-        img_url = activation("trainAI.Master", name, data["debugNum"]) # người thắng / số lượng lượt chơi
+        img_url, inp_oup = activation("trainAI.Master", name, data["debugNum"]) # người thắng / số lượng lượt chơi
 
         with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
             txt = f.read()
@@ -212,6 +213,7 @@ def debug_code():
             "code": 200,
             "img_url": img_url,
             "output": txt,
+            "inp_oup": inp_oup
         }
         return json.dumps(data)
     except Exception:
@@ -303,6 +305,13 @@ def get_pos_of_playing_chess():
     move['selected_pos'] = tuple(reversed(list(move['selected_pos'])))
     move['new_pos'] = tuple(reversed(list(move['new_pos'])))
     return move
+
+@app.route('/get_rate', methods=['POST'])
+@login_required
+def get_rate():
+    move_list = request.get_json()
+    rate = [trainAI.MasterUser.main(i) for i in move_list]
+    return json.dumps(rate)
 
 @app.route('/fighting', methods=['POST'])
 @login_required

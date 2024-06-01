@@ -94,7 +94,7 @@ def vay(opp_pos):
 # System
 def activation(option, session_name, debugNum):
     global org_stdout
-    if debugNum:
+    if debugNum > 0:
         open(f"static/output/stdout_{session_name}.txt", mode="w", encoding="utf-8")
         org_stdout = sys.stdout
         f = open(f"static/output/stdout_{session_name}.txt", mode="a", encoding="utf-8")
@@ -106,12 +106,12 @@ def activation(option, session_name, debugNum):
         Bot2 = __import__(option, fromlist=[None])
         reload(Bot2)
         temp = run_game(UserBot, Bot2, session_name, debugNum)
-        if debugNum:
+        if debugNum > 0:
             sys.stdout = org_stdout
             f.close()
         return temp
     except Exception:
-        if debugNum:
+        if debugNum > 0:
             f.write(traceback.format_exc())
             sys.stdout = org_stdout
             f.close()
@@ -125,10 +125,7 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         "username": session_name,
         "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
     }
-    if debugNum:
-        inp_oup = []
-        rate = []
-        Userpp = 0
+    if debugNum: inp_oup = []
 
     while not winner:
 
@@ -137,23 +134,9 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
             move = UserBot.main(deepcopy(player1))
             Raise_exception(move, current_turn, game_state["board"])
             if debugNum:
-                inp_oup.append(
-                    deepcopy(((player1.your_pos, player1.opp_pos, player1.board, player1.your_side),
-                              (move["selected_pos"], move["new_pos"])))
-                )
-                Userp = __import__("trainAI.MasterUser", fromlist=[None]).main(deepcopy(player1), move)
-
-                rate.append((Userpp, Userp))
-                if Userp > Userpp:
-                    rate.append("Tệ")
-                elif Userp == Userpp:
-                    rate.append("Bình thường")
-                elif Userp <= Userpp - 3:
-                    rate.append("Thiên tài")
-                else:
-                    rate.append("Tốt")
+                inp_oup.append(deepcopy(move))
         else:
-            move, Userpp = Bot2.main(deepcopy(player2))
+            move = Bot2.main(deepcopy(player2))
             Raise_exception(move, current_turn, game_state["board"])
 
         move_new_pos = move["new_pos"]
@@ -172,10 +155,10 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         if remove: point[:] += [move_selected_pos]*len(remove)
 
         body["img"].append([deepcopy(positions), move, remove])
-        if debugNum:
-            if move_counter == debugNum:
-                img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
-                return img_url, inp_oup, rate
+
+        if debugNum > 0 and move_counter == debugNum:
+            img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
+            return img_url, inp_oup
         elif not positions[1]:
             winner = "lost"
         elif not positions[-1]:
@@ -188,4 +171,8 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
     # res = requests.post("http://127.0.0.1:4000//generate_video", json=body)
     new_url = requests.post("http://tlv23.pythonanywhere.com//generate_video", json=body).text
+
+    print("-----------------------------------------------------------------------------------")
+
+    print(winner, move_counter, new_url)
     return winner, move_counter-1, new_url

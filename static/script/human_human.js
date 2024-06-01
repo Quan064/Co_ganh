@@ -1,5 +1,67 @@
-// const $ = document.querySelector.bind(document)
-// const $$ = document.querySelectorAll.bind(document)
+const $ = document.querySelector.bind(document)
+const $$ = document.querySelectorAll.bind(document)
+
+const room_id = localStorage.getItem("room_id")
+const username = localStorage.getItem("user")
+
+const room_info = $(".overflow")
+const room_info_title = $(".room_info-title")
+const user_avatar = $(".room_title-you .avatar")
+const opponent_avatar = $(".room_title-opp .avatar")
+const opp_block = $(".room_title-opp")
+const P2_loading = $(".room_title-loading")
+
+let isPlaying = false
+
+let move_list = [
+    {
+        your_pos: chessPosition[0],
+        opp_pos: chessPosition[1],
+        your_board: [
+            [-1,-1,-1,-1,-1],
+            [-1, 0, 0, 0,-1],
+            [ 1, 0, 0, 0,-1],
+            [ 1, 0, 0, 0, 1],
+            [ 1, 1, 1, 1, 1]
+        ],
+        opp_board: curBoard.map(row => row.map(item => -item)),
+        move: {
+            selected_pos: [],
+            new_pos: [],
+        }
+    }
+]
+
+console.log(move_list)
+
+if(username === room_id) {
+    user_avatar.innerHTML = username[0].toUpperCase()
+} else {
+    user_avatar.innerHTML = room_id[0].toUpperCase()
+}
+
+const socket = io('http://127.0.0.1:5000/', {
+    allowRequest: (req, callback) => {
+        const noOriginHeader = req.headers.origin === undefined;
+        callback(null, noOriginHeader);
+    },
+    withCredentials: true,
+    extraHeaders: {
+        "origin": "http://127.0.0.1:5000/"
+    },
+    serveClient: true,
+    transports : ['websocket'],
+    rejectUnauthorized: true,
+    closeOnBeforeunload: false
+})
+
+const accept_btn = $(".accept_btn")
+const reject_btn = $(".reject_btn")
+const menu_btn = $(".menu_btn")
+const warning = $(".warning")
+const sign = $(".sign")
+const ok_btn = $(".ok_btn")
+const rate_btn = $(".rate_btn")
 
 let board = $(".board")
 let boardValue = board.getBoundingClientRect()
@@ -16,57 +78,10 @@ canvas.width = boardValue.width + 2 * radius + 10
 canvas.height = boardValue.height + 2 * radius + 10
 let cv2 = canvas.getContext("2d")
 let rs = 1
-
-const data = [
-    {
-        type: "excellent",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "good",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "bad",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "bad",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "excellent",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    }
-]
-
 let chessPosition = [
     [[0, 0],[1, 0],[2, 0],[3, 0],[4, 0],[0, 1],[4, 1],[4, 2]], 
     [[0, 2],[0, 3],[2, 4],[4, 3],[0, 4],[1, 4],[3, 4],[4, 4]]
 ]
-
-let gameHistory = [[[[],...chessPosition], {selected_pos: [-1000,-1000], new_pos: [-1000,-1000]}, []]]
-
 let selectedChess
 const gameResult = $(".game_result")
 const gameStatus = $(".game_status")
@@ -75,10 +90,11 @@ const moveSound = $(".move_sound")
 const captureSound = $(".capture_sound")
 const fireSound = $(".fire_sound")
 fireSound.volume = 0.6
+let dem
 
-const rate_btn = $(".rate_btn")
-const rate = $(".rate")
-const ske_loading = $(".ske_loading")
+if(room_id !== username) {
+    isReady(false)
+}
 
 play_again_btn.onclick = () => location.reload()
 
@@ -124,7 +140,6 @@ let curBoard = [
     [1, 0, 0, 0, 1],
     [1, 1, 1, 1, 1]
 ]
-
 const type = [
     [1,0,1,0,1],
     [0,1,0,1,0],
@@ -149,10 +164,18 @@ function resetBoard() {
     for(let i = 0; i < grid.length; i++) {
         for(let j = 0; j < grid[i].length; j++) {
             board.innerHTML += `<div data-choosable="false" data-posx="${j}" data-posy="${i}" class="box" style="top:${chessGrapY*i - 40 * rs}px; left:${chessGrapX*j - 40 * rs}px;"></div>`
-            if(grid[i][j] === -1) {
-                board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: red; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess enemy"></div>`
-            } else if(grid[i][j] === 1) {
-                board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: blue; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess player"></div>`
+            if(username === room_id) {
+                if(grid[i][j] === -1) {
+                    board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: red; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess enemy"></div>`
+                } else if(grid[i][j] === 1) {
+                    board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: blue; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess player"></div>`
+                }
+            } else {
+                if(grid[i][j] === -1) {
+                    board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: blue; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess enemy"></div>`
+                } else if(grid[i][j] === 1) {
+                    board.innerHTML += `<div data-so="${dem}" data-posx="${j}" data-posy="${i}" style="background-color: red; top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;" class="chess player"></div>`
+                }
             }
             dem++
         }
@@ -161,28 +184,91 @@ function resetBoard() {
 
 resetBoard()
 
-let move_list = [
-    // {
-    //     your_pos: chessPosition[0],
-    //     opp_pos: chessPosition[1],
-    //     your_board: [
-    //         [-1,-1,-1,-1,-1],
-    //         [-1, 0, 0, 0,-1],
-    //         [ 1, 0, 0, 0,-1],
-    //         [ 1, 0, 0, 0, 1],
-    //         [ 1, 1, 1, 1, 1]
-    //     ],
-    //     opp_board: curBoard.map(row => row.map(item => item === 0 ? 0 : -item)),
-    //     move: {
-    //         selected_pos: [],
-    //         new_pos: [],
-    //     }
-    // }
-]
+socket.on('connect', () => {
+    
+    if(username !== room_id) {
+        $(".game_turn-bot").classList.add("game_turn-bot_reverse")
+        $(".game_turn-player").classList.add("game_turn-player_reverse")
+    }
+
+    socket.emit("join_room", room_id, username === room_id ? "ready_P1": "ready_P2", 1, {
+        username: username,
+    })
+    
+    socket.on(`check_user_${username}`, (data) => {
+        console.log('room: ', data);
+    });
+
+    socket.on(`join_room_${room_id}`, (data) => {
+        const {type, user_info} = data
+        console.log(type)
+        if(type === "ready_P2") {
+            P2_loading.style.display = "none"
+            opp_block.style.display = "block"
+            room_info_title.innerHTML = "Tìm thấy đối thủ"
+            setTimeout(() => {
+                room_info_title.innerHTML = "Bắt đầu ván đấu"
+            }, 1500)
+            setTimeout(() => {
+                room_info.style.display = "none"
+                isPlaying = true
+            }, 1000)
+
+            opponent_avatar.innerHTML = user_info.username[0].toUpperCase()
+        }
+    });
+    
+    socket.on(`get_move_${room_id}`, (data) => {
+        console.log('room: ', data);
+        const chessAll = $$(".chess")
+        let {selected_pos, new_pos, turn} = data
+        
+        if(turn !== username) {
+            console.log({selected_pos, new_pos})
+            new_pos = [Math.abs(new_pos[0] - 4), Math.abs(new_pos[1] - 4)]
+            selected_pos = [Math.abs(selected_pos[0] - 4), Math.abs(selected_pos[1] - 4)]
+            const selectedChess = Array.from(chessAll).find(e => {
+                return Number(e.dataset.posy) === selected_pos[1] && Number(e.dataset.posx) === selected_pos[0]
+            })
+            console.log(selectedChess)
+            move_list.push({
+                selected_pos: selected_pos, 
+                new_pos: new_pos,
+                turn: turn,
+            })
+            swap(selectedChess, null, new_pos, selected_pos)
+        }
+    });
+
+    socket.on(`player_2_connected_${room_id}`, () => {
+        // playable.style.display
+    });
+
+    socket.on(`out_room_${room_id}`, () => {
+        sign.style.display = "flex"
+        gameStatus.innerHTML = "You Win"
+        gameStatus.style.backgroundColor = "green"
+        gameStatus.style.display = "block"
+        gameStatus.style.opacity = "1";
+        rate_btn.style.display = "block"
+    });
+});
+
+window.addEventListener('beforeunload', (e) => {
+    e.returnValue = `Nếu thoát khỏi đây thì bạn sẽ bị xử thua. Bạn chắc chứ?`;
+    e.preventDefault()
+});
+
+window.addEventListener('unload', function () {
+    const data = JSON.stringify({ 
+        room_id: room_id,
+        type: username === room_id ? "ready_P1": "ready_P2",
+        state: 0,
+    });
+    navigator.sendBeacon('/out_room', data);
+});
 
 rate_btn.onclick = () => {
-    rate.classList.toggle("appear")
-    rate_btn.classList.toggle("active")
     fetch("/get_rate", {
         method: "POST",
         headers: {
@@ -193,18 +279,25 @@ rate_btn.onclick = () => {
     .then(res => res.json())
     .then(data => {
         console.log(data)
-        // const rateModel = createRateModel(".rate", data)
-        // rateModel.start()
     })
-    // setTimeout(() => {
-    // },3000)
 }
 
-console.log(move_list)
+accept_btn.onclick = () => {
+    // socket.emit("out_room", room_id, username === room_id ? "ready_P1": "ready_P2", 0)
+    // window.location.href = "http://127.0.0.1:5000/room_manager"
+}
 
-// window.addEventListener('beforeunload', (event) => {
-//     event.returnValue = `Những thay đổi trên bàn cờ chưa được lưu. Bạn muốn đi khỏi đây?`;
-// });
+reject_btn.onclick = () => {
+    warning.style.display = "none"
+}
+
+ok_btn.onclick = () => {
+    sign.style.display = "none"
+}
+
+menu_btn.onclick = () => {
+    // warning.style.display = "flex"
+}
 
 let boxes = $$(".box")
 
@@ -251,10 +344,11 @@ function findI(e) {
     return e[0] === this[0]  && e[1] === this[1]
 }
 
-function changeBoard(newBoard, valid_remove, selected_pos, new_pos) {
+function changeBoard(newBoard, valid_remove) {
     const chesses = $$(".chess")
     for(let i = 0; i < 5; i++) {
         for(let j = 0; j < 5; j++) {
+            let isBlock = false
             if(curBoard[i][j] !== newBoard[i][j] && valid_remove.length !== 0) {
                 if(curBoard[i][j] !== 0 && newBoard[i][j] === 0) {
                     const changedChess = Array.from(chesses).find(e => {
@@ -267,15 +361,19 @@ function changeBoard(newBoard, valid_remove, selected_pos, new_pos) {
                                 chessPosition[index].splice(es.findIndex(findI, [j,i]),1)
                             }
                         }))
+                        // captureSound.play()
                         fireSound.play()
+                        // changedChess.classList.add("disappear")
                         const fire = document.createElement("img")
                         fire.setAttribute("src", "./static/img/fire.webp")
                         fire.setAttribute("style", `top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;`)
                         fire.setAttribute("class", "fire")
                         let newFire = board.appendChild(fire)
                         console.log("removeChess: " + "(" + j + ",", + i + ")")
+                        // const fire = $$(".fire")
                         newFire.onanimationend = (e) => {
                             changedChess.remove()
+                            // board.removeChild(newFire)
                         }
                     }
                 }
@@ -283,18 +381,6 @@ function changeBoard(newBoard, valid_remove, selected_pos, new_pos) {
             curBoard[i][j] = newBoard[i][j];
         }
     }
-
-    move_list.push({
-        your_pos: chessPosition[0],
-        opp_pos: chessPosition[1],
-        your_board: curBoard.map(row => row.map(item => item)),
-        opp_board: curBoard.map(row => row.map(item => item === 0 ? 0 : -item)),
-        move: {
-            selected_pos: selected_pos,
-            new_pos: new_pos,
-        }
-    })
-    
     if(chessPosition[0].length === 0) {
         gameStatus.innerHTML = "You Win"
         gameStatus.style.backgroundColor = "green"
@@ -332,7 +418,6 @@ function ganh_chet(move, opp_pos, side, opp_side) {
 
     for (let [x, y] of valid_remove) {
         grid[y][x] = 0;
-        // console.log(grid)
         opp_pos = opp_pos.filter(([px, py]) => px !== x || py !== y);
     }
 
@@ -357,10 +442,8 @@ function vay(opp_pos) {
     }
 
     let valid_remove = opp_pos.slice();
-    // console.log(valid_remove)
     for (let [x, y] of opp_pos) {
         grid[y][x] = 0;
-        // console.log(grid)
     }
     opp_pos = [];
     return valid_remove;
@@ -389,8 +472,6 @@ function changePos(x, y, newX, newY) {
 }
 
 function swap(chess, box, newPos, selected_pos) {
-    // newPos = newPos
-    // selected_pos = selected_pos
     let valid_remove
     cv2.clearRect(0, 0, canvas.width, canvas.height);
     moveSound.play()
@@ -399,52 +480,40 @@ function swap(chess, box, newPos, selected_pos) {
         cv2.beginPath();
         cv2.arc(chess.dataset.posx * (boardValue.width / 4) + radius + 2.5 * r[chess.dataset.posx], chess.dataset.posy * (boardValue.height / 4) + radius + 2.5 * r[chess.dataset.posx], radius, 0, 2 * Math.PI);
         cv2.lineWidth = 5;
-        cv2.fillStyle = "#577DFF"
+        cv2.fillStyle = username === room_id ? "#577DFF" : "#FC6666"
         cv2.fill()
-        cv2.strokeStyle = "#577DFF";
+        cv2.strokeStyle = username === room_id ? "#577DFF" : "#FC6666"
         cv2.stroke();
         chess.style.left = box.offsetLeft + 10 * rs + "px"
         chess.style.top = box.offsetTop + 10 * rs + "px"
         chessPosition[1][chessPosition[1].findIndex(findI, [Number(chess.dataset.posx), Number(chess.dataset.posy)])] = [Number(box.dataset.posx), Number(box.dataset.posy)]
         changePos(chess.dataset.posx,chess.dataset.posy, box.dataset.posx, box.dataset.posy)
         let opp_pos = chessPosition[0]
+        console.log(grid)
         valid_remove = [...ganh_chet([Number(box.dataset.posx), Number(box.dataset.posy)], opp_pos, 1, -1), ...vay(opp_pos)]
-        gameHistory.push([[[],...chessPosition], {selected_pos: [Number(chess.dataset.posx),Number(chess.dataset.posy)], new_pos: [Number(box.dataset.posx), Number(box.dataset.posy)]}, valid_remove])
-        newPos = [Number(box.dataset.posx), Number(box.dataset.posy)]
-        selected_pos = [Number(chess.dataset.posx),Number(chess.dataset.posy)]
         chess.dataset.posx = box.dataset.posx
         chess.dataset.posy = box.dataset.posy
     } else {
         cv2.beginPath();
         cv2.arc(chess.dataset.posx * (boardValue.width / 4) + radius + 2.5 * r[chess.dataset.posx], chess.dataset.posy * (boardValue.height / 4) + radius + 2.5 * r[chess.dataset.posx], radius, 0, 2 * Math.PI);
         cv2.lineWidth = 5;
-        cv2.fillStyle = "#FC6666"
+        cv2.fillStyle = username === room_id ? "#FC6666" : "#577DFF"
         cv2.fill()
-        cv2.strokeStyle = "#FC6666";
+        cv2.strokeStyle = username === room_id ? "#FC6666" : "#577DFF"
         cv2.stroke();
-        chessPosition[0][chessPosition[0].findIndex(findI, [selected_pos[1], selected_pos[0]])] = [newPos[1], newPos[0]]
+        chessPosition[0][chessPosition[0].findIndex(findI, [selected_pos[0], selected_pos[1]])] = [newPos[1], newPos[0]]
         chess.style.left = newPos[1] * chessGrapX - 30 * rs + "px"
         chess.style.top = newPos[0] * chessGrapX - 30 * rs + "px"
-        console.log(chessPosition)
-        console.log(grid)
-        console.log(curBoard)
-        console.log("selected_pos: " + "(" + chess.dataset.posy + "," + chess.dataset.posx + ")")
-        // prePos = [Number(chess.dataset.posx), Number(chess.dataset.posy)]
-        console.log("new_pos: " + "(" + newPos[1] + "," + newPos[0] + ")")
-        changePos(selected_pos[1], selected_pos[0], newPos[1], newPos[0])
+        changePos(selected_pos[0], selected_pos[1], newPos[1], newPos[0])
         let opp_pos = chessPosition[1]
         valid_remove = [...ganh_chet([newPos[1], newPos[0]], opp_pos, -1, 1), ...vay(opp_pos)]
         console.log(valid_remove)
-        // console.log("left: " + chess.style.left + " " + "top: " + chess.style.top)
-        // console.log("left: " + chess.style.left + " " + "top: " + chess.style.top)
-        gameHistory.push([[[],...chessPosition], {selected_pos: [Number(chess.dataset.posx),Number(chess.dataset.posy)], new_pos: [newPos[1], newPos[0]]}, valid_remove])
         chess.dataset.posx = `${newPos[1]}`
         chess.dataset.posy = `${newPos[0]}`
-        console.log(chess)
         isReady(true)
     }
-    console.log(gameHistory)
-    changeBoard(grid, valid_remove, selected_pos, newPos)
+    changeBoard(grid, valid_remove)
+    console.log(grid)
 }
 
 function clearBox() {
@@ -453,39 +522,21 @@ function clearBox() {
     })
 }
 
-function getBotmove() {
+function sendMove(selected_pos, new_pos) {
     if(chessPosition[0].length <= 0) return
-    chessEnemy = $$(".chess.enemy")
-    let data = {
-        your_pos : [],
-        your_side : -1,
-        opp_pos : [],
-        board : grid,
-    }
-
-    grid.forEach((row,i) => {
-        row.forEach((__,j) => {
-            if(grid[i][j] === 1) data.your_pos.push([j,i])
-            if(grid[i][j] === -1) data.opp_pos.push([j,i])
-        })
+    const selectX = Number(selected_pos.dataset.posx)
+    const selectY = Number(selected_pos.dataset.posy)
+    const newX = Number(new_pos.dataset.posx)
+    const newY = Number(new_pos.dataset.posy)
+    move_list.push({
+        selected_pos: [selectX,selectY], 
+        new_pos: [newY,newX],
+        turn: username,
     })
-
-    fetch("/get_pos_of_playing_chess", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    })
-    .then(res => res.json(data))
-    .then(resData => {
-        const {selected_pos, new_pos} = resData
-        console.log({selected_pos, new_pos})
-        const selectedChess = Array.from(chessEnemy).find(e => {
-            return Number(e.dataset.posx) === selected_pos[1] && Number(e.dataset.posy) === selected_pos[0]
-        })
-        console.log(selectedChess)
-        swap(selectedChess, null, new_pos, selected_pos)
+    socket.emit(`get_move`, room_id, {
+        selected_pos: [selectX,selectY], 
+        new_pos: [newY,newX],
+        turn: username,
     })
 }
 
@@ -493,17 +544,17 @@ boxes.forEach((e) => {
     e.onclick = () => {
         if(e.dataset.choosable === "true" && selectedChess) {
             isReady(false)
+            sendMove(selectedChess, e)
             swap(selectedChess, e)
             clearBox()
-            getBotmove()
         }
     }
     e.ontouchend = () => {
         if(e.dataset.choosable === "true" && selectedChess) {
             isReady(false)
+            sendMove(selectedChess, e)
             swap(selectedChess, e)
             clearBox()
-            getBotmove()
         }
     }
 })
@@ -531,17 +582,17 @@ window.addEventListener('resize', function(event) {
         e.onclick = () => {
             if(e.dataset.choosable === "true" && selectedChess) {
                 isReady(false)
+                sendMove(selectedChess, e)
                 swap(selectedChess, e)
                 clearBox()
-                getBotmove()
             }
         }
         e.ontouchend = () => {
             if(e.dataset.choosable === "true" && selectedChess) {
                 isReady(false)
+                sendMove(selectedChess, e)
                 swap(selectedChess, e)
                 clearBox()
-                getBotmove()
             }
         }
     })
@@ -555,7 +606,9 @@ window.addEventListener('resize', function(event) {
 }, true);
 
 window.addEventListener("load", (event) => {
-    console.log(event)
+    if(isPlaying) {
+        room_info.style.display = "none"
+    }
     if(window.outerWidth <= 500) {
         rs = 0.5
         radius = 8
@@ -570,17 +623,17 @@ window.addEventListener("load", (event) => {
         e.onclick = () => {
             if(e.dataset.choosable === "true" && selectedChess) {
                 isReady(false)
+                sendMove(selectedChess, e)
                 swap(selectedChess, e)
                 clearBox()
-                getBotmove()
             }
         }
         e.ontouchend = () => {
             if(e.dataset.choosable === "true" && selectedChess) {
                 isReady(false)
+                sendMove(selectedChess, e)
                 swap(selectedChess, e)
                 clearBox()
-                getBotmove()
             }
         }
     })
