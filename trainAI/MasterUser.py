@@ -101,6 +101,6 @@ def main(move_listi):
     elif p*3 >= l:
         return "Bình thường"
     elif p == 0:
-        return "Thiên tài"
+        return "Tốt nhất"
     else:
         return "Tốt"
