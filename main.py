@@ -312,8 +312,8 @@ def get_rate():
     move_list = request.get_json()
     if move_list['side'] == -1:
         for i in move_list:
-            i['your_pos'], i['opp_pos'] = i['opp_pos'], i['your_pos']
-        move_list = str(move_list).replace(')', ']').replace('(', '[').replace('-1', '`').replace('1', '-1').replace('`', '1')
+            i['your_pos'], i['opp_pos'] = [tuple(i) for i in i['opp_pos']], [tuple(i) for i in i['your_pos']]
+            i['board'] = eval(str(i['board']).replace('-1', '`').replace('1', '-1').replace('`', '1'))
     rate = [trainAI.MasterUser.main(i) for i in move_list]
     return json.dumps(rate)
 
