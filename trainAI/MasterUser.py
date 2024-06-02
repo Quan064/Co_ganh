@@ -1,13 +1,13 @@
 import os
-from Master import ganh_chet, vay, check_pos_point
+from trainAI.Master import ganh_chet, vay, check_pos_point
 
 def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlayer=True, alpha=(float("-inf"),), beta=(float("inf"),)):
 
     if isMaximizingPlayer:
-        if (state := f"{opp_board} {your_board}") in cacheUser and depth:
+        if (state := f"{your_board} {opp_board}") in cacheUser and depth:
             temp = cacheUser[state].split(' ')
             return float(temp[0]), float(temp[1])+depth, float(temp[2])
-    elif (state := f"{your_board} {opp_board}") in cache:
+    elif (state := f"{opp_board} {your_board}") in cache:
         temp = cache[state].split(' ')
         return float(temp[1]), float(temp[2])-depth, float(temp[3])
 
