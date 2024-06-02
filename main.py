@@ -310,8 +310,8 @@ def get_pos_of_playing_chess():
 @login_required
 def get_rate():
     move_list = request.get_json()
-    if move_list[0]['side'] == -1:
-        for i in move_list:
+    for i in move_list:
+        if i['side'] == -1:
             i['your_pos'], i['opp_pos'] = [tuple(i) for i in i['opp_pos']], [tuple(i) for i in i['your_pos']]
             i['board'] = eval(str(i['board']).replace('-1', '`').replace('1', '-1').replace('`', '1'))
     rate = [trainAI.MasterUser.main(i) for i in move_list]
