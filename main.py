@@ -1,4 +1,4 @@
-from flask import Flask, flash, request, redirect, url_for, render_template, session
+from flask import Flask, flash, request, redirect, url_for, render_template, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm 
@@ -12,9 +12,11 @@ from threading import Timer
 import json
 import secrets
 from fdb.firestore_config import fdb
+import socketio
 import trainAI.MasterUser
+import requests
 
-# doc_ref = fdb.collection("app").document("User")
+doc_ref_room = fdb.collection("room")
 
 # doc = doc_ref.get()
 
@@ -38,6 +40,9 @@ db = SQLAlchemy(app)
 
 app.config['MAX_CONTENT_LENGTH'] = 16_000_00  #Max file size
 app.config['UPLOAD_FOLDER'] = "static/botfiles"
+
+sio = socketio.Server(cors_allowed_origins='*')
+app.wsgi_app = socketio.WSGIApp(sio, app.wsgi_app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -121,8 +126,8 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         code = '''
-from tool import enable_move, distance
-# enable_move(x, y, board)
+from tool import valid_move, distance
+# valid_move(x, y, board)
 # distance(x1, y1, x2, y2)
 
 # Remember that player.board[y][x] is the tile at (x, y) when printing
@@ -175,23 +180,27 @@ def upload_code():
         f.write(code)
     try: 
         winner, max_move_win, new_url = activation("trainAI.Master", name, 0) # người thắng / số lượng lượt chơi
+        # with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
+        #     txt = f.read()
         user.fightable = True
         db.session.commit()
         data = {
             "code": 200,
             "status": winner,
             "max_move_win": max_move_win,
-            "new_url": new_url
+            "new_url": new_url,
         }
         return json.dumps(data)
-    except Exception:
+    except Exception as err:
+        err = str(err).replace(r"c:\Users\Hello\OneDrive\Code Tutorial\Python", "...")
+        print(err)
         with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
             txt = f.read()
         user.fightable = False
         db.session.commit()
         data = {
             "code": 400,
-            "output": txt
+            "err": txt
         }
         return json.dumps(data) # Giá trị Trackback Error
     
@@ -200,7 +209,6 @@ def upload_code():
 def debug_code():
     name = current_user.username
     data = request.get_json()
-    # print(data)
     user = User.query.filter_by(username=name).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
@@ -260,7 +268,6 @@ def challenge_mode():
             logout_user()
         return redirect(url_for('login'))
         
-
 @app.route('/get_code')
 @login_required
 def get_code():
@@ -291,8 +298,17 @@ def bot_bot():
 @app.route('/human_bot')
 @login_required
 def human_bot():
-    users = [(i.username, i.elo) for i in User.query.all()]
-    return render_template('human_bot.html', users = users)
+    return render_template('human_bot.html', user = current_user)
+
+@app.route('/human_human')
+@login_required
+def human_human():
+    return render_template('human_human.html', user = current_user)
+
+@app.route('/room_manager')
+@login_required
+def room_manager():
+    return render_template('room_manager.html', user = current_user)
 
 @app.route('/get_pos_of_playing_chess', methods=['POST'])
 @login_required
@@ -309,13 +325,23 @@ def get_pos_of_playing_chess():
 @app.route('/get_rate', methods=['POST'])
 @login_required
 def get_rate():
-    move_list = request.get_json()
+    data = request.get_json()
+    move_list = data["move_list"]
+    img_data = data["img_data"]
     for i in move_list:
         if i['side'] == -1:
             i['your_pos'], i['opp_pos'] = [tuple(i) for i in i['opp_pos']], [tuple(i) for i in i['your_pos']]
             i['board'] = eval(str(i['board']).replace('-1', '`').replace('1', '-1').replace('`', '1'))
     rate = [trainAI.MasterUser.main(i) for i in move_list]
-    return json.dumps(rate)
+
+    for i in range(len(img_data["img"])):
+        img_data["img"][i].append(rate[i])
+
+    print(img_data)
+
+    img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=img_data).text
+
+    return json.dumps({"rate": rate, "img_url": img_url})
 
 @app.route('/fighting', methods=['POST'])
 @login_required
@@ -335,7 +361,6 @@ def fighting():
 @app.route('/update_rank_board', methods=['POST'])
 @login_required
 def update_rank_board():
-    # name = current_user.username
     data = request.get_json()
     enemy = User.query.filter_by(username=data['enemy']['name']).first()
     player = User.query.filter_by(username=data['player']['name']).first()
@@ -345,6 +370,90 @@ def update_rank_board():
     users = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
 
     return users
+
+@app.route('/get_room', methods=['GET'])
+@login_required
+def get_room():
+    # name = current_user.username
+    doc_ref = doc_ref_room.where("player_2", "==", "").where("player_1", "!=", current_user.username).where("ready_P1", "==", 1).stream()
+    rooms = []
+    for doc in doc_ref:
+        rooms.append(doc.to_dict())
+    return jsonify(rooms)
+
+@app.route('/create_room', methods=['POST'])
+@login_required
+def create_room():
+    data = request.get_json()
+    name = current_user.username
+
+    doc_ref_room.document(name).set(data)
+    return json.dumps("success")
+
+@app.route('/join_room', methods=['POST'])
+@login_required
+def join_room():
+    data = request.get_json()
+
+    doc_ref = doc_ref_room.document(data["player_1"])
+    doc_ref.update(data)
+    return json.dumps("success")
+
+@app.route('/out_room', methods=['POST'])
+@login_required
+def out_room():
+    try:
+        data = request.get_data(as_text=True)
+        json_data = json.loads(data)
+        room_id = json_data["room_id"]
+        print(f"Received notification: {json_data}")
+        sio.emit(f'out_room_{room_id}')
+        return '', 204
+    except Exception as e:
+        print(f"Error processing request: {e}")
+        return 'Error', 400
+
+
+@sio.event
+def connect(sid, eviron):
+    print(f"Client connected: {sid}")
+
+@sio.event
+def join_room(sid, room_id, type, state, user_info):
+    doc_ref = doc_ref_room.document(room_id)
+    doc_ref.set({type: state}, merge=True)
+    sio.emit(f"join_room_{room_id}", {
+        "type": type,
+        "user_info": user_info,
+    })
+    print(f"Client connected: {sid}")
+
+# @sio.event
+# def out_room(sid, room_id, type, state):
+#     doc_ref = doc_ref_room.document(room_id)
+#     doc_ref.set({type: state}, merge=True)
+#     sio.emit(f"out_room_{room_id}")
+#     print(f"Client disconnected: {sid}")
+
+# Xử lý ngắt kết nối từ client
+@sio.event
+def disconnect(sid):
+    print(f"Client disconnected: {sid}")
+
+# Xử lý sự kiện 'message' từ client
+@sio.event
+def message(sid, data):
+    print(f"Message from {sid}: {data}")
+    sio.send("Hello from server!")
+
+@sio.event
+def check_user(data, environ):
+    # sio.emit('check_user', environ)
+    sio.emit(f'check_user_{environ}', environ)
+
+@sio.event
+def get_move(data, room, environ):
+    sio.emit(f'get_move_{room}', environ)
 
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")

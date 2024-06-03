@@ -33,14 +33,14 @@ function createRateModel(rate_dom, data) {
             const rate_list_detail = this.get_rate_list_detail()
             let type_count = [
                 {
-                    excellent: 0,
-                    good: 0,
-                    bad: 0,
+                    "Tốt nhất": 0,
+                    "Bình thường": 0,
+                    "Tệ": 0,
                 },
                 {
-                    excellent: 0,
-                    good: 0,
-                    bad: 0,
+                    "Tốt nhất": 0,
+                    "Bình thường": 0,
+                    "Tệ": 0,
                 }
             ]
 
@@ -54,11 +54,12 @@ function createRateModel(rate_dom, data) {
                     type: "",
                     icon: ""
                 }
+
                 type_count[i % 2 === 0 ? 0 : 1][rate.type]++
-                if (rate.type === "excellent") {
+                if (rate.type === "Tốt nhất") {
                     res.type = rate.type
                     res.icon = `<img class="rate_item-you_img" src="../static/img/brilliant_icon.png" alt="">`
-                } else if(rate.type === "bad") {
+                } else if(rate.type === "Tệ") {
                     res.icon = `<img class="rate_item-you_img" src="../static/img/bad_icon.png" alt="">`
                     res.type = rate.type
                 }
@@ -80,57 +81,57 @@ function createRateModel(rate_dom, data) {
                 if(i === 0) {
                     overview.innerHTML += `
                         <li class="excellent_count">
-                            <div class="excellent_count-you">${type_count[0].excellent}</div>
-                            <div class="excellent_count-title excellent">EXCELLENT</div>
-                            <div class="excellent_count-opp">${type_count[1].excellent}</div>
+                            <div class="excellent_count-you">${type_count[0]["Tốt nhất"]}</div>
+                            <div class="excellent_count-title excellent">TỐT NHẤT</div>
+                            <div class="excellent_count-opp">${type_count[1]["Tốt nhất"]}</div>
                         </li>
                     `
                 }
                 if(i === 1) {
                     overview.innerHTML += `
                         <li class="excellent_count">
-                            <div class="excellent_count-you">${type_count[0].good}</div>
-                            <div class="excellent_count-title good">GOOD</div>
-                            <div class="excellent_count-opp">${type_count[1].good}</div>
+                            <div class="excellent_count-you">${type_count[0]["Bình thường"]}</div>
+                            <div class="excellent_count-title good">BÌNH THƯỜNG</div>
+                            <div class="excellent_count-opp">${type_count[1]["Bình thường"]}</div>
                         </li>
                     `
                 }
                 if(i === 2) {
                     overview.innerHTML += `
                         <li class="excellent_count">
-                            <div class="excellent_count-you">${type_count[0].bad}</div>
-                            <div class="excellent_count-title bad">BAD</div>
-                            <div class="excellent_count-opp">${type_count[1].bad}</div>
+                            <div class="excellent_count-you">${type_count[0]["Tệ"]}</div>
+                            <div class="excellent_count-title bad">TỆ</div>
+                            <div class="excellent_count-opp">${type_count[1]["Tệ"]}</div>
                         </li>
                     `
                 }
             }
             this.doom_img_item = doom_main_$$(".img_item")
             this.doom_rate_item = doom_main_$$(".rate_item")
-            this.doom_rate_item[0].classList.add("sellected")
+            // this.doom_rate_item[0].classList.add("sellected")
         },
 
         toggle_rate(preI, newI) {
-            this.doom_rate_item[preI].classList.toggle("sellected")
-            this.doom_rate_item[newI].classList.toggle("sellected")
+            this.doom_rate_item[preI-1]?.classList.toggle("sellected")
+            this.doom_rate_item[newI-1].classList.toggle("sellected")
         },
 
         tonggle_img(preI, newI) {
-            if(newI >= 0 && newI < this.doom_img_item.length - 1) {
+            if(newI >= 0 && newI <= this.doom_img_item.length - 1) {
                 // console.log(this.doom_rate_item)
-                this.doom_img_counter.innerHTML = newI + 1
+                this.doom_img_counter.innerHTML = newI
                 this.doom_img_item[preI].style.display = "none"
                 this.doom_img_item[newI].style.display = "block"
                 this.toggle_rate(preI, newI)
             }
 
-            if(newI === 0) {
+            if(newI <= 0) {
                 this.arrow_left.classList.add("hide")
             } else {
                 this.arrow_left.classList.remove("hide")
             }
 
-            if(newI === this.doom_img_item.length - 2) {
+            if(newI === this.doom_img_item.length - 1) {
                 this.arrow_right.classList.add("hide")
             } else {
                 this.arrow_right.classList.remove("hide")
