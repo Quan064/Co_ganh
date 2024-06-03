@@ -4,6 +4,7 @@ from importlib import reload
 import traceback
 from fdb.firestore_config import fdb
 import sys
+import trainAI.MasterUser
 # from fdb.uti.upload import upload_video_to_storage
 
 class Player:
@@ -125,11 +126,21 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         "username": session_name,
         "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
     }
-    if debugNum: inp_oup = []
+    if debugNum: 
+        inp_oup = []
+    move_list = []
+    cur_move = {}
 
     while not winner:
 
         current_turn = game_state["current_turn"]
+
+        # get old board
+        if current_turn == 1:
+            cur_move["board"] = deepcopy(game_state["board"])
+        else:
+            cur_move['board'] = eval(str(game_state['board']).replace('-1', '`').replace('1', '-1').replace('`', '1'))
+
         if player1.your_side == current_turn:
             move = UserBot.main(deepcopy(player1))
             Raise_exception(move, current_turn, game_state["board"])
@@ -141,10 +152,19 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
+        cur_move["move"] = deepcopy({
+            "new_pos": move_new_pos,
+            "selected_pos": move_selected_pos
+        })
 
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
         game_state["board"][move_selected_pos[1]][move_selected_pos[0]] = 0
+
+        # get old chess position
+        cur_move["your_pos"] = deepcopy(positions[current_turn])
+        cur_move["opp_pos"] = deepcopy(positions[-current_turn])
+
         # Update move to positions
         index_move = positions[current_turn].index(move_selected_pos)
         positions[current_turn][index_move] = move_new_pos
@@ -155,10 +175,13 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         if remove: point[:] += [move_selected_pos]*len(remove)
 
         body["img"].append([deepcopy(positions), move, remove])
+        move_list.append(deepcopy(cur_move))
 
         if debugNum > 0 and move_counter == debugNum:
-            for i in range(len(body["img"])):
-                body["img"][i].append("")
+            rate = [trainAI.MasterUser.main(i) for i in move_list]
+            body["img"][0].append("")
+            for i in range(1, len(body["img"])):
+                body["img"][i].append(rate[i-1])
             img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
             return img_url, inp_oup
         elif not positions[1]:
@@ -171,7 +194,6 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
-    # res = requests.post("http://127.0.0.1:4000//generate_video", json=body)
     new_url = requests.post("http://tlv23.pythonanywhere.com//generate_video", json=body).text
 
     print("-----------------------------------------------------------------------------------")

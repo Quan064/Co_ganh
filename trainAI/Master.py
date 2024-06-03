@@ -1,7 +1,6 @@
 import os
 
 def ganh_chet(move, opp_pos, your_board, opp_board):
-
     valid_remove = []
 
     for x0, y0 in opp_pos:
@@ -105,7 +104,6 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
 
     if isMaximizingPlayer:
         if (state := f"{your_board} {opp_board}") in cache and depth:
-            print("🧀")
             temp = cache[state].split(' ')
             return float(temp[1]), float(temp[2])-depth, float(temp[3])
     else:
@@ -142,8 +140,6 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
                     if depth == 0 and value > bestVal:
                         move["selected_pos"] = pos
                         move["new_pos"] = invalid_move
-                    if depth == 0:
-                        print(value, (pos, invalid_move))
 
                     alpha = max(alpha, value)
                     bestVal = max(bestVal, value)

@@ -5,7 +5,6 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
 
     if isMaximizingPlayer:
         if (state := f"{your_board} {opp_board}") in cache and depth:
-            print("🧀")
             temp = cache[state].split(' ')
             return float(temp[1]), float(temp[2])-depth, float(temp[3])
     else:
@@ -96,7 +95,6 @@ def main(move_listi):
     move = move_listi["move"]
     p = sorted(list(rate.values())).index(rate[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"])
     l = len(rate.values())
-    print(rate.values(), p, l)
 
     if p*3 > l*2:
         return "Tệ"
