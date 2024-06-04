@@ -1,4 +1,16 @@
-from trainAI.Master import ganh_chet, vay, check_pos_point
+from trainAI.Master import ganh_chet, vay
+def check_pos_point(your_pos, opp_pos):
+
+    board_pointF = ((9,9,9,9,9),
+                    (4,4,4,4,4),
+                    (2,2,2,2,2),
+                    (0,0,0,0,0),
+                    (0,0,0,0,0))
+    sum = 0
+    for x, y in your_pos: sum += board_pointF[y][x]
+    for x, y in opp_pos: sum -= board_pointF[y][x]
+    return sum
+
 def main(player):
     global move
     move = {"selected_pos": None, "new_pos": None}
@@ -11,11 +23,11 @@ def main(player):
 def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlayer=True):
 
     if your_board == 0 or opp_board == 0:
-        return (-8, depth, 0) if isMaximizingPlayer else (8, -depth, 0)
+        return -100 if isMaximizingPlayer else 100
     if depth == 2:
-        return (len(your_pos) - len(opp_pos)), float("-inf"), check_pos_point(your_board, opp_board)
+        return check_pos_point(your_pos, opp_pos) + len(your_pos) - 4*len(opp_pos)
 
-    bestVal = (float("inf"),)
+    bestVal = float("-inf") if isMaximizingPlayer else float("inf")
 
     for pos in your_pos:
         for movement in ((0,-1), (0,1), (1,0), (-1,0), (-1,1), (1,-1), (1,1), (-1,-1)):
@@ -34,9 +46,12 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, isMaximizingPlaye
 
                 value = minimax(opp_new_pos, your_new_pos, opp_new_board, your_new_board, depth+1, not isMaximizingPlayer)
 
-                if depth == 0 and value < bestVal:
-                    move["selected_pos"] = pos
-                    move["new_pos"] = invalid_move
-                bestVal = min(bestVal, value)
+                if isMaximizingPlayer:
+                    if value > bestVal:
+                        move["selected_pos"] = pos
+                        move["new_pos"] = invalid_move
+                    bestVal = max(bestVal, value)
+                else:
+                    bestVal = min(bestVal, value)
 
     return bestVal
