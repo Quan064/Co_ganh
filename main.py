@@ -15,7 +15,6 @@ from fdb.firestore_config import fdb
 import socketio
 import trainAI.MasterUser
 import requests
-import trainAI.level3
 
 doc_ref_room = fdb.collection("room")
 
@@ -318,7 +317,7 @@ def get_pos_of_playing_chess():
     player.your_pos = [tuple(i) for i in player.your_pos]
     player.opp_pos = [tuple(i) for i in player.opp_pos]
     player.your_pos, player.opp_pos = player.opp_pos, player.your_pos
-    move = trainAI.level3.main(player)
+    move = trainAI.Master.main(player)
     move['selected_pos'] = tuple(reversed(list(move['selected_pos'])))
     move['new_pos'] = tuple(reversed(list(move['new_pos'])))
     return move
