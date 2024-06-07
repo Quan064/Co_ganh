@@ -112,7 +112,6 @@ def activation(option, session_name, debugNum):
         f.close()
         return temp
     except Exception:
-
         f.write(traceback.format_exc())
         sys.stdout = org_stdout
         f.close()
@@ -148,6 +147,8 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
                 inp_oup.append(deepcopy(move))
         else:
             move = Bot2.main(deepcopy(player2))
+            if debugNum:
+                inp_oup.append(deepcopy(move))
             Raise_exception(move, current_turn, game_state["board"])
 
         move_new_pos = move["new_pos"]
@@ -183,7 +184,7 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
             for i in range(1, len(body["img"])):
                 body["img"][i].append(rate[i-1])
             img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
-            return img_url, inp_oup
+            return img_url, inp_oup, rate
         elif not positions[1]:
             winner = "lost"
         elif not positions[-1]:

@@ -19,55 +19,10 @@ let rs = 1
 
 let username = $(".username").innerHTML
 
-const data = [
-    {
-        type: "excellent",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "good",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "bad",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "bad",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    },
-    {
-        type: "excellent",
-        move: {
-            sellected_pos: "(0,1)",
-            new_pos: "(1,0)",
-        },
-        img_url: "../static/img/chessboard.png",
-    }
-]
-
 let chessPosition = [
     [[0, 0],[1, 0],[2, 0],[3, 0],[4, 0],[0, 1],[4, 1],[4, 2]], 
     [[0, 2],[0, 3],[2, 4],[4, 3],[0, 4],[1, 4],[3, 4],[4, 4]]
 ]
-
-let gameHistory = [[[[],...chessPosition], {selected_pos: [-1000,-1000], new_pos: [-1000,-1000]}, []]]
 
 let selectedChess
 const gameResult = $(".game_result")
@@ -163,27 +118,42 @@ function resetBoard() {
 
 resetBoard()
 
-let move_list = [
-    // {
-    //     your_pos: chessPosition[0],
-    //     opp_pos: chessPosition[1],
-    //     your_board: [
-    //         [-1,-1,-1,-1,-1],
-    //         [-1, 0, 0, 0,-1],
-    //         [ 1, 0, 0, 0,-1],
-    //         [ 1, 0, 0, 0, 1],
-    //         [ 1, 1, 1, 1, 1]
-    //     ],
-    //     opp_board: curBoard.map(row => row.map(item => item === 0 ? 0 : -item)),
-    //     move: {
-    //         selected_pos: [],
-    //         new_pos: [],
-    //     }
-    // }
-]
+let choosen_bot
+const bot_items = $$(".bot_item")
+const fight_btn = $(".fight_btn")
+const overflow = $(".overflow")
+const bot_avatar_img = $(".bot_avatar img")
+const bot_info_name = $(".bot_info_name")
+
+bot_items.forEach(item => {
+    item.onclick = (e) => {
+        if(item.classList.contains("selected")) {
+            choosen_bot = ""
+            item.classList.remove("selected")
+            fight_btn.classList.remove("active")
+            return
+        }
+        bot_items.forEach(e => e.classList.remove("selected"))
+        choosen_bot = item.dataset.level
+        item.classList.add("selected")
+        bot_html = item
+        fight_btn.classList.add("active")
+
+    }
+})
+
+fight_btn.onclick = () => {
+    if(!choosen_bot) return
+    bot_avatar_img.src = `../static/img/${choosen_bot}.png`
+    bot_info_name.innerHTML = choosen_bot
+    overflow.style.display = "none"
+}
+
+let move_list = []
 
 let img_data = {
     username: username,
+    side: 1,
     img: [],
 }
 
@@ -194,6 +164,7 @@ rate_btn.onclick = () => {
     rate_btn.classList.toggle("active")
     console.log({move_list: move_list,img_data: img_data})
     if(rateModel) return
+    console.log("get_Rate")
     fetch("/get_rate", {
         method: "POST",
         headers: {
@@ -288,14 +259,15 @@ function changeBoard(newBoard, valid_remove, selected_pos, new_pos) {
                                 chessPosition[index].splice(es.findIndex(findI, [j,i]),1)
                             }
                         }))
+                        captureSound.play()
                         fireSound.play()
                         const fire = document.createElement("img")
                         fire.setAttribute("src", "./static/img/fire.webp")
                         fire.setAttribute("style", `top:${chessGrapY*i - 30 * rs}px; left:${chessGrapX*j - 30 * rs}px;`)
                         fire.setAttribute("class", "fire")
                         let newFire = board.appendChild(fire)
-                        console.log("removeChess: " + "(" + j + ",", + i + ")")
                         newFire.onanimationend = (e) => {
+                            console.log("remove")
                             changedChess.remove()
                         }
                     }
@@ -306,7 +278,6 @@ function changeBoard(newBoard, valid_remove, selected_pos, new_pos) {
     }
     
     img_data.img.push([[[], [...chessPosition[1]], [...chessPosition[0]]], {selected_pos,new_pos}, valid_remove])
-    console.log(img_data.img[img_data.img.length-1])
 
     if(chessPosition[0].length === 0) {
         gameStatus.innerHTML = "You Win"
@@ -345,7 +316,6 @@ function ganh_chet(move, opp_pos, side, opp_side) {
 
     for (let [x, y] of valid_remove) {
         grid[y][x] = 0;
-        // console.log(grid)
         opp_pos = opp_pos.filter(([px, py]) => px !== x || py !== y);
     }
 
@@ -364,16 +334,15 @@ function vay(opp_pos) {
             let new_valid_x = pos[0] + move[0];
             let new_valid_y = pos[1] + move[1];
             if (new_valid_x >= 0 && new_valid_x <= 4 && new_valid_y >= 0 && new_valid_y <= 4 && grid[new_valid_y][new_valid_x] === 0) {
+                console.log(new_valid_x, new_valid_y)
                 return [];
             }
         }
     }
 
     let valid_remove = opp_pos.slice();
-    // console.log(valid_remove)
     for (let [x, y] of opp_pos) {
         grid[y][x] = 0;
-        // console.log(grid)
     }
     opp_pos = [];
     return valid_remove;
@@ -383,10 +352,10 @@ function isReady(bol) {
     const chesses = $$(".chess")
     if(bol) {
         chesses.forEach(chess => chess.classList.remove("not_ready"))
-        changeTurn(".game_turn-bot", ".game_turn-player")
+        changeTurn(".bot_info", ".player_info")
     } else {
         chesses.forEach(chess => chess.classList.add("not_ready"))
-        changeTurn(".game_turn-player", ".game_turn-bot")
+        changeTurn(".player_info", ".bot_info")
     }
     ready = bol
 }
@@ -408,6 +377,7 @@ function swap(chess, box, newPos, selected_pos) {
     cv2.clearRect(0, 0, canvas.width, canvas.height);
     moveSound.play()
     let r = [2,1.5,2,2.5,2]
+    let preBoard = curBoard.map(row => row.map(item => item))
     if(box) {
         cv2.beginPath();
         cv2.arc(chess.dataset.posx * (boardValue.width / 4) + radius + 2.5 * r[chess.dataset.posx], chess.dataset.posy * (boardValue.height / 4) + radius + 2.5 * r[chess.dataset.posx], radius, 0, 2 * Math.PI);
@@ -423,11 +393,12 @@ function swap(chess, box, newPos, selected_pos) {
         selected_pos = [Number(chess.dataset.posx),Number(chess.dataset.posy)]
         
         let opp_pos = chessPosition[0]
+        changePos(chess.dataset.posx,chess.dataset.posy, box.dataset.posx, box.dataset.posy)
         valid_remove = [...ganh_chet([Number(box.dataset.posx), Number(box.dataset.posy)], opp_pos, 1, -1), ...vay(opp_pos)]
         move_list.push({
             your_pos: [...chessPosition[1]],
             opp_pos: [...chessPosition[0]],
-            board: curBoard.map(row => row.map(item => item)),
+            board: preBoard,
             side: 1,
             remove: valid_remove,
             move: {
@@ -437,8 +408,6 @@ function swap(chess, box, newPos, selected_pos) {
         })
         
         chessPosition[1][chessPosition[1].findIndex(findI, [Number(chess.dataset.posx), Number(chess.dataset.posy)])] = [Number(box.dataset.posx), Number(box.dataset.posy)]
-        changePos(chess.dataset.posx,chess.dataset.posy, box.dataset.posx, box.dataset.posy)
-        gameHistory.push([[[],...chessPosition], {selected_pos: [Number(chess.dataset.posx),Number(chess.dataset.posy)], new_pos: [Number(box.dataset.posx), Number(box.dataset.posy)]}, valid_remove])
         chess.dataset.posx = box.dataset.posx
         chess.dataset.posy = box.dataset.posy
     } else {
@@ -453,12 +422,10 @@ function swap(chess, box, newPos, selected_pos) {
         let opp_pos = chessPosition[1]
         valid_remove = [...ganh_chet([newPos[1], newPos[0]], opp_pos, -1, 1), ...vay(opp_pos)]
 
-        console.log(selected_pos)
-
         move_list.push({
             your_pos: [...chessPosition[1]],
             opp_pos: [...chessPosition[0]],
-            board: curBoard.map(row => row.map(item => item)),
+            board: preBoard,
             side: -1,
             remove: valid_remove,
             move: {
@@ -471,14 +438,12 @@ function swap(chess, box, newPos, selected_pos) {
         chess.style.left = newPos[1] * chessGrapX - 30 * rs + "px"
         chess.style.top = newPos[0] * chessGrapX - 30 * rs + "px"
         changePos(selected_pos[0], selected_pos[1], newPos[1], newPos[0])
-        gameHistory.push([[[],...chessPosition], {selected_pos: [Number(chess.dataset.posx),Number(chess.dataset.posy)], new_pos: [newPos[1], newPos[0]]}, valid_remove])
         chess.dataset.posx  = `${newPos[1]}`
         chess.dataset.posy = `${newPos[0]}`
         console.log(chess)
         newPos = newPos.reverse()
         isReady(true)
     }
-    console.log(gameHistory)
     changeBoard(grid, valid_remove, selected_pos, newPos)
 }
 
@@ -489,41 +454,46 @@ function clearBox() {
 }
 
 function getBotmove() {
-    if(chessPosition[0].length <= 0) return
-    chessEnemy = $$(".chess.enemy")
-    let data = {
-        your_pos : [],
-        your_side : -1,
-        opp_pos : [],
-        board : grid,
-    }
+    setTimeout(() => {
+        if(chessPosition[0].length <= 0 || chessPosition[1].length <= 0) return
+        chessEnemy = $$(".chess.enemy")
+        let data = {
+            your_pos : [],
+            your_side : -1,
+            opp_pos : [],
+            board : grid,
+        }
 
-    grid.forEach((row,i) => {
-        row.forEach((__,j) => {
-            if(grid[i][j] === 1) data.your_pos.push([j,i])
-            if(grid[i][j] === -1) data.opp_pos.push([j,i])
+        grid.forEach((row,i) => {
+            row.forEach((__,j) => {
+                if(grid[i][j] === 1) data.your_pos.push([j,i])
+                if(grid[i][j] === -1) data.opp_pos.push([j,i])
+            })
         })
-    })
 
-    fetch("/get_pos_of_playing_chess", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    })
-    .then(res => res.json(data))
-    .then(resData => {
-        const {selected_pos, new_pos} = resData
-        // console.log(selected_pos)
-        console.log("selected_pos:  ",{selected_pos, new_pos})
-        const selectedChess = Array.from(chessEnemy).find(e => {
-            return Number(e.dataset.posx) === selected_pos[1] && Number(e.dataset.posy) === selected_pos[0]
+        fetch("/get_pos_of_playing_chess", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                data: data,
+                choosen_bot: choosen_bot,
+            }),
         })
-        console.log("resData: ", resData)
-        console.log(selectedChess)
-        swap(selectedChess, null, new_pos, selected_pos)
-    })
+        .then(res => res.json(data))
+        .then(resData => {
+            const {selected_pos, new_pos} = resData
+            // console.log(selected_pos)
+            console.log("selected_pos:  ",{selected_pos, new_pos})
+            const selectedChess = Array.from(chessEnemy).find(e => {
+                return Number(e.dataset.posx) === selected_pos[1] && Number(e.dataset.posy) === selected_pos[0]
+            })
+            console.log("resData: ", resData)
+            console.log(selectedChess)
+            swap(selectedChess, null, new_pos, selected_pos)
+        })
+    }, 1000)
 }
 
 boxes.forEach((e) => {

@@ -14,6 +14,8 @@ function createRateModel(rate_dom, data) {
         arrow_right: doom_main_$(".arrow_right"),
         doom_rate_item: null,
         doom_img_counter: doom_main_$(".counter"),
+        doom_player_you: doom_main_$(".player.you .content"),
+        doom_player_enemy: doom_main_$(".player.enemy .content"),
         cur_img: 0,
         move_count: 0,
 
@@ -29,16 +31,18 @@ function createRateModel(rate_dom, data) {
             return rate_item
         },
 
-        render() {
+        render(side) {
             const rate_list_detail = this.get_rate_list_detail()
             let type_count = [
                 {
                     "Tốt nhất": 0,
+                    "Tốt": 0,
                     "Bình thường": 0,
                     "Tệ": 0,
                 },
                 {
                     "Tốt nhất": 0,
+                    "Tốt": 0,
                     "Bình thường": 0,
                     "Tệ": 0,
                 }
@@ -47,9 +51,15 @@ function createRateModel(rate_dom, data) {
             this.move_count = data.length
 
             doom_main_$(".move_count").innerHTML = `MOVE: ${this.move_count}`
+            if(side === 1) {
+                this.doom_player_you.classList.add("blue")
+                this.doom_player_enemy.classList.add("red")
+            } else {
+                this.doom_player_enemy.classList.add("blue")
+                this.doom_player_you.classList.add("red")
+            }
 
             data.forEach((rate,i) => {
-                // if(rate.type !== "good") {
                 let res = {
                     type: "",
                     icon: ""
@@ -62,14 +72,29 @@ function createRateModel(rate_dom, data) {
                 } else if(rate.type === "Tệ") {
                     res.icon = `<img class="rate_item-you_img" src="../static/img/bad_icon.png" alt="">`
                     res.type = rate.type
+                } else if(rate.type === "Tốt") {
+                    res.icon = `<img class="rate_item-you_img" src="../static/img/good_icon.png" alt="">`
+                    res.type = rate.type
                 }
-                rate_list_detail.innerHTML += `
-                    <li class="rate_item">
-                        <div class="rate_item-you">${i % 2 === 0 ? res.icon + res.type : ""}</div>
-                        <div class="rate_item-move">${rate.move.sellected_pos + " => " + rate.move.new_pos}</div>
-                        <div class="rate_item-opp">${i % 2 !== 0 ? res.type + res.icon : ""}</div>
-                    </li>
-                `
+
+                if(side === 1) {
+                    rate_list_detail.innerHTML += `
+                        <li class="rate_item">
+                            <div class="rate_item-you">${i % 2 === 0 ? res.icon + res.type : ""}</div>
+                            <div class="rate_item-move">${rate.move.sellected_pos + " => " + rate.move.new_pos}</div>
+                            <div class="rate_item-opp">${i % 2 !== 0 ? res.type + res.icon : ""}</div>
+                        </li>
+                    `
+                } else {
+                    rate_list_detail.innerHTML += `
+                        <li class="rate_item">
+                            <div class="rate_item-you">${i % 2 !== 0 ? res.icon + res.type : ""}</div>
+                            <div class="rate_item-move">${rate.move.sellected_pos + " => " + rate.move.new_pos}</div>
+                            <div class="rate_item-opp">${i % 2 === 0 ? res.type + res.icon : ""}</div>
+                        </li>
+                    `
+                }
+
                 this.doom_img_loader.innerHTML += `
                     <li style="display: none;" class="img_item default"><img src=${rate.img_url} alt=""></li>
                 `
@@ -77,7 +102,9 @@ function createRateModel(rate_dom, data) {
 
             const overview = doom_main_$(".overview")
 
-            for(let i = 0; i < 3; i++) {
+            if(side === -1) type_count = type_count.reverse()
+
+            for(let i = 0; i < 4; i++) {
                 if(i === 0) {
                     overview.innerHTML += `
                         <li class="excellent_count">
@@ -90,13 +117,22 @@ function createRateModel(rate_dom, data) {
                 if(i === 1) {
                     overview.innerHTML += `
                         <li class="excellent_count">
-                            <div class="excellent_count-you">${type_count[0]["Bình thường"]}</div>
-                            <div class="excellent_count-title good">BÌNH THƯỜNG</div>
-                            <div class="excellent_count-opp">${type_count[1]["Bình thường"]}</div>
+                            <div class="excellent_count-you">${type_count[0]["Tốt"]}</div>
+                            <div class="excellent_count-title good">TỐT</div>
+                            <div class="excellent_count-opp">${type_count[1]["Tốt"]}</div>
                         </li>
                     `
                 }
                 if(i === 2) {
+                    overview.innerHTML += `
+                        <li class="excellent_count">
+                            <div class="excellent_count-you">${type_count[0]["Bình thường"]}</div>
+                            <div class="excellent_count-title normal">BÌNH THƯỜNG</div>
+                            <div class="excellent_count-opp">${type_count[1]["Bình thường"]}</div>
+                        </li>
+                    `
+                }
+                if(i === 3) {
                     overview.innerHTML += `
                         <li class="excellent_count">
                             <div class="excellent_count-you">${type_count[0]["Tệ"]}</div>
@@ -108,15 +144,26 @@ function createRateModel(rate_dom, data) {
             }
             this.doom_img_item = doom_main_$$(".img_item")
             this.doom_rate_item = doom_main_$$(".rate_item")
-            // this.doom_rate_item[0].classList.add("sellected")
         },
 
         toggle_rate(preI, newI) {
             this.doom_rate_item[preI-1]?.classList.toggle("sellected")
-            this.doom_rate_item[newI-1].classList.toggle("sellected")
+            this.doom_rate_item[newI-1]?.classList.toggle("sellected")
+            this.scrollToView(this.doom_rate_item[newI-1])
         },
 
         tonggle_img(preI, newI) {
+            if(newI < 0) {
+                newI = this.doom_img_item.length - 1
+                this.cur_img = newI + 1
+                this.tonggle_img(preI, newI)
+                return
+            } else if(newI > this.doom_img_item.length - 1) {
+                newI = 0
+                this.cur_img = newI - 1
+                this.tonggle_img(preI, newI)
+                return
+            }
             if(newI >= 0 && newI <= this.doom_img_item.length - 1) {
                 // console.log(this.doom_rate_item)
                 this.doom_img_counter.innerHTML = newI
@@ -125,17 +172,27 @@ function createRateModel(rate_dom, data) {
                 this.toggle_rate(preI, newI)
             }
 
-            if(newI <= 0) {
-                this.arrow_left.classList.add("hide")
-            } else {
-                this.arrow_left.classList.remove("hide")
-            }
+            // if(newI <= 0) {
+            //     this.arrow_left.classList.add("hide")
+            // } else {
+            //     this.arrow_left.classList.remove("hide")
+            // }
 
-            if(newI === this.doom_img_item.length - 1) {
-                this.arrow_right.classList.add("hide")
-            } else {
-                this.arrow_right.classList.remove("hide")
-            }
+            // if(newI === this.doom_img_item.length - 1) {
+            //     this.arrow_right.classList.add("hide")
+            // } else {
+            //     this.arrow_right.classList.remove("hide")
+            // }
+        },
+
+        scrollToView(element) {
+            if(!element) return
+            setTimeout(() => {
+                element.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                })
+            }, 200)
         },
 
         handle_event() {
@@ -146,15 +203,15 @@ function createRateModel(rate_dom, data) {
             this.arrow_right.onclick = () => {
                 this.tonggle_img(this.cur_img, this.cur_img + 1)
                 this.cur_img++
+                
             }
             this.doom_rate_item.forEach((item, i) => {
                 item.onclick = () => {
-                    this.tonggle_img(this.cur_img, i)
-                    this.cur_img = i
+                    this.tonggle_img(this.cur_img, i+1)
+                    this.cur_img = i + 1
                 }
             })
             document.onkeyup = (e) => {
-                console.log(e)
                 if(e.code === "ArrowUp" || e.code === "KeyW") {
                     this.tonggle_img(this.cur_img, this.cur_img - 1)
                     this.cur_img--
@@ -165,8 +222,8 @@ function createRateModel(rate_dom, data) {
             }
         },
 
-        start() {
-            this.render()
+        start(side=1) {
+            this.render(side)
             this.handle_event()
         }
     })
