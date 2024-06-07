@@ -93,14 +93,14 @@ def main(move_listi):
             f.write( f'''\n{your_board} {opp_board}  {' '.join(map(str, min(rate.values())))} {str(rate).replace(' ', '')}''' )
 
     move = move_listi["move"]
-    p = sorted(list(rate.values())).index(rate[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"])
-    l = len(rate.values())
+    p = sorted(set(rate.values())).index(rate[f"{move['selected_pos'][0]}{move['selected_pos'][1]}{move['new_pos'][0]}{move['new_pos'][1]}"]) + 1
+    l = len(set(rate.values()))
 
     if p*3 > l*2:
         return "Tệ"
     elif p*3 >= l:
         return "Bình thường"
-    elif p == 0:
+    elif p == 1:
         return "Tốt nhất"
     else:
         return "Tốt"

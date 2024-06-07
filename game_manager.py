@@ -142,14 +142,10 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
         if player1.your_side == current_turn:
             move = UserBot.main(deepcopy(player1))
-            Raise_exception(move, current_turn, game_state["board"])
-            if debugNum:
-                inp_oup.append(deepcopy(move))
         else:
             move = Bot2.main(deepcopy(player2))
-            if debugNum:
-                inp_oup.append(deepcopy(move))
-            Raise_exception(move, current_turn, game_state["board"])
+        Raise_exception(move, current_turn, game_state["board"])
+        if debugNum: inp_oup.append(move)
 
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
@@ -178,6 +174,8 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         body["img"].append([deepcopy(positions), move, remove])
         move_list.append(deepcopy(cur_move))
 
+        print(f"__________{move_counter}__________")
+
         if debugNum > 0 and move_counter == debugNum:
             rate = [trainAI.MasterUser.main(i) for i in move_list]
             body["img"][0].append("")
@@ -197,7 +195,4 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
     new_url = requests.post("http://tlv23.pythonanywhere.com//generate_video", json=body).text
 
-    print("-----------------------------------------------------------------------------------")
-
-    print(winner, move_counter, new_url)
     return winner, move_counter-1, new_url
