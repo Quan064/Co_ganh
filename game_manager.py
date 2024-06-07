@@ -133,6 +133,7 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
     while not winner:
 
         current_turn = game_state["current_turn"]
+        print(f"__________{move_counter}__________")
 
         # get old board
         if current_turn == 1:
@@ -173,8 +174,6 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
 
         body["img"].append([deepcopy(positions), move, remove])
         move_list.append(deepcopy(cur_move))
-
-        print(f"__________{move_counter}__________")
 
         if debugNum > 0 and move_counter == debugNum:
             rate = [trainAI.MasterUser.main(i) for i in move_list]
