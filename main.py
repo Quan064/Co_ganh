@@ -15,6 +15,8 @@ from fdb.firestore_config import fdb
 import socketio
 import trainAI.MasterUser
 import requests
+from importlib import reload
+import traceback
 
 doc_ref_room = fdb.collection("room")
 
@@ -179,30 +181,23 @@ def upload_code():
     user = User.query.filter_by(username=current_user.username).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
-    try: 
-        winner, max_move_win, new_url = activation(f"trainAI.{bot}", name, 0) # người thắng / số lượng lượt chơi
-        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
-            txt = f.read()
-        user.fightable = True
-        db.session.commit()
-        data = {
-            "code": 200,
-            "status": winner,
-            "max_move_win": max_move_win,
-            "new_url": new_url,
-            "output": txt,
-        }
-        return json.dumps(data)
-    except Exception:
-        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
-            txt = f.read()
-        user.fightable = False
-        db.session.commit()
+    err, game_res, output = activation(f"trainAI.{bot}", name, 0) # người thắng / số lượng lượt chơi
+    user.fightable = not err
+    db.session.commit()
+    if err:
         data = {
             "code": 400,
-            "output": txt
+            "output": output
         }
-        return json.dumps(data) # Giá trị Trackback Error
+    else:
+        data = {
+            "code": 200,
+            "status": game_res[0],
+            "max_move_win": game_res[1],
+            "new_url": game_res[2],
+            "output": output
+        }
+    return json.dumps(data) # Giá trị Trackback Error
     
 
     
@@ -217,29 +212,23 @@ def debug_code():
     user = User.query.filter_by(username=name).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
-    try: 
-        img_url, inp_oup, rate = activation(f"trainAI.{bot}", name, res["debugNum"]) # người thắng / số lượng lượt chơi
-
-        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
-            txt = f.read()
-        data = {
-            "code": 200,
-            "img_url": img_url,
-            "output": txt,
-            "inp_oup": inp_oup,
-            "rate": rate,
-        }
-        return json.dumps(data)
-    except Exception:
-        with open(f"static/output/stdout_{name}.txt", encoding="utf-8") as f:
-            txt = f.read()
-        user.fightable = False
-        db.session.commit()
+    err, game_res, output = activation(f"trainAI.{bot}", name, res['debugNum']) # người thắng / số lượng lượt chơi
+    user.fightable = not err
+    db.session.commit()
+    if err:
         data = {
             "code": 400,
-            "output": txt,
+            "output": output
         }
-        return json.dumps(data) # Giá trị Trackback Error
+    else:
+        data = {
+            "code": 200,
+            "img_url": game_res[0],
+            "inp_oup": game_res[1],
+            "rate": game_res[2],
+            "output": output
+        }
+    return json.dumps(data) # Giá trị Trackback Error
     
 @app.route('/save_code', methods=['POST'])
 @login_required
@@ -358,7 +347,7 @@ def get_rate():
 def fighting():
     name = current_user.username
     player = request.get_json()
-    winner, max_move_win, new_url = activation("static.botfiles.botfile_"+player['name'], name, 0)
+    winner, max_move_win, new_url = activation("static.botfiles.botfile_"+player['name'], name, 0)[1]
     
     data = {
         "status": winner,
@@ -367,6 +356,21 @@ def fighting():
     }
 
     return data
+
+# @app.route('/practice', methods=['POST'])
+# @login_required
+# def practice():
+#     name = current_user.username
+#     data = request.get_json()
+#     with open(f"static/practice/{data['lesson']}/testcase.txt") as f:
+#         testcase = f.read().split("\n")
+#     mod = reload(__import__(f"static.practice.{data['lesson']}.codes.code_{name}", fromlist=[None])).main
+#     for i in testcase:
+#         try:
+#             mod(*eval(i))
+#             return "Accepted"
+#         except:
+#             return {"err" : eval(i)}
 
 @app.route('/update_rank_board', methods=['POST'])
 @login_required
