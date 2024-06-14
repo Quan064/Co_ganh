@@ -17,6 +17,9 @@ import trainAI.MasterUser
 import requests
 from importlib import reload
 import traceback
+from io import StringIO
+import sys
+import time
 
 doc_ref_room = fdb.collection("room")
 
@@ -357,20 +360,64 @@ def fighting():
 
     return data
 
-# @app.route('/practice', methods=['POST'])
-# @login_required
-# def practice():
-#     name = current_user.username
-#     data = request.get_json()
-#     with open(f"static/practice/{data['lesson']}/testcase.txt") as f:
-#         testcase = f.read().split("\n")
-#     mod = reload(__import__(f"static.practice.{data['lesson']}.codes.code_{name}", fromlist=[None])).main
-#     for i in testcase:
-#         try:
-#             mod(*eval(i))
-#             return "Accepted"
-#         except:
-#             return {"err" : eval(i)}
+@app.route('/submit', methods=['POST'])
+@login_required
+def submit():
+    res = request.get_json()
+    code = res["code"]
+    inp_oup = res["inp_oup"]
+    task = doc_ref_task.document(res["id"])
+    org_stdout = sys.stdout
+
+    user_output = []
+    for i in inp_oup:
+        f = StringIO()
+        sys.stdout = f
+
+        try:
+            ldict = {}
+            start = time.time()
+            exec(code, globals={}, locals=ldict)
+            end = time.time()
+
+            if i["output"] == ldict["main"](*i["input"]):
+                user_output.append({
+                    "output_status" : "AC",
+                    "output" : f.getvalue(),
+                    "runtime" : (end-start) * 10**3
+                })
+            else:
+                user_output.append({
+                    "output_status" : "WA",
+                    "output" : f.getvalue()
+                })
+        except:
+            print(traceback.format_exc())
+            user_output.append({
+                "output_status" : "SE",
+                "output" : f.getvalue()
+            })
+    sys.stdout = org_stdout
+
+    status = all(i["output_status"]=="AC" for i in user_output)
+    update_data = {
+        "code": code,
+        "status": status,
+        "submit_time": datetime.datetime.now()
+    }
+
+    task.update({
+        f"challenger.{current_user.username}.submissions": firestore.ArrayUnion([update_data]),
+        f"challenger.{current_user.username}.current_submit": update_data
+    })
+
+    return_date = {
+        "status": status,
+        "output": [i["output"] for i in inp_oup],
+        "user_output": user_output
+    }
+
+    return return_date
 
 @app.route('/update_rank_board', methods=['POST'])
 @login_required
