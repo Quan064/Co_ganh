@@ -380,7 +380,7 @@ def submit():
             exec(code, globals={}, locals=ldict)
             end = time.time()
 
-            if i["output"] == ldict["main"](*i["input"]):
+            if i["output"] == ldict["main"](*eval(i["input"])):
                 user_output.append({
                     "output_status" : "AC",
                     "output" : f.getvalue(),
