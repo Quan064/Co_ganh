@@ -1,27 +1,34 @@
 from flask import Flask, flash, request, redirect, url_for, render_template, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from functools import wraps
 from flask_wtf import FlaskForm 
 from wtforms import SubmitField, PasswordField, StringField
 from wtforms.validators import Length, ValidationError, EqualTo, DataRequired
 from flask_bcrypt import Bcrypt
 from game_manager import activation
+from game_manager_debug import activation_debug
 import trainAI.Master
 import webbrowser
 from threading import Timer
 import json
 import secrets
+from firebase_admin import firestore
 from fdb.firestore_config import fdb
 import socketio
 import trainAI.MasterUser
 import requests
-from importlib import reload
-import traceback
+from tool import valid_move, distance
 from io import StringIO
+import traceback
 import sys
 import time
+import builtins
 
 doc_ref_room = fdb.collection("room")
+doc_ref_post = fdb.collection("post")
+doc_ref_task = fdb.collection("task")
+doc_ref_code = fdb.collection("code")
 
 # doc = doc_ref.get()
 
@@ -32,6 +39,10 @@ class Player:
     def __init__(self, dict: dict):
         for key, value in dict.items():
             setattr(self, key, value)
+
+globals_exec = {"valid_move": valid_move,
+                "distance": distance,
+                '__builtins__': {k:v for k, v in builtins.__dict__.items() if k not in ['eval', 'exec', 'input', '__import__', 'open']}}
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -92,6 +103,25 @@ class RegisterForm(FlaskForm):
         if User.query.filter_by(username=username_to_check.data).first(): #_existing_user_username
             raise ValidationError('Tên đăng nhập đã được sử dụng')
 
+def checkSession():
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
+    
+def session_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        checkSession()
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.template_filter('parse_json')
+def parse_json(json_string):
+    return json.loads(json_string)
 
 @app.route('/')
 def home_page():
@@ -163,16 +193,9 @@ def logout():
 
 @app.route('/menu')
 @login_required
+@session_required
 def menu():
-    if 'secret_key' in session:
-        # print(session['secret_key'])
-        user = User.query.where(User.username == session['username']).first()
-        login_user(user)
-        return render_template('menu.html', current_user=current_user)
-    else:
-        if current_user:
-            logout_user()
-        return redirect(url_for('login'))
+    return render_template('menu.html', current_user=current_user)
         
 
 @app.route('/upload_code', methods=['POST'])
@@ -184,7 +207,7 @@ def upload_code():
     user = User.query.filter_by(username=current_user.username).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
-    err, game_res, output = activation(f"trainAI.{bot}", name, 0) # người thắng / số lượng lượt chơi
+    err, game_res, output = activation(bot, data["code"], name) # người thắng / số lượng lượt chơi
     user.fightable = not err
     db.session.commit()
     if err:
@@ -200,10 +223,8 @@ def upload_code():
             "new_url": game_res[2],
             "output": output
         }
-    return json.dumps(data) # Giá trị Trackback Error
-    
 
-    
+    return json.dumps(data) # Giá trị Trackback Error
     
 @app.route('/debug_code', methods=['POST'])
 @login_required
@@ -215,7 +236,7 @@ def debug_code():
     user = User.query.filter_by(username=name).first()
     with open(f"static/botfiles/botfile_{name}.py", mode="w", encoding="utf-8") as f:
         f.write(data["code"])
-    err, game_res, output = activation(f"trainAI.{bot}", name, res['debugNum']) # người thắng / số lượng lượt chơi
+    err, game_res, output = activation_debug(bot, data["code"], name, res['debugNum']) # người thắng / số lượng lượt chơi
     user.fightable = not err
     db.session.commit()
     if err:
@@ -244,27 +265,18 @@ def save_code():
 
 @app.route('/create_bot')
 @login_required
+@session_required
 def create_bot():
-    if 'secret_key' in session:
-        user = User.query.where(User.username == session['username']).first()
-        login_user(user)
-        return render_template('create_bot.html', user = current_user)
-    else:
-        if current_user:
-            logout_user()
-        return redirect(url_for('login'))
+    return render_template('create_bot.html', user = current_user)
+    return ""
     
-@app.route('/challenge_mode')
+@app.route('/challenge_mode/<id>')
 @login_required
-def challenge_mode():
-    if 'secret_key' in session:
-        user = User.query.where(User.username == session['username']).first()
-        login_user(user)
-        return render_template('challenge_mode.html')
-    else:
-        if current_user:
-            logout_user()
-        return redirect(url_for('login'))
+@session_required
+def challenge_mode(id):
+    task = doc_ref_task.document(id).get().to_dict()
+
+    return render_template('challenge_mode.html', user=current_user, task = task, id = id)
         
 @app.route('/get_code')
 @login_required
@@ -281,32 +293,265 @@ def get_users():
 
 @app.route('/bot_bot')
 @login_required
+@session_required
 def bot_bot():
-    if 'secret_key' in session:
-        user = User.query.where(User.username == session['username']).first()
-        login_user(user)
-        users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username, User.fightable == True).order_by(User.elo.desc()).limit(10).all()]
-        rank_board = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
-        return render_template('bot_bot.html', users = users, rank_board = rank_board)
-    else:
-        if current_user:
-            logout_user()
-        return redirect(url_for('login'))
+    users = [(i.username, i.elo) for i in User.query.filter(User.username != current_user.username, User.fightable == True).order_by(User.elo.desc()).limit(10).all()]
+    rank_board = [(i.username, i.elo) for i in User.query.filter(User.fightable == True).order_by(User.elo.desc()).limit(5).all()]
+    return render_template('bot_bot.html', users = users, rank_board = rank_board)
 
 @app.route('/human_bot')
 @login_required
+@session_required
 def human_bot():
     return render_template('human_bot.html', user = current_user)
 
+
 @app.route('/human_human')
 @login_required
+@session_required
 def human_human():
     return render_template('human_human.html', user = current_user)
 
 @app.route('/room_manager')
 @login_required
+@session_required
 def room_manager():
     return render_template('room_manager.html', user = current_user)
+
+@app.route('/text_editor')
+@login_required
+@session_required
+def text_editor():
+    if 'secret_key' in session:
+        user = User.query.where(User.username == session['username']).first()
+        login_user(user)
+        return render_template('text_editor.html', user = current_user)
+    else:
+        if current_user:
+            logout_user()
+        return redirect(url_for('login'))
+
+@app.route('/post/<post_id>')
+# @login_required
+def post(post_id):
+    data = ""
+    docs = doc_ref_post.where("post_id", "==", post_id).stream()
+    for doc in docs:
+        data = doc.to_dict()
+    return render_template('post.html', user = current_user, data = data)
+
+@app.route('/task_list')
+@login_required
+@session_required
+def task_list():
+    res = doc_ref_task.stream()
+    
+    tasks = []
+
+    for doc in res:
+        task = doc.to_dict()
+        task["id"] = doc.id
+        tasks.append(task)
+
+    return render_template('task_list.html', user = current_user, tasks = tasks)
+    
+@app.route('/simulation')
+@login_required
+@session_required
+def simulation():
+    res = doc_ref_task.stream()
+    
+    tasks = []
+
+    for doc in res:
+        task = doc.to_dict()
+        task["id"] = doc.id
+        tasks.append(task)
+
+    return render_template('simulation.html', user = current_user, tasks = tasks)
+
+@app.route('/run_task', methods=["POST"])
+# @login_required
+def run_task():
+    res = request.get_json()
+    inp_oup = res["inp_oup"]
+    code = res["code"]
+    org_stdout = sys.stdout
+    err = ""
+
+    user_output = []
+    for i in inp_oup:
+        f = StringIO()
+        sys.stdout = f
+        try:
+            start = time.time()
+            locals = {}
+            exec(code, globals_exec, locals)
+            Uoutput = locals["main"](*i["input"])
+            end = time.time()
+            Uoutput = json.loads(json.dumps(Uoutput).replace("(","[").replace(")","]"))
+            if type(i["output"]) is list:
+                comparision = sorted(i["output"]) == sorted(Uoutput)
+            else:
+                comparision = i["output"] == Uoutput
+            if comparision:
+                user_output.append({
+                    "log": f.getvalue(),
+                    "output_status" : "AC",
+                    "output" : Uoutput,
+                    "runtime" : (end-start) * 10**3
+                })
+            else:
+                user_output.append({
+                    "log": f.getvalue(),
+                    "output_status" : "WA",
+                    "output" : Uoutput
+                })
+        except:
+            err = traceback.format_exc()
+            user_output.append({
+                "log": f.getvalue(),
+                "output_status" : "SE",
+            })
+    sys.stdout = org_stdout
+
+    if any(i["output_status"]=="SE" for i in user_output):
+        status = "SE"
+    elif any(i["output_status"]=="WA" for i in user_output):
+        status = "WA"
+    else:
+        status = "AC"
+
+    if err:
+        return_data = {
+            "status": "SE",
+            "output": [i["output"] for i in inp_oup],
+            "err": err,
+        }
+    else:
+        return_data = {
+            "status": status,
+            "output": [i["output"] for i in inp_oup],
+            "user_output": user_output,
+        }
+
+    # print(return_data)
+
+    return return_data
+
+@app.route('/submit', methods=['POST'])
+@login_required
+def submit():
+    res = request.get_json()
+    task = doc_ref_task.document(res["id"])
+    code = res["code"]
+    inp_oup = res["inp_oup"]
+    org_stdout = sys.stdout
+    soAc = 0
+    err = ""
+    compile_data = {
+        "update_data": {
+
+        },
+
+        "return_data": {
+
+        }
+    }
+    user_output = []
+    start = time.time()
+    for i in inp_oup:
+        f = StringIO()
+        sys.stdout = f
+        try:
+            locals = {}
+            exec(code, globals_exec, locals)
+            Uoutput = locals["main"](*i["input"])
+            Uoutput = json.loads(json.dumps(Uoutput).replace("(","[").replace(")","]"))
+            if type(i["output"]) is list:
+                comparision = sorted(i["output"]) == sorted(Uoutput)
+            else:
+                comparision = i["output"] == Uoutput
+
+            if comparision:
+                user_output.append({
+                    "log": f.getvalue(),
+                    "output_status" : "AC",
+                    "output" : Uoutput,
+                })
+                soAc+=1
+            else:
+                user_output.append({
+                    "log": f.getvalue(),
+                    "output_status" : "WA",
+                    "output" : Uoutput
+                })
+        except:
+            err = traceback.format_exc()
+            user_output.append({
+                "log": f.getvalue(),
+                "output_status" : "SE",
+            })
+    end = time.time()
+    sys.stdout = org_stdout
+
+    if any(i["output_status"]=="SE" for i in user_output):
+        status = "SE"
+    elif any(i["output_status"]=="WA" for i in user_output):
+        status = "WA"
+    else:
+        status = "AC"
+
+    compile_data["update_data"] = {
+        "code": code,
+        "status": status,
+        "test_finished": f"{soAc}/{len(user_output)}",
+        "submit_time": res["time"],
+        "run_time": (end-start) * 10**3,
+    }
+
+    if err:
+        compile_data["return_data"] = {
+            "status": "SE",
+            "output": [i["output"] for i in inp_oup],
+            "err": err,
+        }
+    else:
+        compile_data["return_data"] = {
+            "status": status,
+            "output": [i["output"] for i in inp_oup],
+            "user_output": user_output,
+            "test_finished": f"{soAc}/{len(user_output)}",
+            "run_time": (end-start) * 10**3,
+        }
+
+    update_data = compile_data["update_data"]
+    return_data = compile_data["return_data"]
+
+    if return_data["status"] == "AC":
+        task.update({
+            f"challenger.{current_user.username}.submissions": firestore.ArrayUnion([update_data]),
+            f"challenger.{current_user.username}.current_submit": update_data,
+            "submission_count": firestore.Increment(1),
+            "accepted_count": firestore.Increment(1),
+        })
+    else:
+        task.update({
+            f"challenger.{current_user.username}.submissions": firestore.ArrayUnion([update_data]),
+            f"challenger.{current_user.username}.current_submit": update_data,
+            "submission_count": firestore.Increment(1),
+        })
+
+    return return_data
+
+@app.route('/post_page')
+# @login_required
+def post_page():
+    posts = []
+    docs = doc_ref_post.stream()
+    for doc in docs:
+        posts.append(doc.to_dict())
+    return render_template('post_page.html', user = current_user, posts = posts)
 
 @app.route('/get_pos_of_playing_chess', methods=['POST'])
 @login_required
@@ -318,7 +563,6 @@ def get_pos_of_playing_chess():
     player.opp_pos = [tuple(i) for i in player.opp_pos]
     player.your_pos, player.opp_pos = player.opp_pos, player.your_pos
     move = __import__(f"trainAI.{choosen_bot}", fromlist=[None]).main(player)
-    # move = trainAI.Master.main(player)
     move['selected_pos'] = tuple(reversed(list(move['selected_pos'])))
     move['new_pos'] = tuple(reversed(list(move['new_pos'])))
     return move
@@ -350,7 +594,11 @@ def get_rate():
 def fighting():
     name = current_user.username
     player = request.get_json()
-    winner, max_move_win, new_url = activation("static.botfiles.botfile_"+player['name'], name, 0)[1]
+    with open(f"static/botfiles/botfile_{player['name']}.py", encoding="utf-8") as f:
+        bot_code1 = f.read()
+    with open(f"static/botfiles/botfile_{name}.py", encoding="utf-8") as f:
+        bot_code2 = f.read()
+    winner, max_move_win, new_url = activation(bot_code1, bot_code2, name)[1]
     
     data = {
         "status": winner,
@@ -359,65 +607,6 @@ def fighting():
     }
 
     return data
-
-@app.route('/submit', methods=['POST'])
-@login_required
-def submit():
-    res = request.get_json()
-    code = res["code"]
-    inp_oup = res["inp_oup"]
-    task = doc_ref_task.document(res["id"])
-    org_stdout = sys.stdout
-
-    user_output = []
-    for i in inp_oup:
-        f = StringIO()
-        sys.stdout = f
-
-        try:
-            ldict = {}
-            start = time.time()
-            exec(code, globals={}, locals=ldict)
-            end = time.time()
-
-            if i["output"] == ldict["main"](*eval(i["input"])):
-                user_output.append({
-                    "output_status" : "AC",
-                    "output" : f.getvalue(),
-                    "runtime" : (end-start) * 10**3
-                })
-            else:
-                user_output.append({
-                    "output_status" : "WA",
-                    "output" : f.getvalue()
-                })
-        except:
-            print(traceback.format_exc())
-            user_output.append({
-                "output_status" : "SE",
-                "output" : f.getvalue()
-            })
-    sys.stdout = org_stdout
-
-    status = all(i["output_status"]=="AC" for i in user_output)
-    update_data = {
-        "code": code,
-        "status": status,
-        "submit_time": datetime.datetime.now()
-    }
-
-    task.update({
-        f"challenger.{current_user.username}.submissions": firestore.ArrayUnion([update_data]),
-        f"challenger.{current_user.username}.current_submit": update_data
-    })
-
-    return_date = {
-        "status": status,
-        "output": [i["output"] for i in inp_oup],
-        "user_output": user_output
-    }
-
-    return return_date
 
 @app.route('/update_rank_board', methods=['POST'])
 @login_required
@@ -475,19 +664,19 @@ def out_room():
         return 'Error', 400
 
 
-@sio.event
-def connect(sid, eviron):
-    print(f"Client connected: {sid}")
+# @sio.event
+# def connect(sid, eviron):
+#     print(f"Client connected: {sid}")
 
-@sio.event
-def join_room(sid, room_id, type, state, user_info):
-    doc_ref = doc_ref_room.document(room_id)
-    doc_ref.set({type: state}, merge=True)
-    sio.emit(f"join_room_{room_id}", {
-        "type": type,
-        "user_info": user_info,
-    })
-    print(f"Client connected: {sid}")
+# @sio.event
+# def join_room(sid, room_id, type, state, user_info):
+#     doc_ref = doc_ref_room.document(room_id)
+#     doc_ref.set({type: state}, merge=True)
+#     sio.emit(f"join_room_{room_id}", {
+#         "type": type,
+#         "user_info": user_info,
+#     })
+#     print(f"Client connected: {sid}")
 
 # @sio.event
 # def out_room(sid, room_id, type, state):
@@ -496,25 +685,25 @@ def join_room(sid, room_id, type, state, user_info):
 #     sio.emit(f"out_room_{room_id}")
 #     print(f"Client disconnected: {sid}")
 
-# Xử lý ngắt kết nối từ client
-@sio.event
-def disconnect(sid):
-    print(f"Client disconnected: {sid}")
+# # Xử lý ngắt kết nối từ client
+# @sio.event
+# def disconnect(sid):
+#     print(f"Client disconnected: {sid}")
 
-# Xử lý sự kiện 'message' từ client
-@sio.event
-def message(sid, data):
-    print(f"Message from {sid}: {data}")
-    sio.send("Hello from server!")
+# # Xử lý sự kiện 'message' từ client
+# @sio.event
+# def message(sid, data):
+#     print(f"Message from {sid}: {data}")
+#     sio.send("Hello from server!")
 
-@sio.event
-def check_user(data, environ):
-    # sio.emit('check_user', environ)
-    sio.emit(f'check_user_{environ}', environ)
+# @sio.event
+# def check_user(data, environ):
+#     # sio.emit('check_user', environ)
+#     sio.emit(f'check_user_{environ}', environ)
 
-@sio.event
-def get_move(data, room, environ):
-    sio.emit(f'get_move_{room}', environ)
+# @sio.event
+# def get_move(data, room, environ):
+#     sio.emit(f'get_move_{room}', environ)
 
 if __name__ == '__main__':
     open_browser = lambda: webbrowser.open_new("http://127.0.0.1:5000")

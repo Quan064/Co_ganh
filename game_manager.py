@@ -1,11 +1,11 @@
 import requests
 from copy import deepcopy
-from importlib import reload
 import traceback
 from fdb.firestore_config import fdb
 import sys
-import trainAI.MasterUser
 from io import StringIO
+import builtins
+from tool import valid_move, distance
 # from fdb.uti.upload import upload_video_to_storage
 
 class Player:
@@ -53,7 +53,7 @@ def Raise_exception(move, current_side, board):
         raise Exception("new_pos must be empty")
     elif board[current_y][current_x] != current_side:
         raise Exception("selected_pos should be your position")
-    elif abs(current_x - new_x)|abs(current_y - new_y)!=1 or (current_x+current_y+new_x+new_y)%2==0:
+    elif abs(current_x - new_x)|abs(current_y - new_y)!=1 or (current_x+current_y)%2 & (new_x+new_y)%2:
         raise Exception("Can only move into adjacent cells")
 
 def ganh_chet(move, opp_pos, side, opp_side):
@@ -94,15 +94,23 @@ def vay(opp_pos):
     return valid_remove
 
 # System
-def activation(option, session_name, debugNum):
+def activation(code1, code2, name):
     f = StringIO()
     org_stdout = sys.stdout
     sys.stdout = f
 
+    globals_exec = {"valid_move": valid_move,
+                    "distance": distance,
+                    '__builtins__': {k:v for k, v in builtins.__dict__.items() if k not in ['eval', 'exec', 'input', '__import__', 'open']}}
+
     try:
-        UserBot = reload(__import__("static.botfiles.botfile_"+session_name, fromlist=[None]))
-        Bot2 = reload(__import__(option, fromlist=[None]))
-        game_res = run_game(UserBot, Bot2, session_name, debugNum)
+        local1 = {}
+        local2 = {}
+        if code1 in ("level1", "level2","level3", "level4", "Master"):
+            local1["main"] = __import__(f"trainAI.{code1}", fromlist=[None]).main
+        else: exec(code1, globals_exec, local1)
+        exec(code2, globals_exec, local2)
+        game_res = run_game(local1["main"], local2["main"], name)
 
         sys.stdout = org_stdout
         return False, game_res, f.getvalue()
@@ -110,7 +118,7 @@ def activation(option, session_name, debugNum):
         print(traceback.format_exc())
         sys.stdout = org_stdout
         return True, None, f.getvalue()
-def run_game(UserBot, Bot2, session_name, debugNum): # Main
+def run_game(Bot2, UserBot, session_name): # Main
 
     declare()
     winner = False
@@ -119,43 +127,24 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         "username": session_name,
         "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
     }
-    if debugNum: 
-        inp_oup = []
-    move_list = []
-    cur_move = {}
 
     while not winner:
 
         current_turn = game_state["current_turn"]
         print(f"__________{move_counter}__________")
 
-        # get old board
-        if current_turn == 1:
-            cur_move["board"] = deepcopy(game_state["board"])
-        else:
-            cur_move['board'] = eval(str(game_state['board']).replace('-1', '`').replace('1', '-1').replace('`', '1'))
-
         if player1.your_side == current_turn:
-            move = UserBot.main(deepcopy(player1))
+            move = UserBot(deepcopy(player1))
         else:
-            move = Bot2.main(deepcopy(player2))
+            move = Bot2(deepcopy(player2))
         Raise_exception(move, current_turn, game_state["board"])
-        if debugNum: inp_oup.append(move)
 
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
-        cur_move["move"] = deepcopy({
-            "new_pos": move_new_pos,
-            "selected_pos": move_selected_pos
-        })
 
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
         game_state["board"][move_selected_pos[1]][move_selected_pos[0]] = 0
-
-        # get old chess position
-        cur_move["your_pos"] = deepcopy(positions[current_turn])
-        cur_move["opp_pos"] = deepcopy(positions[-current_turn])
 
         # Update move to positions
         index_move = positions[current_turn].index(move_selected_pos)
@@ -167,16 +156,8 @@ def run_game(UserBot, Bot2, session_name, debugNum): # Main
         if remove: point[:] += [move_selected_pos]*len(remove)
 
         body["img"].append([deepcopy(positions), move, remove])
-        move_list.append(deepcopy(cur_move))
 
-        if debugNum > 0 and move_counter == debugNum:
-            rate = [trainAI.MasterUser.main(i) for i in move_list]
-            body["img"][0].append("")
-            for i in range(1, len(body["img"])):
-                body["img"][i].append(rate[i-1])
-            img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
-            return img_url, inp_oup, rate
-        elif not positions[1]:
+        if not positions[1]:
             winner = "lost"
         elif not positions[-1]:
             winner = "win"
