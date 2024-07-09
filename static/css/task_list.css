@@ -39,10 +39,14 @@ nav {
 }
 
 .tsk_acceptance {
-    flex: 1;
+    flex: 2;
 }
 
 .tsk_difficult {
+    flex: 1;
+}
+
+.tsk_author {
     flex: 1;
 }
 
@@ -61,7 +65,7 @@ nav {
     font-size: 18px;
 }
 
-.task_status.accpeted {
+.task_status.accepted {
     color: #007BFF;
 }
 
@@ -74,7 +78,7 @@ nav {
 }
 
 .task_acceptance {
-    flex: 1;
+    flex: 2;
 }
 
 .task_difficult {
@@ -91,4 +95,8 @@ nav {
 
 .task_difficult.hard {
     color: red;
+}
+
+.task_author {
+    flex: 1;
 }

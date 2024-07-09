@@ -108,6 +108,8 @@ def activation(code1, code2, name):
         local2 = {}
         if code1 in ("level1", "level2","level3", "level4", "Master"):
             local1["main"] = __import__(f"trainAI.{code1}", fromlist=[None]).main
+        elif code1 == name:
+            exec(code2, globals_exec, local1)
         else: exec(code1, globals_exec, local1)
         exec(code2, globals_exec, local2)
         game_res = run_game(local1["main"], local2["main"], name)

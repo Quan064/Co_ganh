@@ -14,6 +14,7 @@ nav {
     justify-content: space-between;
     border-bottom: 1px solid #ccc;
     user-select: none;
+    z-index: 1000000;
 }
 
 .left_block {
@@ -139,6 +140,12 @@ ul, ol {
     margin-inline-end: 0px;
     padding-inline-start: 40px;
     unicode-bidi: isolate;
+}
+
+figcaption {
+    text-align: center;
+    font-size: 16px;
+    color: #333;
 }
 
 li {

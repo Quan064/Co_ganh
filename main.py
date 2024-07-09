@@ -18,22 +18,22 @@ from fdb.firestore_config import fdb
 import socketio
 import trainAI.MasterUser
 import requests
+from importlib import reload
 from tool import valid_move, distance
 from io import StringIO
 import traceback
 import sys
 import time
+import threading
+from timeout_decorator import timeout
 import builtins
+from copy import deepcopy
 
 doc_ref_room = fdb.collection("room")
 doc_ref_post = fdb.collection("post")
 doc_ref_task = fdb.collection("task")
+doc_ref_simulation = fdb.collection("simulation")
 doc_ref_code = fdb.collection("code")
-
-# doc = doc_ref.get()
-
-# if doc.exists:
-#     print(f"Document data: {doc.to_dict()}")
 
 class Player:
     def __init__(self, dict: dict):
@@ -86,12 +86,10 @@ class User(db.Model, UserMixin):
     elo = db.Column(db.Integer)
     fightable = db.Column(db.Boolean)
 
-
 class LoginForm(FlaskForm):
     username = StringField("Tên đăng nhập", validators=[DataRequired(), Length(min=4, max=20)])
     password =  PasswordField("Mật khẩu", validators=[DataRequired(), Length(min=4, max=20)])
     submit = SubmitField("Đăng Nhập")
-
 
 class RegisterForm(FlaskForm):
     username = StringField('Tên đăng nhập', validators=[DataRequired(), Length(min=4, max=20)])
@@ -102,6 +100,14 @@ class RegisterForm(FlaskForm):
     def validate_username(self, username_to_check):
         if User.query.filter_by(username=username_to_check.data).first(): #_existing_user_username
             raise ValidationError('Tên đăng nhập đã được sử dụng')
+
+# @timeout(1)
+def safe_exec(code, input):
+    func_to_del = ['eval', 'exec', 'input', '__import__', 'open']
+    allowed_builtins = {k:v for k, v in builtins.__dict__.items() if k not in func_to_del}
+    locals = {}
+    exec(code, {"valid_move": valid_move, "distance": distance, '__builtins__': allowed_builtins}, locals)
+    return locals["main"](*input)
 
 def checkSession():
     if 'secret_key' in session:
@@ -122,6 +128,10 @@ def session_required(f):
 @app.template_filter('parse_json')
 def parse_json(json_string):
     return json.loads(json_string)
+
+@app.template_filter('eval_string')
+def eval_string(string):
+    return eval(string)
 
 @app.route('/')
 def home_page():
@@ -161,9 +171,15 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         code = '''
-from tool import valid_move, distance
-# valid_move(x, y, board)
-# distance(x1, y1, x2, y2)
+# NOTE: tool
+# valid_move(x, y, board): trả về các nước đi hợp lệ của một quân cờ - ((x, y), ...)
+# distance(x1, y1, x2, y2): trả về số nước đi ít nhất từ (x1, y1) đến (x2, y2) - n
+
+# NOTE: player
+# player.your_pos: vị trí tất cả quân cờ của bản thân - [(x, y), ...]
+# player.opp_pos: vị trí tất cả quân cờ của đối thủ - [(x, y), ...]
+# player.your_side: màu quân cờ của bản thân - 1:🔵
+# player.board: bàn cờ - -1:🔴 / 1:🔵 / 0:∅
 
 # Remember that player.board[y][x] is the tile at (x, y) when printing
 def main(player):
@@ -268,7 +284,6 @@ def save_code():
 @session_required
 def create_bot():
     return render_template('create_bot.html', user = current_user)
-    return ""
     
 @app.route('/challenge_mode/<id>')
 @login_required
@@ -355,69 +370,68 @@ def task_list():
 
     return render_template('task_list.html', user = current_user, tasks = tasks)
     
-@app.route('/simulation')
+@app.route('/visualize_page')
 @login_required
 @session_required
-def simulation():
-    res = doc_ref_task.stream()
-    
-    tasks = []
+def visualize_page():
+    visualize = []
+    docs = doc_ref_simulation.stream()
+    for doc in docs:
+        viz = doc.to_dict()
+        viz["id"] = doc.id
+        visualize.append(viz)
 
-    for doc in res:
-        task = doc.to_dict()
-        task["id"] = doc.id
-        tasks.append(task)
+    return render_template('visualize_page.html', user = current_user, visualize = visualize)
 
-    return render_template('simulation.html', user = current_user, tasks = tasks)
+@app.route('/visualize/<id>')
+@login_required
+@session_required
+def visualize(id):
+    visualize = doc_ref_simulation.document(id).get().to_dict()
+
+    return render_template('visualize.html', user = current_user, simulation = visualize)
 
 @app.route('/run_task', methods=["POST"])
 # @login_required
 def run_task():
     res = request.get_json()
-    inp_oup = res["inp_oup"]
+    inp_oup = eval(res["inp_oup"])
     code = res["code"]
     org_stdout = sys.stdout
     err = ""
 
     user_output = []
-    for i in inp_oup:
+    for i in inp_oup[:2]:
         f = StringIO()
         sys.stdout = f
         try:
-            start = time.time()
             locals = {}
             exec(code, globals_exec, locals)
             Uoutput = locals["main"](*i["input"])
-            end = time.time()
-            Uoutput = json.loads(json.dumps(Uoutput).replace("(","[").replace(")","]"))
-            if type(i["output"]) is list:
-                comparision = sorted(i["output"]) == sorted(Uoutput)
-            else:
-                comparision = i["output"] == Uoutput
+            # Uoutput = json.loads(json.dumps(Uoutput).replace("(","[").replace(")","]"))
+            # if type(Uoutput) is list:
+            #     comparision = sorted(i["output"]) == sorted(Uoutput)
+            # else:
+            comparision = i["output"] == Uoutput
             if comparision:
                 user_output.append({
                     "log": f.getvalue(),
                     "output_status" : "AC",
-                    "output" : Uoutput,
-                    "runtime" : (end-start) * 10**3
+                    "output" : str(Uoutput),
                 })
             else:
                 user_output.append({
                     "log": f.getvalue(),
                     "output_status" : "WA",
-                    "output" : Uoutput
+                    "output" : str(Uoutput)
                 })
         except:
             err = traceback.format_exc()
-            user_output.append({
-                "log": f.getvalue(),
-                "output_status" : "SE",
-            })
+            status = "SE"
+            break
     sys.stdout = org_stdout
-
-    if any(i["output_status"]=="SE" for i in user_output):
-        status = "SE"
-    elif any(i["output_status"]=="WA" for i in user_output):
+    
+    if any(i["output_status"]=="WA" for i in user_output):
         status = "WA"
     else:
         status = "AC"
@@ -431,7 +445,7 @@ def run_task():
     else:
         return_data = {
             "status": status,
-            "output": [i["output"] for i in inp_oup],
+            "output": [str(i["output"]) for i in inp_oup],
             "user_output": user_output,
         }
 
@@ -445,7 +459,7 @@ def submit():
     res = request.get_json()
     task = doc_ref_task.document(res["id"])
     code = res["code"]
-    inp_oup = res["inp_oup"]
+    inp_oup = eval(res["inp_oup"])
     org_stdout = sys.stdout
     soAc = 0
     err = ""
@@ -467,40 +481,34 @@ def submit():
             locals = {}
             exec(code, globals_exec, locals)
             Uoutput = locals["main"](*i["input"])
-            Uoutput = json.loads(json.dumps(Uoutput).replace("(","[").replace(")","]"))
-            if type(i["output"]) is list:
-                comparision = sorted(i["output"]) == sorted(Uoutput)
-            else:
-                comparision = i["output"] == Uoutput
+            comparision = i["output"] == Uoutput
+            print(comparision)
 
             if comparision:
                 user_output.append({
                     "log": f.getvalue(),
                     "output_status" : "AC",
-                    "output" : Uoutput,
+                    "output" : str(Uoutput),
                 })
                 soAc+=1
             else:
                 user_output.append({
                     "log": f.getvalue(),
                     "output_status" : "WA",
-                    "output" : Uoutput
+                    "output" : str(Uoutput)
                 })
         except:
             err = traceback.format_exc()
-            user_output.append({
-                "log": f.getvalue(),
-                "output_status" : "SE",
-            })
+            status = "SE"
+            break
     end = time.time()
     sys.stdout = org_stdout
 
-    if any(i["output_status"]=="SE" for i in user_output):
-        status = "SE"
-    elif any(i["output_status"]=="WA" for i in user_output):
-        status = "WA"
-    else:
-        status = "AC"
+    if not err:
+        if any(i["output_status"]=="WA" for i in user_output):
+            status = "WA"
+        else:
+            status = "AC"
 
     compile_data["update_data"] = {
         "code": code,
@@ -513,13 +521,13 @@ def submit():
     if err:
         compile_data["return_data"] = {
             "status": "SE",
-            "output": [i["output"] for i in inp_oup],
+            "output": [str(i["output"]) for i in inp_oup],
             "err": err,
         }
     else:
         compile_data["return_data"] = {
             "status": status,
-            "output": [i["output"] for i in inp_oup],
+            "output": [str(i["output"]) for i in inp_oup],
             "user_output": user_output,
             "test_finished": f"{soAc}/{len(user_output)}",
             "run_time": (end-start) * 10**3,
@@ -553,6 +561,21 @@ def post_page():
         posts.append(doc.to_dict())
     return render_template('post_page.html', user = current_user, posts = posts)
 
+@app.route('/upload_task', methods=['POST'])
+# @login_required
+def upload_task():
+    task = request.get_json()
+    try:
+        inp_oup = task["inp_oup"]
+        for i in range(len(inp_oup)):
+            for j in range(len(inp_oup[i]["input"])):
+                task["inp_oup"][i]["input"][j] = eval(inp_oup[i]["input"][j])
+            task["inp_oup"][i]["output"] = eval(inp_oup[i]["output"])
+        doc_ref_task.document().set(task)
+        return 'success'
+    except Exception as e:
+        return 'err'
+        
 @app.route('/get_pos_of_playing_chess', methods=['POST'])
 @login_required
 def get_pos_of_playing_chess():
@@ -589,24 +612,40 @@ def get_rate():
 
     return json.dumps({"rate": rate, "img_url": img_url})
 
+
 @app.route('/fighting', methods=['POST'])
 @login_required
 def fighting():
-    name = current_user.username
-    player = request.get_json()
-    with open(f"static/botfiles/botfile_{player['name']}.py", encoding="utf-8") as f:
-        bot_code1 = f.read()
-    with open(f"static/botfiles/botfile_{name}.py", encoding="utf-8") as f:
-        bot_code2 = f.read()
-    winner, max_move_win, new_url = activation(bot_code1, bot_code2, name)[1]
-    
-    data = {
-        "status": winner,
-        "max_move_win": max_move_win,
-        "new_url": new_url
-    }
+    try:
+        name = current_user.username
+        player = request.get_json()
+        with open(f"static/botfiles/botfile_{player['name']}.py", encoding="utf-8") as f:
+            bot_code1 = f.read()
+        with open(f"static/botfiles/botfile_{name}.py", encoding="utf-8") as f:
+            bot_code2 = f.read()
+        err, game_res, output = activation(bot_code1, bot_code2, name)
+        
+        if err:
+            data = {
+                "code": 400,
+                "output": output
+            }
+        else:
+            data = {
+                "code": 200,
+                "status": game_res[0],
+                "max_move_win": game_res[1],
+                "new_url": game_res[2],
+                "output": output
+            }
+    except Exception as err:
+        if err:
+            data = {
+                "code": 400,
+                "output": err
+            }
 
-    return data
+    return json.dumps(data)
 
 @app.route('/update_rank_board', methods=['POST'])
 @login_required

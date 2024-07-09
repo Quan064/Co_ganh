@@ -109,6 +109,8 @@ def activation_debug(code1, code2, name, debugNum):
         local2 = {}
         if code1 in ("level1", "level2","level3", "level4", "Master"):
             local1["main"] = __import__(f"trainAI.{code1}", fromlist=[None]).main
+        elif code1 == name:
+            exec(code2, globals_exec, local1)
         else: exec(code1, globals_exec, local1)
         exec(code2, globals_exec, local2)
         game_res = run_game(local1["main"], local2["main"], name, debugNum)
@@ -135,7 +137,7 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
     while not winner:
 
         current_turn = game_state["current_turn"]
-        # print(f"__________{move_counter}__________")
+        print(f"__________{move_counter}__________")
 
         # get old board
         if current_turn == 1:
@@ -177,37 +179,13 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
         body["img"].append([deepcopy(positions), move, remove])
         move_list.append(deepcopy(cur_move))
 
-        if not positions[1]:
-            winner = "lost"
-        elif not positions[-1]:
-            winner = "win"
-        elif (len(positions[1]) + len(positions[-1]) <= 2) or move_counter == 200:
-            winner = "draw"
-        if winner:
+        if move_counter == debugNum:
             body["img"][0].append("")
             rate = [trainAI.MasterUser.main(i) for i in move_list]
             for i in range(1, len(body["img"])):
                 body["img"][i].append(rate[i-1])
-            # img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
-            # return img_url, inp_oup, rate
-            return None
+            img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
+            return img_url, inp_oup, rate
 
         game_state["current_turn"] *= -1
         move_counter += 1
-
-if __name__ == "__main__":
-    import random
-    def func(player):
-        while True:
-            pos = random.choice(player.your_pos)
-            x, y = pos[0], pos[1]
-            move = random.choice(((1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,-1), (-1,1), (1,-1)))
-            mx, my = move[0],move[1]
-            if 0 <= x+mx <=4 and 0 <= y+my <= 4 and player.board[y+my][x+mx] == 0: #check if new position is valid
-                move = {"selected_pos": (x,y), "new_pos": (x+mx, y+my)}
-                try:
-                    Raise_exception(move, 1, player.board)
-                    return move
-                except: pass
-    while True:
-        run_game(__import__("trainAI.Master", fromlist=[None]).main, func, None, 6)

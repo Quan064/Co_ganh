@@ -1,4 +1,3 @@
-from tool import valid_move, distance
 # NOTE: tool
 # valid_move(x, y, board): trả về các nước đi hợp lệ của một quân cờ - ((x, y), ...)
 # distance(x1, y1, x2, y2): trả về số nước đi ít nhất từ (x1, y1) đến (x2, y2) - n
@@ -11,6 +10,6 @@ from tool import valid_move, distance
 
 def main(player):
     for x, y in player.your_pos:
-		    moves = valid_move(x, y, player.board)
-		    if moves != ():
-		        return {"selected_pos": (x,y), "new_pos": moves[0]}
+        moves = valid_move(x, y, player.board)
+        if moves != ():
+            return {"selected_pos": (x,y), "new_pos": moves[0]}

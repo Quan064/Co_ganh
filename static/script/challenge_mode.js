@@ -18,9 +18,11 @@ const uniNavItem = $$(".utility_nav-block--item")
 const taskBtn = $(".bot_display_nav-block--item.task")
 const resulttBtn = $(".bot_display_nav-block--item.result")
 const submissionsBtn = $(".bot_display_nav-block--item.submissions")
+const helpBtn = $(".bot_display_nav-block--item.help")
 const task_block = $(".bot_display-task")
 const result_block = $(".bot_display-result")
 const submissions_block = $(".bot_display-submissions")
+const help_block = $(".bot_display-help")
 const all_block = $$(".bot_display-item")
 
 // result block
@@ -32,6 +34,11 @@ const test_case_result_list = $(".test_case_result_list")
 let test_case_result_item = $$(".test_case_result_item")
 let text_case_InOu = $$(".text_case_InOu")
 const test_case_result_err = $(".test_case_result_err")
+const test_case_result_overview = $(".test_case_result_overview")
+const test_case_runtime = $(".test_case_runtime")
+const test_case_AC = $(".test_case_AC")
+const runtime = $(".runtime")
+const AC = $(".AC")
 
 // --------------
 
@@ -50,7 +57,7 @@ const inp = $$(".inp")
 // --------------
 
 
-const animation = $(".utility_nav-block .animation")
+const animation = $(".bot_display_nav-block .animation")
 const animationChild = $(".utility_nav-block .animation .children")
 const bDAnimation = $(".bot_display_nav-block .animation")
 const bDAnimationChild = $(".bot_display_nav-block .animation .children")
@@ -81,8 +88,6 @@ runBtn.onclick = () => {
     })
 
     let formatter = new Intl.DateTimeFormat([], options);
-    
-    // console.log();
 
     fetch("/run_task", {
         method: "POST",
@@ -91,18 +96,18 @@ runBtn.onclick = () => {
         },
         body: JSON.stringify({
             code: code,
-            inp_oup: JSON.parse(task_inp_oup).slice(0, 2),
+            inp_oup: task_inp_oup,
             time: formatter.format(new Date()),
         }),
     })
     .then(res => res.json())
     .then(data => {
+        console.log(data)
         $$(".output_block").forEach(item => item.remove())
         if(data.status === "SE") {
             render_result(data, data.status)
             return
         }
-        console.log(data)
         data.user_output.forEach((oup, i) => {
             if(oup.output_status === "AC") {
                 test_case_nav_item[i].className = "test_case_nav_item accepted"
@@ -115,9 +120,9 @@ runBtn.onclick = () => {
                 <div class="output_block">
                     <hr style="width: 100%; margin: 10px 0;">
                     <div class="oup_title">output</div>
-                    <div contenteditable="" name="" id="" class="oup">${JSON.stringify(data.output[i])}</div>
+                    <div contenteditable="" name="" id="" class="oup">${data.output[i]}</div>
                     <div class="user_oup_title">your_output</div>
-                    <div contenteditable="" name="" id="" class="your_oup ${data.user_output[i].output_status === "AC" ? "accepted" : "err"}">${JSON.stringify(data.user_output[i].output)}</div>
+                    <div contenteditable="" name="" id="" class="your_oup ${data.user_output[i].output_status === "AC" ? "accepted" : "err"}">${data.user_output[i].output}</div>
                 </div>
             `
         })
@@ -142,7 +147,7 @@ function submitCode(code) {
         },
         body: JSON.stringify({
             code: code,
-            inp_oup: JSON.parse(task_inp_oup),
+            inp_oup: task_inp_oup,
             id: task_id,
             time: formatter.format(new Date()),
         }),
@@ -194,30 +199,55 @@ function render_result(data, status) {
     result_status.innerHTML = data.status === "AC" ? "Accepted": data.status === "WA" ? "Wrong answer" : "Syntax error"
     test_case_result_list.innerHTML = ""
 
+    console.log(data)
+    console.log(typeof data.run_time)
+
     if(status === "SE") {
+        test_case_result_overview.style.display = "none"
         test_case_result_err.style.display = "block"
-        test_case_result_err.innerHTML = data.err
+        test_case_result_err.innerHTML = data.err.replaceAll('\n', '<br>').replaceAll('    ', '&emsp;')
         test_case_result_list.style.display = "none"
     } else {
+        test_case_result_overview.style.display = "flex"
+        runtime.innerHTML = `${Math.round(data.run_time)}` + "ms"
+        if(data.run_time > 1000) {
+            test_case_runtime.classList.add("err")
+        }
+        else {
+            test_case_runtime.classList.remove("err")
+        }
+        const [left, right] = data.test_finished.split("/");
+        AC.innerHTML = data.test_finished
+        if(left != right) {
+            test_case_AC.classList.add("err")
+        } else {
+            test_case_AC.classList.remove("err")
+        }
         test_case_result_err.style.display = "none"
         test_case_result_list.style.display = "grid"
         data.user_output.forEach((oup, i) => {
+            let type_output
+            try {
+                type_output = typeof JSON.parse(oup.output)
+            } catch {
+                type_output = "j cha dc"
+            }
             test_case_result_list.innerHTML += `
                 <li tabindex="0" class="test_case_result_item ${oup.output_status === "AC" ? "accepted" : "err"}">
                     Test ${i+1}
                     <div class="text_case_InOu ${oup.output_status === "AC" ? "accepted" : "err"}">
                         <div class="text_case_oup_title">output =</div>
-                        <div class="test_case_oup">${JSON.stringify(data.output[i])}</div>
+                        <div class="test_case_oup">${data.output[i]}</div>
                         <hr style="width: 100%; border: 1px solid #007BFF; margin-top: 14px">
                         <div class="user_oup_title">your output =</div>
-                        <div class="user_oup">${typeof oup.output === 'boolean' ? capitalize(`${oup.output}`) : JSON.stringify(oup.output)}</div>
+                        <div class="user_oup">${type_output === 'boolean' ? capitalize(`${oup.output}`) : oup.output}</div>
                     </div>
                 </li>
             `
         })
         reset_result_item()
     }
-    changeAnimation(resulttBtn, taskBtn.clientWidth + 5 + "%", resulttBtn.clientWidth + "px", "result", bDAnimationChild)
+    changeAnimation(resulttBtn,  animation.clientWidth - (taskBtn.clientWidth * 3) - 3 + "px", resulttBtn.clientWidth + "px", "result", bDAnimationChild)
     
 }
 
@@ -273,7 +303,6 @@ async function render_summissions(isfirstRender = false) {
             session.setValue(task_data.challenger[username].current_submit.code)
         }
     }
-    
 }
 // console.log(demo_code)
 
@@ -292,6 +321,9 @@ function toggleMode(mode) {
             break
         case "submissions":
             submissions_block.style.display = "block"
+            break
+        case "help":
+            help_block.style.display = "block"
             break
         default:
             break
@@ -321,11 +353,15 @@ taskBtn.onclick = (e) => {
 }
 
 resulttBtn.onclick = (e) => {
-    changeAnimation(resulttBtn, taskBtn.clientWidth + 5 + "%", e.target.clientWidth + "px", "result", bDAnimationChild)
+    changeAnimation(resulttBtn, animation.clientWidth - (taskBtn.clientWidth * 3) - 3 + "px", e.target.clientWidth + "px", "result", bDAnimationChild)
 }
 
 submissionsBtn.onclick = (e) => {
-    changeAnimation(submissionsBtn, "0", e.target.clientWidth + "px", "submissions", bDAnimationChild)
+    changeAnimation(submissionsBtn, animation.clientWidth - (resulttBtn.clientWidth * 4.4) + 5 + "px", e.target.clientWidth + "px", "submissions", bDAnimationChild)
+}
+
+helpBtn.onclick = (e) => {
+    changeAnimation(helpBtn, "0", e.target.clientWidth + "px", "help", bDAnimationChild)
 }
 
 inp.forEach(item => {
