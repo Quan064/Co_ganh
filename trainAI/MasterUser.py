@@ -1,6 +1,5 @@
 import os
 from trainAI.Master import ganh_chet, vay, check_pos_point
-from pprint import pprint
 
 def main(move_listi, side):
     global cache, rate, move_set, pos_set, move_chosen
@@ -42,8 +41,8 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
 
     if depth%2==0:
         if (state := f"{your_board} {opp_board}") in cache and depth:
-            temp = cache[state].split(' ')
-            return int(temp[0]), (-depth - int(temp[1]) if int(temp[1])<0 else 0 if int(temp[1])==0 else depth - int(temp[1])), int(temp[2])
+            temp = [int(i) for i in cache[state].split(' ')]
+            return -temp[0], -temp[1] - depth  if temp[1]>0 else 0, -temp[2]
 
         if your_board == 0 or opp_board == 0:
             return (8, -depth, 0)
@@ -109,8 +108,8 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
 
     else:
         if (state := f"{your_board} {opp_board}") in cache:
-            temp = cache[state].split(' ')
-            return int(temp[0]), (-depth + int(temp[1]) if int(temp[1])<0 else 0 if int(temp[1])==0 else depth + int(temp[1])), int(temp[2])
+            temp = [int(i) for i in cache[state].split(' ')]
+            return temp[0], temp[1] - depth if temp[1]<0 else 0, temp[2]
 
         if your_board == 0 or opp_board == 0:
             return (-8, depth, 0)

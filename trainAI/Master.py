@@ -83,6 +83,14 @@ def main(player):
     dirname = os.path.dirname(__file__)
     with open(os.path.join(dirname, "source_code/bit_board.txt")) as f:
         cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
+        # NOTE:
+        # cache[state][0]:
+        #     8 : 🔴 thắng
+        #    -8 : 🔵 thắng
+        #
+        # cache[state][1] = n:
+        #   -lẻ : 🔴 thắng sau n lượt (🔵 thua)
+        #    lẻ : 🔵 thắng sau n lượt (🔴 thua)
 
     v = minimax(player.your_pos, player.opp_pos, your_board, opp_board)
 
@@ -96,8 +104,8 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
 
     if depth%2==0:
         if (state := f"{your_board} {opp_board}") in cache and depth:
-            temp = cache[state].split(' ')
-            return int(temp[0]), (-depth + int(temp[1]) if int(temp[1])<0 else 0 if int(temp[1])==0 else depth + int(temp[1])), int(temp[2])
+            temp = [int(i) for i in cache[state].split(' ')]
+            return temp[0], temp[1] - depth if temp[1]<0 else 0, temp[2]
 
         if your_board == 0 or opp_board == 0:
             return (-8, depth, 0)
@@ -137,8 +145,8 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
 
     else:
         if (state := f"{your_board} {opp_board}") in cache:
-            temp = cache[state].split(' ')
-            return int(temp[0]), (-depth - int(temp[1]) if int(temp[1])<0 else 0 if int(temp[1])==0 else depth - int(temp[1])), int(temp[2])
+            temp = [int(i) for i in cache[state].split(' ')]
+            return -temp[0], -temp[1] - depth  if temp[1]>0 else 0, -temp[2]
 
         if your_board == 0 or opp_board == 0:
             return (8, -depth, 0)
