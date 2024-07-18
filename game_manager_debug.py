@@ -15,28 +15,6 @@ class Player:
         self.opp_pos = opp_pos
         self.your_side = your_side
         self.board = board
-def declare():
-    global game_state, positions, point, player1, player2
-
-    player1 = Player()
-    player2 = Player()
-    player1.your_side = 1
-    player2.your_side = -1
-
-    game_state = {"current_turn": 1,
-                  "board": [[-1, -1, -1, -1, -1],
-                            [-1,  0,  0,  0, -1],
-                            [ 1,  0,  0,  0, -1],
-                            [ 1,  0,  0,  0,  1],
-                            [ 1,  1,  1,  1,  1]]}
-    player1.board = player2.board = game_state["board"]
-    positions = [None,
-                [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
-                [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
-    player1.your_pos = player2.opp_pos = positions[player1.your_side]
-    player2.your_pos = player1.opp_pos = positions[player2.your_side]
-
-    point = []
 
 # Board manipulation
 def Raise_exception(move, current_side, board):
@@ -122,28 +100,36 @@ def activation_debug(code1, code2, name, debugNum):
         sys.stdout = org_stdout
         return True, None, f.getvalue()
 def run_game(Bot2, UserBot, session_name, debugNum): # Main
+    global game_state
 
-    declare()
-    winner = False
-    move_counter = 1
+    player1 = Player()
+    player2 = Player()
+    player1.your_side = 1
+    player2.your_side = -1
+
+    game_state = {"current_turn": 1,
+                  "board": [[-1, -1, -1, -1, -1],
+                            [-1,  0,  0,  0, -1],
+                            [ 1,  0,  0,  0, -1],
+                            [ 1,  0,  0,  0,  1],
+                            [ 1,  1,  1,  1,  1]]}
+    player1.board = player2.board = game_state["board"]
+    positions = [[],
+                [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
+                [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
+    player1.your_pos = player2.opp_pos = positions[player1.your_side]
+    player2.your_pos = player1.opp_pos = positions[player2.your_side]
+
     body = {
         "username": session_name,
-        "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
+        "img": [[[i.copy() for i in positions], {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, [], ""]]
     }
     inp_oup = []
-    move_list = []
-    cur_move = {}
 
-    while not winner:
+    for move_counter in range(1, debugNum+1):
 
         current_turn = game_state["current_turn"]
         print(f"__________{move_counter}__________")
-
-        # get old board
-        if current_turn == 1:
-            cur_move["board"] = deepcopy(game_state["board"])
-        else:
-            cur_move['board'] = eval(str(game_state['board']).replace('-1', '`').replace('1', '-1').replace('`', '1'))
 
         if player1.your_side == current_turn:
             move = UserBot(deepcopy(player1))
@@ -154,38 +140,35 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
 
         move_new_pos = move["new_pos"]
         move_selected_pos = move["selected_pos"]
-        cur_move["move"] = deepcopy({
-            "new_pos": move_new_pos,
-            "selected_pos": move_selected_pos
-        })
+
+        rate = trainAI.MasterUser.main({
+            "board" : [i.copy() for i in game_state['board']],
+            "your_pos" : positions[current_turn].copy(),
+            "opp_pos" : positions[-current_turn].copy(),
+            "move" : move
+        }, current_turn)
 
         # Update move to board
         game_state["board"][move_new_pos[1]][move_new_pos[0]] = current_turn
         game_state["board"][move_selected_pos[1]][move_selected_pos[0]] = 0
-
-        # get old chess position
-        cur_move["your_pos"] = deepcopy(positions[current_turn])
-        cur_move["opp_pos"] = deepcopy(positions[-current_turn])
 
         # Update move to positions
         index_move = positions[current_turn].index(move_selected_pos)
         positions[current_turn][index_move] = move_new_pos
 
         opp_pos = positions[-current_turn]
-        remove = ganh_chet(move_new_pos, opp_pos, current_turn, -current_turn)
-        remove += vay(opp_pos)
-        if remove: point[:] += [move_selected_pos]*len(remove)
+        remove = vay(opp_pos)
+        remove.extend( ganh_chet(move_new_pos, opp_pos, current_turn, -current_turn) )
+        remove.extend( vay(opp_pos) )
 
-        body["img"].append([deepcopy(positions), move, remove])
-        move_list.append(deepcopy(cur_move))
-
-        if move_counter == debugNum:
-            body["img"][0].append("")
-            rate = [trainAI.MasterUser.main(i) for i in move_list]
-            for i in range(1, len(body["img"])):
-                body["img"][i].append(rate[i-1])
-            img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
-            return img_url, inp_oup, rate
+        body["img"].append([[i.copy() for i in positions], move, remove, rate])
 
         game_state["current_turn"] *= -1
-        move_counter += 1
+
+        if not positions[1]:
+            break
+        elif not positions[-1]:
+            break
+
+    img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
+    return img_url, inp_oup, [i[-1] for i in body["img"]]

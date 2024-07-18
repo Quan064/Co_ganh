@@ -18,22 +18,20 @@ from fdb.firestore_config import fdb
 import socketio
 import trainAI.MasterUser
 import requests
-from importlib import reload
 from tool import valid_move, distance
 from io import StringIO
 import traceback
 import sys
 import time
-import threading
-from timeout_decorator import timeout
 import builtins
-from copy import deepcopy
 
 doc_ref_room = fdb.collection("room")
 doc_ref_post = fdb.collection("post")
 doc_ref_task = fdb.collection("task")
 doc_ref_simulation = fdb.collection("simulation")
 doc_ref_code = fdb.collection("code")
+doc_ref_user = fdb.collection("user")
+doc_ref_bot = fdb.collection("bot")
 
 class Player:
     def __init__(self, dict: dict):
@@ -86,6 +84,14 @@ class User(db.Model, UserMixin):
     elo = db.Column(db.Integer)
     fightable = db.Column(db.Boolean)
 
+    def to_dict(self):
+        return {
+            "username": self.username,
+            "password": self.password,
+            "elo": self.elo,
+            "fightable": self.fightable
+        }
+
 class LoginForm(FlaskForm):
     username = StringField("Tên đăng nhập", validators=[DataRequired(), Length(min=4, max=20)])
     password =  PasswordField("Mật khẩu", validators=[DataRequired(), Length(min=4, max=20)])
@@ -100,14 +106,6 @@ class RegisterForm(FlaskForm):
     def validate_username(self, username_to_check):
         if User.query.filter_by(username=username_to_check.data).first(): #_existing_user_username
             raise ValidationError('Tên đăng nhập đã được sử dụng')
-
-# @timeout(1)
-def safe_exec(code, input):
-    func_to_del = ['eval', 'exec', 'input', '__import__', 'open']
-    allowed_builtins = {k:v for k, v in builtins.__dict__.items() if k not in func_to_del}
-    locals = {}
-    exec(code, {"valid_move": valid_move, "distance": distance, '__builtins__': allowed_builtins}, locals)
-    return locals["main"](*input)
 
 def checkSession():
     if 'secret_key' in session:
@@ -148,13 +146,13 @@ def home_page():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+        # user = (doc_ref_user.where("username", "==", form.username.data).get()[0]).to_dict()
         user = User.query.filter_by(username=form.username.data).first()
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
                 secret_key = generate_secret_key(form.username.data)
                 session['secret_key'] = secret_key
                 session['username'] = form.username.data
-                # print(session['secret_key'])
                 login_user(user)
                 flash("Đăng nhập thành công", category='success')
                 return redirect(url_for('menu'))
@@ -168,6 +166,7 @@ def register():
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data)
         new_user = User(username=form.username.data, password=hashed_password, elo=0, fightable=False)
+        # update_time, user_ref = doc_ref_user.add(new_user.to_dict())
         db.session.add(new_user)
         db.session.commit()
         code = '''
@@ -189,6 +188,10 @@ def main(player):
             if 0 <= x+mx <= 4 and 0 <= y+my <= 4 and player.board[y+my][x+mx] == 0:
                 return {"selected_pos": (x,y), "new_pos": (x+mx, y+my)}
 '''
+        # doc_ref_bot.add({
+        #     "owner": form.username.data,
+        #     "code": code
+        # })
         with open(f"static/botfiles/botfile_{form.username.data}.py", mode="w", encoding="utf-8") as f:
             f.write(code)
         return redirect(url_for('login'))
@@ -571,6 +574,7 @@ def upload_task():
             for j in range(len(inp_oup[i]["input"])):
                 task["inp_oup"][i]["input"][j] = eval(inp_oup[i]["input"][j])
             task["inp_oup"][i]["output"] = eval(inp_oup[i]["output"])
+        task["inp_oup"] = str(task["inp_oup"])
         doc_ref_task.document().set(task)
         return 'success'
     except Exception as e:
@@ -582,12 +586,9 @@ def get_pos_of_playing_chess():
     res = request.get_json()
     player = Player(res["data"])
     choosen_bot = res["choosen_bot"]
-    player.your_pos = [tuple(i) for i in player.your_pos]
-    player.opp_pos = [tuple(i) for i in player.opp_pos]
-    player.your_pos, player.opp_pos = player.opp_pos, player.your_pos
+    player.your_pos, player.opp_pos = [tuple(i) for i in player.opp_pos], [tuple(i) for i in player.your_pos]
+
     move = __import__(f"trainAI.{choosen_bot}", fromlist=[None]).main(player)
-    move['selected_pos'] = tuple(reversed(list(move['selected_pos'])))
-    move['new_pos'] = tuple(reversed(list(move['new_pos'])))
     return move
 
 @app.route('/get_rate', methods=['POST'])
@@ -596,20 +597,14 @@ def get_rate():
     data = request.get_json()
     move_list = data["move_list"]
     img_data = data["img_data"]
-    for i in move_list:
-        if i['side'] == -1:
-            i['your_pos'], i['opp_pos'] = [tuple(i) for i in i['opp_pos']], [tuple(i) for i in i['your_pos']]
-            i['board'] = eval(str(i['board']).replace('-1', '`').replace('1', '-1').replace('`', '1'))
-        else:
-            i['your_pos'], i['opp_pos'] = [tuple(i) for i in i['your_pos']], [tuple(i) for i in i['opp_pos']]
-            
-    rate = [trainAI.MasterUser.main(i) for i in move_list]
 
-    for i in range(len(img_data["img"])):
+    rate = []
+    for i in range(len(move_list)):
+        move_list[i]['your_pos'], move_list[i]['opp_pos'] = ([tuple(j) for j in move_list[i]['your_pos']], [tuple(j) for j in move_list[i]['opp_pos']])[::move_list[i]['side']]
+        rate.append(trainAI.MasterUser.main(move_list[i], move_list[i]['side']))
         img_data["img"][i].append(rate[i])
 
     img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=img_data).text
-
     return json.dumps({"rate": rate, "img_url": img_url})
 
 
