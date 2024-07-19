@@ -89,8 +89,8 @@ def main(player):
         #    -8 : 🔵 thắng
         #
         # cache[state][1] = n:
-        #   -lẻ : 🔴 thắng sau n lượt (🔵 thua)
-        #    lẻ : 🔵 thắng sau n lượt (🔴 thua)
+        #   -lẻ : 🔴 thắng sau n lượt
+        #  chẵn : 🔵 thắng sau n lượt
 
     v = minimax(player.your_pos, player.opp_pos, your_board, opp_board)
 
@@ -105,7 +105,7 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
     if depth%2==0:
         if (state := f"{your_board} {opp_board}") in cache and depth:
             temp = [int(i) for i in cache[state].split(' ')]
-            return temp[0], temp[1] - depth if temp[1]<0 else 0, temp[2]
+            return temp[0], temp[1] - depth if temp[1]<0 else temp[1] + depth if temp[1]>0 else 0, temp[2]
 
         if your_board == 0 or opp_board == 0:
             return (-8, depth, 0)
@@ -144,10 +144,6 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
         return bestVal
 
     else:
-        if (state := f"{your_board} {opp_board}") in cache:
-            temp = [int(i) for i in cache[state].split(' ')]
-            return -temp[0], -temp[1] - depth  if temp[1]>0 else 0, -temp[2]
-
         if your_board == 0 or opp_board == 0:
             return (8, -depth, 0)
 

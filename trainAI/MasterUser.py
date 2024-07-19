@@ -20,12 +20,12 @@ def main(move_listi, side):
 
     v = minimax(move_listi['your_pos'], move_listi['opp_pos'], your_board, opp_board)
 
-    cache[f"{your_board} {opp_board}"] = ' '.join(str(-i) for i in v)
+    cache[f"{your_board} {opp_board}"] = ' '.join(str(i) for i in v)
     with open(os.path.join(dirname, f"source_code/bit_board.txt"), mode="w") as f:
         f.write("\n".join("  ".join(i) for i in cache.items()))
 
     User_p = rate[0]
-    p = sorted(rate).index(User_p)
+    p = sorted(rate, reverse=True).index(User_p)
     l = len(rate)
 
     if p*3 > l*2:
@@ -42,14 +42,14 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
     if depth%2==0:
         if (state := f"{your_board} {opp_board}") in cache and depth:
             temp = [int(i) for i in cache[state].split(' ')]
-            return -temp[0], -temp[1] - depth  if temp[1]>0 else 0, -temp[2]
+            return temp[0], temp[1] - depth if temp[1]<0 else temp[1] + depth if temp[1]>0 else 0, temp[2]
 
         if your_board == 0 or opp_board == 0:
-            return (8, -depth, 0)
+            return (-8, depth, 0)
         if depth == 6:
-            return (len(opp_pos) - len(your_pos)), 0, check_pos_point(opp_pos, your_pos)
+            return (len(your_pos) - len(opp_pos)), 0, check_pos_point(your_pos, opp_pos)
 
-        bestVal = (9,)
+        bestVal = (-9,)
 
         your_pos.sort(key=pos_set[1])
         if depth == 0:
@@ -75,9 +75,9 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
                         opp_new_board, opp_new_pos = vay(opp_new_pos, your_new_board, opp_new_board)
 
                         value = minimax(opp_new_pos, your_new_pos, opp_new_board, your_new_board, depth+1, alpha, beta)
-                        bestVal = min(bestVal, value)
+                        bestVal = max(bestVal, value)
 
-                        if beta == (9,): beta = value
+                        if alpha == (-9,): alpha = value
                         rate.append(value)
 
         else:
@@ -98,23 +98,19 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
                         opp_new_board, opp_new_pos = vay(opp_new_pos, your_new_board, opp_new_board)
 
                         value = minimax(opp_new_pos, your_new_pos, opp_new_board, your_new_board, depth+1, alpha, beta)
-                        bestVal = min(bestVal, value)
+                        bestVal = max(bestVal, value)
 
-                        beta = min(beta, value)
+                        alpha = max(alpha, value)
                         if alpha >= beta:
                             return bestVal
 
         return bestVal
 
     else:
-        if (state := f"{your_board} {opp_board}") in cache:
-            temp = [int(i) for i in cache[state].split(' ')]
-            return temp[0], temp[1] - depth if temp[1]<0 else 0, temp[2]
-
         if your_board == 0 or opp_board == 0:
-            return (-8, depth, 0)
+            return (8, -depth, 0)
 
-        bestVal = (-9,)
+        bestVal = (9,)
 
         your_pos.sort(key=pos_set[0])
         for pos in your_pos:
@@ -134,9 +130,9 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
                     opp_new_board, opp_new_pos = vay(opp_new_pos, your_new_board, opp_new_board)
 
                     value = minimax(opp_new_pos, your_new_pos, opp_new_board, your_new_board, depth+1, alpha, beta)
-                    bestVal = max(bestVal, value)
+                    bestVal = min(bestVal, value)
 
-                    alpha = max(alpha, value)
+                    beta = min(beta, value)
                     if alpha >= beta:
                         return bestVal
 
