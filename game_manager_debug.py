@@ -122,7 +122,7 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
 
     body = {
         "username": session_name,
-        "img": [[[i.copy() for i in positions], {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, [], ""]]
+        "img": []
     }
     inp_oup = []
 
@@ -161,7 +161,7 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
         remove.extend( ganh_chet(move_new_pos, opp_pos, current_turn, -current_turn) )
         remove.extend( vay(opp_pos) )
 
-        body["img"].append([[i.copy() for i in positions], move, remove, rate])
+        body["img"].append([*move_selected_pos, *move_new_pos, {i:"remove_blue" if current_turn==1 else "remove_red" for i in remove}, rate])
 
         game_state["current_turn"] *= -1
 
@@ -170,5 +170,5 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
         elif not positions[-1]:
             break
 
-    img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=body).text
+    img_url = requests.post("http://quan064.pythonanywhere.com//generate_debug_image", json=body).text
     return img_url, inp_oup, [i[-1] for i in body["img"]]

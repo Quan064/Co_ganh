@@ -123,7 +123,7 @@ def run_game(Bot2, UserBot, session_name): # Main
     move_counter = 1
     body = {
         "username": session_name,
-        "img": [[deepcopy(positions), {"selected_pos": (-1000,-1000), "new_pos": (-1000,-1000)}, []]]
+        "img": []
     }
 
     while not winner:
@@ -153,7 +153,7 @@ def run_game(Bot2, UserBot, session_name): # Main
         remove.extend( ganh_chet(move_new_pos, opp_pos, current_turn, -current_turn) )
         remove.extend( vay(opp_pos) )
 
-        body["img"].append([[i.copy() for i in positions], move, remove])
+        body["img"].append([*move_selected_pos, *move_new_pos, {i:"remove_blue" if current_turn==1 else "remove_red" for i in remove}])
 
         if not positions[1]:
             winner = "lost"
@@ -165,6 +165,6 @@ def run_game(Bot2, UserBot, session_name): # Main
         game_state["current_turn"] *= -1
         move_counter += 1
 
-    new_url = requests.post("http://tlv23.pythonanywhere.com//generate_video", json=body).text
+    new_url = requests.post("http://quan064.pythonanywhere.com//generate_video", json=body).text
 
     return winner, move_counter-1, new_url
