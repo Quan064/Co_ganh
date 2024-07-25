@@ -1,122 +1,187 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import moviepy.editor as mpe
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import os
-import fdb.firestore_config
-from fdb.uti.upload import upload_video_to_storage
-import webbrowser
-import time
-# import cv2
+from fdb.uti.upload import upload_file, upload_files
+import asyncio
 
 app = Flask(__name__)
-
 absolute_path = os.getcwd()
 
 
-def declare(side):
-    global positions, point, frame, video, img_url
+def init():
+    global rect, red_piece, blue_piece, piece_layer, move_tracker, remove_tracker, bad, brilliant, good, ordinary
 
-    positions = [None,
-                [(0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)],
-                [(0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)]]
+    rect = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
+    red_piece = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
+    blue_piece = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
+    piece_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
 
-    point = []
+    move_tracker = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
+    remove_tracker = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(red_piece)
+    draw.ellipse((0, 0, 40, 40), fill="red", outline="red")
+    draw = ImageDraw.Draw(blue_piece)
+    draw.ellipse((0, 0, 40, 40), fill="blue", outline="blue")
+    draw = ImageDraw.Draw(move_tracker)
+    draw.ellipse((0, 0, 40, 40), fill=None, outline="green", width=5)
+    draw = ImageDraw.Draw(remove_tracker)
+    draw.ellipse((0, 0, 40, 40), fill=None, outline="#FFC900", width=5)
 
-    frame = Image.open(absolute_path + "/mysite/chessboard.png")
-    frame_cop = frame.copy()
-    draw = ImageDraw.Draw(frame_cop)
+    brilliant = Image.new('RGBA', (43, 51), (0, 0, 0, 0))
+    good = Image.new('RGBA', (43, 51), (0, 0, 0, 0))
+    ordinary = Image.new('RGBA', (43, 51), (0, 0, 0, 0))
+    bad = Image.new('RGBA', (43, 51), (0, 0, 0, 0))
 
-    for x, y in positions[side]:
-        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
-    for x, y in positions[-side]:
-        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
+    draw = ImageDraw.Draw(brilliant)
+    draw.ellipse((0, 10, 40, 50), fill=None, outline="green", width=5)
+    draw.ellipse((22, 0, 42, 20), fill="#2DC4A6")
+    draw.line((35, 3, 35, 12), fill="white", width=3)
+    draw.ellipse((33, 15, 36, 18), fill="white")
+    draw.line((29, 3, 29, 12), fill="white", width=3)
+    draw.ellipse((28, 15, 31, 18.5), fill="white")
+    draw = ImageDraw.Draw(good)
+    draw.ellipse((0, 10, 40, 50), fill=None, outline="green", width=5)
+    draw.ellipse((22, 0, 42, 20), fill="#00B400")
+    draw.line((27, 11, 32, 16), fill="white", width=3)
+    draw.line((32, 16, 39, 7), fill="white", width=3)
+    draw = ImageDraw.Draw(ordinary)
+    draw.ellipse((0, 10, 40, 50), fill=None, outline="green", width=5)
+    draw.ellipse((22, 0, 42, 20), fill="#bbb")
+    draw.line((25, 10, 39, 10), fill="white", width=4)
+    draw = ImageDraw.Draw(bad)
+    draw.ellipse((0, 10, 40, 50), fill=None, outline="green", width=5)
+    draw.ellipse((22, 0, 42, 20), fill="red", width=5)
+    draw.line((27, 5, 37, 15), fill="white", width=3)
+    draw.line((37, 5, 27, 15), fill="white", width=3)
 
-    frame_cop = np.array(frame_cop)
-    video = [mpe.ImageClip(frame_cop).set_duration(1)]
-    img_url = []
+    for x, y in ((0,2), (0,3), (4,3), (0,4), (1,4), (2,4), (3,4), (4,4)):
+        piece_layer.paste(blue_piece, (x*100+80, y*100+80), blue_piece)
+    for x, y in ((0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)):
+        piece_layer.paste(red_piece, (x*100+80, y*100+80), red_piece)
 
-def generate_image(positions, move, remove, username, isDebug, debugTurn, rate, side): #tạo ảnh / video
-    frame_cop = frame.copy()
-    draw = ImageDraw.Draw(frame_cop)
+def generate_image(redTurn, selected_x, selected_y, new_x, new_y, intervention, rate=""):
+    move_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
 
-    for x, y in remove:
-        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill=None, outline="#FFC900", width=4)
-    for x, y in positions[side]:
-        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="blue", outline="blue")
-    for x, y in positions[-side]:
-        draw.ellipse((x*100+80, y*100+80, x*100+120, y*100+120), fill="red", outline="red")
-    new_x = move["new_pos"][0]
-    new_y = move["new_pos"][1]
-    old_x = move["selected_pos"][0]
-    old_y = move["selected_pos"][1]
-    draw.ellipse((new_x*100+80, new_y*100+80, new_x*100+120, new_y*100+120), fill=None, outline="green", width=5)
-    draw.ellipse((old_x*100+80, old_y*100+80, old_x*100+120, old_y*100+120), fill=None, outline="green", width=5)
-
-    if rate != "":
-        if rate == "Tốt nhất":
-            draw.ellipse((new_x*100+102, new_y*100+70, new_x*100+122, new_y*100+90), fill="#2DC4A6")
-            draw.line((new_x*100+102+13, new_y*100+73, new_x*100+102+13, new_y*100+82), fill="white", width=3)
-            draw.ellipse((new_x*100+102+11, new_y*100+85, new_x*100+102+14, new_y*100+88), fill="white")
-            draw.line((new_x*100+102+7, new_y*100+73, new_x*100+102+7, new_y*100+82), fill="white", width=3)
-            draw.ellipse((new_x*100+102+6, new_y*100+85, new_x*100+102+9, new_y*100+88.5), fill="white")
-        elif rate == "Tốt":
-            draw.ellipse((new_x*100+102, new_y*100+70, new_x*100+122, new_y*100+90), fill="#00B400")
-            draw.line((new_x*100+102+5, new_y*100+70+11, new_x*100+112, new_y*100+86), fill="white", width=3)
-            draw.line((new_x*100+112, new_y*100+86, new_x*100+112+7, new_y*100+77), fill="white", width=3)
-        elif rate == "Tệ":
-            draw.ellipse((new_x*100+102, new_y*100+70, new_x*100+122, new_y*100+90), fill="red", width=5)
-            draw.line((new_x*100+107, new_y*100+75, new_x*100+117, new_y*100+85), fill="white", width=3)
-            draw.line((new_x*100+117, new_y*100+75, new_x*100+107, new_y*100+85), fill="white", width=3)
-        elif rate == "Bình thường":
-            draw.ellipse((new_x*100+102, new_y*100+70, new_x*100+122, new_y*100+90), fill="#bbb")
-            draw.line((new_x*100+102+3, new_y*100+70+10, new_x*100+122-3, new_y*100+90-10), fill="white", width=4)
-
-    if isDebug:
-        frame_cop.save(absolute_path + f"/mysite/img/chessboard_{debugTurn}_{username}.png", "PNG")
-        url = upload_video_to_storage(absolute_path + f"/mysite/img/chessboard_{debugTurn}_{username}.png", f"imgs/img_{debugTurn}_{username}.png")
-        img_url.append(url)
+    piece_layer.paste(rect, (selected_x*100+80, selected_y*100+80))
+    if redTurn:
+        piece_layer.paste(red_piece, (new_x*100+80, new_y*100+80))
     else:
-        frame_cop = np.array(frame_cop)
-        video.append(mpe.ImageClip(frame_cop).set_duration(1))
+        piece_layer.paste(blue_piece, (new_x*100+80, new_y*100+80))
 
-def home():
-    return 'Hello, World!'
+    move_layer.paste(move_tracker, (selected_x*100+80, selected_y*100+80))
+    move_layer.paste(move_tracker, (new_x*100+80, new_y*100+80))
+
+    if rate == "Tốt nhất":
+        move_layer.paste(brilliant, (new_x*100+80, new_y*100+70))
+    elif rate == "Tốt":
+        move_layer.paste(good, (new_x*100+80, new_y*100+70))
+    elif rate == "Tệ":
+        move_layer.paste(bad, (new_x*100+80, new_y*100+70))
+    elif rate == "Bình thường":
+        move_layer.paste(ordinary, (new_x*100+80, new_y*100+70))
+
+    for key, action in intervention.items():
+        key = [int(i) for i in key.split(",")]
+        match action:
+            case "remove_blue" | "remove_red":
+                piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(remove_tracker, (key[0]*100+80, key[1]*100+80))
+
+            case "insert_blue":
+                piece_layer.paste(blue_piece, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
+
+            case "insert_red":
+                piece_layer.paste(red_piece, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
+
+            case "Set_value":
+                draw = ImageDraw.Draw(move_layer)
+                font = ImageFont.truetype('seguiemj.ttf', size=20)
+                text_bbox = draw.textbbox((0, 0), key[2], font=font)
+
+                x = key[0]*100+100 - (text_bbox[2] - text_bbox[0]) / 2
+                y = key[1]*100+100 - (text_bbox[3] - text_bbox[1]) / 2
+
+                draw.text((x, y), key[2], font=font, fill="white", stroke_width=1, stroke_fill="black")
+
+    return move_layer
+
 
 @app.route("/generate_debug_image", methods=['POST'])
 def generate_debug_image():
-    data = request.get_json()
-    if "side" in data:
-        declare(data["side"])
-    else:
-        declare(1)
-        data["side"] = 1
-    debug_turn = 1
-    img_url.clear()
-    for [positions, move, remove, rate] in data["img"]:
-        generate_image(positions, move, remove, data['username'], True, debug_turn, rate, data["side"])
-        debug_turn += 1
-    return img_url
+
+    data = {'img': [[0, 2, 1, 2, {}, 'Bình thường'], [0, 0, 1, 1, {}, 'Tốt nhất']], 'username': '1234'}
+    duration = len(data["img"])
+
+    init()
+
+    board_layer = Image.new("RGBA", (600, 600), "WHITE")
+    draw = ImageDraw.Draw(board_layer)
+    for i in ((100,100,500,100),(100,200,500,200),(100,300,500,300),(100,400,500,400),(100,500,500,500),(100,100,100,500),(200,100,200,500),(300,100,300,500),(400,100,400,500),(500,100,500,500),(100,100,500,500),(100,500,500,100),(100,300,300,100),(300,100,500,300),(500,300,300,500),(300,500,100,300)):
+        draw.line(i, fill="black", width=3)
+
+    Image.alpha_composite(board_layer, piece_layer).save(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", "PNG")
+    files = [(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}.png")]
+    board = [16959, 33064511]
+    cache = {(16959, 33064511, "{}"):(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}.png")}
+
+    for i in range(duration):
+        board[i%2] = board[i%2]^(1<<24-5*data["img"][i][1]-data["img"][i][0])|(1<<24-5*data["img"][i][3]-data["img"][i][2])
+        for key, action in data["img"][i][4].items():
+            key = [int(i) for i in key.split(",")]
+            match action:
+                case "remove_blue":
+                    board[0] ^= 1<<24-5*key[1]-key[0]
+                case "remove_red":
+                    board[1] ^= 1<<24-5*key[1]-key[0]
+                case "insert_blue":
+                    board[0] |= 1<<24-5*key[1]-key[0]
+                case "insert_red":
+                    board[1] |= 1<<24-5*key[1]-key[0]
+
+        move_layer = generate_image(i%2, *data["img"][i])
+        if (tup_board := (*tuple(board), str(data["img"][i][4]))) in cache:
+            files.append(cache[tup_board])
+        else:
+            Image.alpha_composite(Image.alpha_composite(board_layer, piece_layer), move_layer).save(absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", "PNG")
+            files.append((absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", f"imgs/img_{i+2}_{data['username']}.png"))
+            cache[tup_board] = (absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", f"imgs/img_{i+2}_{data['username']}.png")
+
+    img_url = asyncio.run(upload_files(files))
+    for i in cache.values(): os.remove(i[0])
+    return jsonify(img_url)
 
 @app.route("/generate_video", methods=['POST'])
 def generate_video():
+
     data = request.get_json()
-    declare(1)
-    for [positions, move, remove] in data["img"]:
-        generate_image(positions, move, remove, data['username'], False, 0, "", 1)
 
-    concat_video = mpe.concatenate_videoclips(video, method="compose")
+    init()
 
-    audio_background = mpe.AudioFileClip(absolute_path + '/mysite/audio.mp3').set_duration(concat_video.duration)
-    my_clip = concat_video.set_audio(audio_background)
-    my_clip.write_videofile(absolute_path + "/mysite/result.mp4", 1)
-    my_clip.close()
+    board_layer = Image.new("RGBA", (600, 600), "WHITE")
+    draw = ImageDraw.Draw(board_layer)
+    for i in ((100,100,500,100),(100,200,500,200),(100,300,500,300),(100,400,500,400),(100,500,500,500),(100,100,100,500),(200,100,200,500),(300,100,300,500),(400,100,400,500),(500,100,500,500),(100,100,500,500),(100,500,500,100),(100,300,300,100),(300,100,500,300),(500,300,300,500),(300,500,100,300)):
+        draw.line(i, fill="black", width=3)
 
-    url = upload_video_to_storage(absolute_path + "/mysite/result.mp4", f"videos/video_{data['username']}.mp4")
-    video.clear()
+    combined = Image.alpha_composite(board_layer, piece_layer)
+    video = [ mpe.ImageClip(np.array(combined)).set_duration(1) ]
+
+    for i in range(len(data["img"])):
+        move_layer = generate_image(i%2, *data["img"][i])
+        combined = Image.alpha_composite(board_layer, piece_layer)
+        combined = Image.alpha_composite(combined, move_layer)
+        video.append( mpe.ImageClip(np.array(combined)).set_duration(1) )
+
+    video = mpe.concatenate_videoclips(video)
+
+    audio_background = mpe.AudioFileClip(absolute_path + '/mysite/audio.mp3').set_duration(i+2)
+    video.set_audio(audio_background)
+    video.write_videofile(absolute_path + "/mysite/result.mp4", 1)
+    video.close()
+
+    url = upload_file(absolute_path + "/mysite/result.mp4", f"videos/video_{data['username']}.mp4")
+    os.remove(absolute_path + "/mysite/result.mp4")
     return url
-
-@app.route('/about')
-def about():
-    return 'About'
-
