@@ -113,7 +113,7 @@ def generate_image(redTurn, selected_x, selected_y, new_x, new_y, intervention, 
 @app.route("/generate_debug_image", methods=['POST'])
 def generate_debug_image():
 
-    data = {'img': [[0, 2, 1, 2, {}, 'Bình thường'], [0, 0, 1, 1, {}, 'Tốt nhất']], 'username': '1234'}
+    data = request.get_json()
     duration = len(data["img"])
 
     init()
