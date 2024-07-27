@@ -5,6 +5,7 @@ import numpy as np
 import os
 from fdb.uti.upload import upload_file, upload_files
 import asyncio
+from datetime import datetime
 
 app = Flask(__name__)
 absolute_path = os.getcwd()
@@ -97,7 +98,7 @@ def generate_image(redTurn, selected_x, selected_y, new_x, new_y, intervention, 
                 piece_layer.paste(red_piece, (key[0]*100+80, key[1]*100+80))
                 move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
 
-            case "Set_value":
+            case "set_value":
                 draw = ImageDraw.Draw(move_layer)
                 font = ImageFont.truetype('seguiemj.ttf', size=20)
                 text_bbox = draw.textbbox((0, 0), key[2], font=font)
@@ -124,9 +125,10 @@ def generate_debug_image():
         draw.line(i, fill="black", width=3)
 
     Image.alpha_composite(board_layer, piece_layer).save(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", "PNG")
-    files = [(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}.png")]
+    date = datetime.now().strftime("%H%M%S")
+    files = [(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}_{date}.png")]
     board = [16959, 33064511]
-    cache = {(16959, 33064511, "{}"):(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}.png")}
+    cache = {(16959, 33064511, "{}"):(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}_{date}.png")}
 
     for i in range(duration):
         board[i%2] = board[i%2]^(1<<24-5*data["img"][i][1]-data["img"][i][0])|(1<<24-5*data["img"][i][3]-data["img"][i][2])
@@ -147,8 +149,9 @@ def generate_debug_image():
             files.append(cache[tup_board])
         else:
             Image.alpha_composite(Image.alpha_composite(board_layer, piece_layer), move_layer).save(absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", "PNG")
-            files.append((absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", f"imgs/img_{i+2}_{data['username']}.png"))
-            cache[tup_board] = (absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", f"imgs/img_{i+2}_{data['username']}.png")
+            date = datetime.now().strftime("%H%M%S")
+            files.append((absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", f"imgs/img_{i+2}_{data['username']}_{date}.png"))
+            cache[tup_board] = (absolute_path + f"/mysite/img/chessboard_{i+2}_{data['username']}.png", f"imgs/img_{i+2}_{data['username']}_{date}.png")
 
     img_url = asyncio.run(upload_files(files))
     for i in cache.values(): os.remove(i[0])
