@@ -161,7 +161,7 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
         remove.extend( ganh_chet(move_new_pos, opp_pos, current_turn, -current_turn) )
         remove.extend( vay(opp_pos) )
 
-        body["img"].append([*move_selected_pos, *move_new_pos, {",".join(map(str, i)):"remove_blue" if current_turn==1 else "remove_red" for i in remove}, rate])
+        body["img"].append([*move_selected_pos, *move_new_pos, {",".join(map(str, i)):"remove_blue" if current_turn==-1 else "remove_red" for i in remove}, rate])
 
         game_state["current_turn"] *= -1
 
