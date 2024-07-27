@@ -604,7 +604,7 @@ def get_rate():
         rate.append(trainAI.MasterUser.main(move_list[i], move_list[i]['side']))
         img_data["img"][i].append(rate[i])
 
-    img_url = requests.post("http://tlv23.pythonanywhere.com//generate_debug_image", json=img_data).text
+    img_url = requests.post("http://quan064.pythonanywhere.com//generate_debug_image", json=img_data).text
     return json.dumps({"rate": rate, "img_url": img_url})
 
 
