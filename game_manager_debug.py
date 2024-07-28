@@ -122,7 +122,8 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
 
     body = {
         "username": session_name,
-        "img": []
+        "img": [],
+        "setup": {}
     }
     inp_oup = []
 

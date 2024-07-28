@@ -12,23 +12,23 @@ absolute_path = os.getcwd()
 
 
 def init():
-    global rect, red_piece, blue_piece, piece_layer, move_tracker, remove_tracker, bad, brilliant, good, ordinary
+    global rect, red_piece, blue_piece, piece_layer, move_tracker, blue_remove_tracker, red_remove_tracker, bad, brilliant, good, ordinary
 
     rect = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
     red_piece = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
     blue_piece = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
     piece_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
+    fire = Image.open(absolute_path + "/mysite/fire.png")
 
     move_tracker = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
-    remove_tracker = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
     draw = ImageDraw.Draw(red_piece)
     draw.ellipse((0, 0, 40, 40), fill="red", outline="red")
     draw = ImageDraw.Draw(blue_piece)
     draw.ellipse((0, 0, 40, 40), fill="blue", outline="blue")
     draw = ImageDraw.Draw(move_tracker)
     draw.ellipse((0, 0, 40, 40), fill=None, outline="green", width=5)
-    draw = ImageDraw.Draw(remove_tracker)
-    draw.ellipse((0, 0, 40, 40), fill=None, outline="#FFC900", width=5)
+    blue_remove_tracker = Image.alpha_composite(blue_piece, fire)
+    red_remove_tracker = Image.alpha_composite(red_piece, fire)
 
     brilliant = Image.new('RGBA', (43, 51), (0, 0, 0, 0))
     good = Image.new('RGBA', (43, 51), (0, 0, 0, 0))
@@ -86,9 +86,13 @@ def generate_image(redTurn, selected_x, selected_y, new_x, new_y, intervention, 
     for key, action in intervention.items():
         key = [int(i) for i in key.split(",")]
         match action:
-            case "remove_blue" | "remove_red":
+            case "remove_blue":
                 piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
-                move_layer.paste(remove_tracker, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(blue_remove_tracker, (key[0]*100+80, key[1]*100+80))
+
+            case "remove_red":
+                piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(red_remove_tracker, (key[0]*100+80, key[1]*100+80))
 
             case "insert_blue":
                 piece_layer.paste(blue_piece, (key[0]*100+80, key[1]*100+80))
@@ -124,11 +128,35 @@ def generate_debug_image():
     for i in ((100,100,500,100),(100,200,500,200),(100,300,500,300),(100,400,500,400),(100,500,500,500),(100,100,100,500),(200,100,200,500),(300,100,300,500),(400,100,400,500),(500,100,500,500),(100,100,500,500),(100,500,500,100),(100,300,300,100),(300,100,500,300),(500,300,300,500),(300,500,100,300)):
         draw.line(i, fill="black", width=3)
 
-    Image.alpha_composite(board_layer, piece_layer).save(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", "PNG")
+    move_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
+    for key, action in data["setup"].items():
+        key = [int(i) for i in key.split(",")]
+        match action:
+            case "remove_blue":
+                piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(blue_remove_tracker, (key[0]*100+80, key[1]*100+80))
+            case "remove_red":
+                piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(red_remove_tracker, (key[0]*100+80, key[1]*100+80))
+            case "insert_blue":
+                piece_layer.paste(blue_piece, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
+            case "insert_red":
+                piece_layer.paste(red_piece, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
+            case "set_value":
+                draw = ImageDraw.Draw(move_layer)
+                font = ImageFont.truetype('seguiemj.ttf', size=20)
+                text_bbox = draw.textbbox((0, 0), key[2], font=font)
+                x = key[0]*100+100 - (text_bbox[2] - text_bbox[0]) / 2
+                y = key[1]*100+100 - (text_bbox[3] - text_bbox[1]) / 2
+                draw.text((x, y), key[2], font=font, fill="white", stroke_width=1, stroke_fill="black")
+
+    Image.alpha_composite(Image.alpha_composite(board_layer, piece_layer), move_layer).save(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", "PNG")
     date = datetime.now().strftime("%H%M%S")
     files = [(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}_{date}.png")]
     board = [16959, 33064511]
-    cache = {(16959, 33064511, "{}"):(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}_{date}.png")}
+    cache = {(16959, 33064511, str(data["setup"])):(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", f"imgs/img_1_{data['username']}_{date}.png")}
 
     for i in range(duration):
         board[i%2] = board[i%2]^(1<<24-5*data["img"][i][1]-data["img"][i][0])|(1<<24-5*data["img"][i][3]-data["img"][i][2])
@@ -169,7 +197,31 @@ def generate_video():
     for i in ((100,100,500,100),(100,200,500,200),(100,300,500,300),(100,400,500,400),(100,500,500,500),(100,100,100,500),(200,100,200,500),(300,100,300,500),(400,100,400,500),(500,100,500,500),(100,100,500,500),(100,500,500,100),(100,300,300,100),(300,100,500,300),(500,300,300,500),(300,500,100,300)):
         draw.line(i, fill="black", width=3)
 
-    combined = Image.alpha_composite(board_layer, piece_layer)
+    move_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
+    for key, action in data["setup"].items():
+        key = [int(i) for i in key.split(",")]
+        match action:
+            case "remove_blue":
+                piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(blue_remove_tracker, (key[0]*100+80, key[1]*100+80))
+            case "remove_red":
+                piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(red_remove_tracker, (key[0]*100+80, key[1]*100+80))
+            case "insert_blue":
+                piece_layer.paste(blue_piece, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
+            case "insert_red":
+                piece_layer.paste(red_piece, (key[0]*100+80, key[1]*100+80))
+                move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
+            case "set_value":
+                draw = ImageDraw.Draw(move_layer)
+                font = ImageFont.truetype('seguiemj.ttf', size=20)
+                text_bbox = draw.textbbox((0, 0), key[2], font=font)
+                x = key[0]*100+100 - (text_bbox[2] - text_bbox[0]) / 2
+                y = key[1]*100+100 - (text_bbox[3] - text_bbox[1]) / 2
+                draw.text((x, y), key[2], font=font, fill="white", stroke_width=1, stroke_fill="black")
+
+    combined = Image.alpha_composite(Image.alpha_composite(board_layer, piece_layer), move_layer)
     video = [ mpe.ImageClip(np.array(combined)).set_duration(1) ]
 
     for i in range(len(data["img"])):
@@ -185,6 +237,7 @@ def generate_video():
     video.write_videofile(absolute_path + "/mysite/result.mp4", 1)
     video.close()
 
-    url = upload_file(absolute_path + "/mysite/result.mp4", f"videos/video_{data['username']}.mp4")
+    date = datetime.now().strftime("%H%M%S")
+    url = upload_file(absolute_path + "/mysite/result.mp4", f"videos/video_{data['username']}_{date}.mp4")
     os.remove(absolute_path + "/mysite/result.mp4")
     return url

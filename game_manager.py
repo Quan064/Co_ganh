@@ -123,7 +123,8 @@ def run_game(Bot2, UserBot, session_name): # Main
     move_counter = 1
     body = {
         "username": session_name,
-        "img": []
+        "img": [],
+        "setup": {}
     }
 
     while not winner:
