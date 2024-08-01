@@ -5,8 +5,13 @@ from fdb.firestore_config import fdb
 import sys
 import trainAI.MasterUser
 from io import StringIO
-from main import globals_exec
+import builtins
 # from fdb.uti.upload import upload_video_to_storage
+
+def _import(name, *args, **kwargs):
+    if name in ('os','subprocess','pickle','marshal','ctypes','shutil','glob','socket','tempfile','urllib','main','index','game_manager','game_manager_debug','game_manager_debug copy','trainAI.Master','trainAI.MasterUser'):
+        raise ValueError(f"Module '{name}' is blocked.")
+    return __import__(name, *args, **kwargs)
 
 class Player:
     def __init__(self, your_pos=None, opp_pos=None, your_side=None, board=None):
@@ -76,6 +81,12 @@ def activation_debug(code1, code2, name, debugNum):
     f = StringIO()
     org_stdout = sys.stdout
     sys.stdout = f
+
+    custom_builtins = builtins.__dict__.copy()
+    custom_builtins['__import__'] = _import
+    del custom_builtins['open']
+    del custom_builtins['input']
+    globals_exec = {'__builtins__': custom_builtins}
 
     try:
         local1 = {}
