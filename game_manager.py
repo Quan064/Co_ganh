@@ -4,8 +4,7 @@ import traceback
 from fdb.firestore_config import fdb
 import sys
 from io import StringIO
-import builtins
-from tool import valid_move, distance
+from main import globals_exec
 # from fdb.uti.upload import upload_video_to_storage
 
 class Player:
@@ -76,10 +75,6 @@ def activation(code1, code2, name):
     f = StringIO()
     org_stdout = sys.stdout
     sys.stdout = f
-
-    globals_exec = {"valid_move": valid_move,
-                    "distance": distance,
-                    '__builtins__': {k:v for k, v in builtins.__dict__.items() if k not in ['eval', 'exec', 'input', '__import__', 'open']}}
 
     try:
         local1 = {}

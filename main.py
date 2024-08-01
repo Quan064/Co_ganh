@@ -18,7 +18,6 @@ from fdb.firestore_config import fdb
 import socketio
 import trainAI.MasterUser
 import requests
-from tool import valid_move, distance
 from io import StringIO
 import traceback
 import sys
@@ -33,14 +32,21 @@ doc_ref_code = fdb.collection("code")
 doc_ref_user = fdb.collection("user")
 doc_ref_bot = fdb.collection("bot")
 
+def _import(name, *args, **kwargs):
+    if name in ('os','subprocess','pickle','marshal','ctypes','shutil','glob','socket','tempfile','urllib','main','index','game_manager','game_manager_debug','game_manager_debug copy','trainAI.Master','trainAI.MasterUser'):
+        raise ValueError(f"Module '{name}' is blocked.")
+    return __import__(name, *args, **kwargs)
+
 class Player:
     def __init__(self, dict: dict):
         for key, value in dict.items():
             setattr(self, key, value)
 
-globals_exec = {"valid_move": valid_move,
-                "distance": distance,
-                '__builtins__': {k:v for k, v in builtins.__dict__.items() if k not in ['eval', 'exec', 'input', '__import__', 'open']}}
+custom_builtins = builtins.__dict__.copy()
+custom_builtins['__import__'] = _import
+del custom_builtins['open']
+del custom_builtins['input']
+globals_exec = {'__builtins__': custom_builtins}
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
