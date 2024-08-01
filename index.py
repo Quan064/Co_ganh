@@ -12,7 +12,7 @@ absolute_path = os.getcwd()
 
 
 def init():
-    global rect, red_piece, blue_piece, piece_layer, move_tracker, blue_remove_tracker, red_remove_tracker, bad, brilliant, good, ordinary
+    global font, rect, red_piece, blue_piece, piece_layer, move_tracker, blue_remove_tracker, red_remove_tracker, bad, brilliant, good, ordinary
 
     rect = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
     red_piece = Image.new('RGBA', (41, 41), (0, 0, 0, 0))
@@ -62,6 +62,8 @@ def init():
     for x, y in ((0,0), (1,0), (2,0), (3,0), (4,0), (0,1), (4,1), (4,2)):
         piece_layer.paste(red_piece, (x*100+80, y*100+80), red_piece)
 
+    font = ImageFont.truetype(absolute_path + "/mysite/seguiemj.ttf", size=20)
+
 def generate_image(redTurn, selected_x, selected_y, new_x, new_y, intervention, rate=""):
     move_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
 
@@ -84,7 +86,9 @@ def generate_image(redTurn, selected_x, selected_y, new_x, new_y, intervention, 
         move_layer.paste(ordinary, (new_x*100+80, new_y*100+70))
 
     for key, action in intervention.items():
-        key = [int(i) for i in key.split(",")]
+        key = key.split(",", 3)
+        key[0] = int(key[0])
+        key[1] = int(key[1])
         match action:
             case "remove_blue":
                 piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
@@ -104,13 +108,12 @@ def generate_image(redTurn, selected_x, selected_y, new_x, new_y, intervention, 
 
             case "set_value":
                 draw = ImageDraw.Draw(move_layer)
-                font = ImageFont.truetype('seguiemj.ttf', size=20)
                 text_bbox = draw.textbbox((0, 0), key[2], font=font)
 
                 x = key[0]*100+100 - (text_bbox[2] - text_bbox[0]) / 2
                 y = key[1]*100+100 - (text_bbox[3] - text_bbox[1]) / 2
 
-                draw.text((x, y), key[2], font=font, fill="white", stroke_width=1, stroke_fill="black")
+                draw.text((round(x), round(y)), key[2], font=font, embedded_color=True, stroke_width=1, stroke_fill="black")
 
     return move_layer
 
@@ -130,7 +133,9 @@ def generate_debug_image():
 
     move_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
     for key, action in data["setup"].items():
-        key = [int(i) for i in key.split(",")]
+        key = key.split(",", 3)
+        key[0] = int(key[0])
+        key[1] = int(key[1])
         match action:
             case "remove_blue":
                 piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
@@ -146,11 +151,10 @@ def generate_debug_image():
                 move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
             case "set_value":
                 draw = ImageDraw.Draw(move_layer)
-                font = ImageFont.truetype('seguiemj.ttf', size=20)
                 text_bbox = draw.textbbox((0, 0), key[2], font=font)
                 x = key[0]*100+100 - (text_bbox[2] - text_bbox[0]) / 2
                 y = key[1]*100+100 - (text_bbox[3] - text_bbox[1]) / 2
-                draw.text((x, y), key[2], font=font, fill="white", stroke_width=1, stroke_fill="black")
+                draw.text((round(x), round(y)), key[2], font=font, embedded_color=True, stroke_width=1, stroke_fill="black")
 
     Image.alpha_composite(Image.alpha_composite(board_layer, piece_layer), move_layer).save(absolute_path + f"/mysite/img/chessboard_1_{data['username']}.png", "PNG")
     date = datetime.now().strftime("%H%M%S")
@@ -161,7 +165,9 @@ def generate_debug_image():
     for i in range(duration):
         board[i%2] = board[i%2]^(1<<24-5*data["img"][i][1]-data["img"][i][0])|(1<<24-5*data["img"][i][3]-data["img"][i][2])
         for key, action in data["img"][i][4].items():
-            key = [int(i) for i in key.split(",")]
+            key = key.split(",", 3)
+            key[0] = int(key[0])
+            key[1] = int(key[1])
             match action:
                 case "remove_blue":
                     board[0] ^= 1<<24-5*key[1]-key[0]
@@ -199,7 +205,9 @@ def generate_video():
 
     move_layer = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
     for key, action in data["setup"].items():
-        key = [int(i) for i in key.split(",")]
+        key = key.split(",", 3)
+        key[0] = int(key[0])
+        key[1] = int(key[1])
         match action:
             case "remove_blue":
                 piece_layer.paste(rect, (key[0]*100+80, key[1]*100+80))
@@ -215,11 +223,10 @@ def generate_video():
                 move_layer.paste(move_tracker, (key[0]*100+80, key[1]*100+80))
             case "set_value":
                 draw = ImageDraw.Draw(move_layer)
-                font = ImageFont.truetype('seguiemj.ttf', size=20)
                 text_bbox = draw.textbbox((0, 0), key[2], font=font)
                 x = key[0]*100+100 - (text_bbox[2] - text_bbox[0]) / 2
                 y = key[1]*100+100 - (text_bbox[3] - text_bbox[1]) / 2
-                draw.text((x, y), key[2], font=font, fill="white", stroke_width=1, stroke_fill="black")
+                draw.text((round(x), round(y)), key[2], font=font, embedded_color=True, stroke_width=1, stroke_fill="black")
 
     combined = Image.alpha_composite(Image.alpha_composite(board_layer, piece_layer), move_layer)
     video = [ mpe.ImageClip(np.array(combined)).set_duration(1) ]
