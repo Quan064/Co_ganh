@@ -86,17 +86,16 @@ def activation_debug(code1, code2, name, debugNum):
     custom_builtins['__import__'] = _import
     del custom_builtins['open']
     del custom_builtins['input']
-    globals_exec = {'__builtins__': custom_builtins}
 
     try:
-        local1 = {}
-        local2 = {}
+        local1 = {'__builtins__': custom_builtins}
+        local2 = {'__builtins__': custom_builtins}
         if code1 in ("level1", "level2","level3", "level4", "Master"):
             local1["main"] = __import__(f"trainAI.{code1}", fromlist=[None]).main
         elif code1 == name:
-            exec(code2, globals_exec, local1)
-        else: exec(code1, globals_exec, local1)
-        exec(code2, globals_exec, local2)
+            exec(code2, local1, local1)
+        else: exec(code1, local1, local1)
+        exec(code2, local2, local2)
         game_res = run_game(local1["main"], local2["main"], name, debugNum)
 
         sys.stdout = org_stdout

@@ -46,7 +46,6 @@ custom_builtins = builtins.__dict__.copy()
 custom_builtins['__import__'] = _import
 del custom_builtins['open']
 del custom_builtins['input']
-globals_exec = {'__builtins__': custom_builtins}
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -414,13 +413,10 @@ def run_task():
         f = StringIO()
         sys.stdout = f
         try:
-            locals = {}
-            exec(code, globals_exec, locals)
-            Uoutput = locals["main"](*i["input"])
-            # Uoutput = json.loads(json.dumps(Uoutput).replace("(","[").replace(")","]"))
-            # if type(Uoutput) is list:
-            #     comparision = sorted(i["output"]) == sorted(Uoutput)
-            # else:
+            local = {'__builtins__': custom_builtins}
+
+            exec(code, local, local)
+            Uoutput = local["main"](*i["input"])
             comparision = i["output"] == Uoutput
             if comparision:
                 user_output.append({
@@ -487,9 +483,10 @@ def submit():
         f = StringIO()
         sys.stdout = f
         try:
-            locals = {}
-            exec(code, globals_exec, locals)
-            Uoutput = locals["main"](*i["input"])
+            local = {'__builtins__': custom_builtins}
+
+            exec(code, local, local)
+            Uoutput = local["main"](*i["input"])
             comparision = i["output"] == Uoutput
             print(comparision)
 
