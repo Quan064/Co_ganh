@@ -1,2 +1,4 @@
 .env
 *.pyc
+trainAI/source_code/bitboard.txt
+trainAI/source_code/bitboard.txt.lock

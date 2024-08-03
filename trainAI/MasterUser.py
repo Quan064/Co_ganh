@@ -1,5 +1,6 @@
 import os
 from trainAI.Master import ganh_chet, vay, check_pos_point
+from filelock import FileLock
 
 def main(move_listi, side):
     global cache, rate, move_set, pos_set, move_chosen
@@ -8,8 +9,10 @@ def main(move_listi, side):
     opp_board = int("0b"+"".join("1" if ele == -side else "0" for row in move_listi["board"] for ele in row),2)
 
     dirname = os.path.dirname(__file__)
-    with open(os.path.join(dirname, "source_code/bit_board.txt")) as f:
-        cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
+    lock = FileLock(os.path.join(dirname, f"source_code/bit_board.txt.lock"))
+    with lock:
+        with open(os.path.join(dirname, "source_code/bit_board.txt")) as f:
+            cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
 
     rate = []
     move_set = ([(-1,1), (0,1), (1,1), (-1,0), (1,0), (-1,-1), (0,-1), (1,-1)],
@@ -21,8 +24,10 @@ def main(move_listi, side):
     v = minimax(move_listi['your_pos'], move_listi['opp_pos'], your_board, opp_board)
 
     cache[f"{your_board} {opp_board}"] = ' '.join(str(i) for i in v)
-    with open(os.path.join(dirname, f"source_code/bit_board.txt"), mode="w") as f:
-        f.write("\n".join("  ".join(i) for i in cache.items()))
+    lock = FileLock(os.path.join(dirname, f"source_code/bit_board.txt.lock"))
+    with lock:
+        with open(os.path.join(dirname, f"source_code/bit_board.txt"), mode="w") as f:
+            f.write("\n".join("  ".join(i) for i in cache.items()))
 
     User_p = rate[0]
     p = sorted(rate, reverse=True).index(User_p)
@@ -46,7 +51,7 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
 
         if your_board == 0 or opp_board == 0:
             return (-8, depth, 0)
-        if depth == 6:
+        if depth == 2:
             return (len(your_pos) - len(opp_pos)), 0, check_pos_point(your_pos, opp_pos)
 
         bestVal = (-9,)

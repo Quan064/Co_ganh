@@ -1,4 +1,5 @@
 import os
+from filelock import FileLock
 
 def ganh_chet(move, opp_pos, your_board, opp_board):
     valid_remove = []
@@ -33,7 +34,7 @@ def vay(opp_pos, your_board, opp_board):
     return 0, []
 def check_pos_point(your_pos, opp_pos):
 
-    board_pointF = (0,0,1,0,0,0,7,2,5,0,4,2,10,2,4,0,5,2,7,0,0,0,1,0,0)
+    board_pointF = (1,1,2,1,1,1,8,3,6,1,5,3,11,3,5,1,6,3,8,1,1,1,2,1,1)
     move_count = (
         (5,4,3,2,1,4,4,3,2,1,3,3,3,2,1,2,2,2,2,1,1,1,1,1,1),
         (4,5,4,3,2,3,4,3,3,2,3,3,3,2,2,2,2,2,2,1,1,1,1,1,1),
@@ -81,8 +82,10 @@ def main(player):
     opp_board = int("0b"+"".join("1" if ele == 1 else "0" for row in player.board for ele in row),2)
 
     dirname = os.path.dirname(__file__)
-    with open(os.path.join(dirname, "source_code/bit_board.txt")) as f:
-        cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
+    lock = FileLock(os.path.join(dirname, f"source_code/bit_board.txt.lock"))
+    with lock:
+        with open(os.path.join(dirname, "source_code/bit_board.txt")) as f:
+            cache = {i.split("  ")[0]:i.split("  ")[1] for i in f.read().split("\n")}
         # NOTE:
         # cache[state][0]:
         #     8 : 🔴 thắng
@@ -95,8 +98,10 @@ def main(player):
     v = minimax(player.your_pos, player.opp_pos, your_board, opp_board)
 
     cache[f"{your_board} {opp_board}"] = ' '.join(str(i) for i in v)
-    with open(os.path.join(dirname, f"source_code/bit_board.txt"), mode="w") as f:
-        f.write("\n".join("  ".join(i) for i in cache.items()))
+    lock = FileLock(os.path.join(dirname, f"source_code/bit_board.txt.lock"))
+    with lock:
+        with open(os.path.join(dirname, f"source_code/bit_board.txt"), mode="w") as f:
+            f.write("\n".join("  ".join(i) for i in cache.items()))
 
     return move
 
@@ -109,7 +114,7 @@ def minimax(your_pos, opp_pos, your_board, opp_board, depth=0, alpha=(-9,), beta
 
         if your_board == 0 or opp_board == 0:
             return (-8, depth, 0)
-        if depth == 6:
+        if depth == 2:
             return (len(your_pos) - len(opp_pos)), 0, check_pos_point(your_pos, opp_pos)
 
         bestVal = (-9,)
