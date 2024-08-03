@@ -180,6 +180,7 @@ let img_data = {
     username: username,
     side: 1,
     img: [],
+    setup: {}
 }
 
 let rateModel
