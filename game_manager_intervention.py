@@ -5,11 +5,14 @@ from fdb.firestore_config import fdb
 import sys
 from io import StringIO
 import builtins
-from tool import valid_move, distance
-import random
 from pprint import pprint
-from trainAI.Master import main as Bot
+from trainAI.Master_breakrule import main as Bot
 # from fdb.uti.upload import upload_video_to_storage
+
+def _import(name, *args, **kwargs):
+    if name in ('os','subprocess','pickle','marshal','ctypes','shutil','glob','socket','tempfile','urllib','main','index','game_manager','game_manager_debug','game_manager_debug copy','trainAI.Master','trainAI.MasterUser'):
+        raise ValueError(f"Module '{name}' is blocked.")
+    return __import__(name, *args, **kwargs)
 
 class Player:
     your_pos = None
@@ -65,6 +68,14 @@ class intervention():
                 case 'insert_red':
                     game_state["board"][y][x] = -1
                     game_state["positions"][-1].append((x, y))
+
+        if game_state["move_counter"] == 200 or (not game_state["positions"][1] and not game_state["positions"][-1]):
+            game_state["result"] = "draw"
+        elif not game_state["positions"][1]:
+            game_state["result"] = "lost"
+        elif not game_state["positions"][-1]:
+            game_state["result"] = "win"
+
         self.clear()
 
 # Board manipulation
@@ -118,29 +129,28 @@ def vay(opp_pos):
 
 # System
 def activation(user_code, break_rule_code, name):
-    # f = StringIO()
-    # org_stdout = sys.stdout
+    f = StringIO()
+    org_stdout = sys.stdout
     # sys.stdout = f
 
-    globals_exec = {"valid_move": valid_move,
-                    "distance": distance,
-                    "random": random,
-                    "pprint": pprint,
-                    '__builtins__': {k:v for k, v in builtins.__dict__.items() if k not in ['eval', 'exec', 'input', '__import__', 'open']}}
+    custom_builtins = builtins.__dict__.copy()
+    custom_builtins['__import__'] = _import
+    del custom_builtins['open']
+    del custom_builtins['input']
 
     try:
-        local = {}
-        local_break = {}
-        exec(user_code, globals_exec, local)
-        exec(break_rule_code, globals_exec, local_break)
+        local = {'__builtins__': custom_builtins}
+        local_break = {'__builtins__': custom_builtins}
+        exec(user_code, local, local)
+        exec(break_rule_code, local_break, local_break)
         game_res = run_game(Bot, local["main"], local_break["break_rule"], name)
 
-        # sys.stdout = org_stdout
-        # return False, game_res, f.getvalue()
+        sys.stdout = org_stdout
+        return False, game_res, f.getvalue()
     except:
         print(traceback.format_exc())
-        # sys.stdout = org_stdout
-        # return True, None, f.getvalue()
+        sys.stdout = org_stdout
+        return True, None, f.getvalue()
 def run_game(Bot, UserBot, break_rule, session_name): # Main
     global game_state
 
@@ -166,13 +176,12 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
     player1.your_pos = player2.opp_pos = game_state["positions"][1]
     player2.your_pos = player1.opp_pos = game_state["positions"][-1]
 
+    break_rule(game_state, intervention)
     body = {
         "username": session_name,
-        "img": []
+        "img": [],
+        "setup": intervention().get_result()
     }
-
-    break_rule(game_state, intervention)
-    body["setup"] = intervention().get_result()
     intervention().action()
 
     while not game_state["result"]:
@@ -209,30 +218,39 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
             else:
                 intervention().remove_blue(*i)
 
+        if game_state["move_counter"] == 200 or (not game_state["positions"][1] and not game_state["positions"][-1]):
+            game_state["result"] = "draw"
+        elif not game_state["positions"][1]:
+            game_state["result"] = "lost"
+        elif not game_state["positions"][-1]:
+            game_state["result"] = "win"
+
         break_rule(deepcopy(game_state), intervention)
         body["img"].append([*move_selected_pos, *move_new_pos, intervention().get_result()])
         intervention().action()
 
-        if game_state["result"] == None:
-            if not game_state["positions"][1]:
-                game_state["result"] = "lost"
-            elif not game_state["positions"][-1]:
-                game_state["result"] = "win"
-            elif (len(game_state["positions"][1]) + len(game_state["positions"][-1]) <= 2) or game_state["move_counter"] == 200:
-                game_state["result"] = "draw"
-
         game_state["current_turn"] *= -1
 
+    pprint(body)
+    import time
+    start = time.time()
     new_url = requests.post("http://quan064.pythonanywhere.com//generate_video", json=body).text
-    print(new_url)
+    end = time.time()
+    print(end - start)
     return game_state["result"], game_state["move_counter"], new_url
 
 if __name__ == "__main__":
     user_code = '''
+import random
+from tool import valid_move
+
 def main(player):
-    for x, y in player.your_pos:
-        for mx, my in valid_move(x, y, player.board):
-            return {"selected_pos": (x,y), "new_pos": (mx,my)}
+    while True:
+        try:
+            selected_pos = x, y = random.choice(player.your_pos)
+            new_pos = random.choice(valid_move(x, y, player.board))
+            return {"selected_pos": selected_pos, "new_pos": new_pos}
+        except: pass
 '''
 
     break_rule_code = r'''
@@ -269,4 +287,4 @@ def break_rule(game_state, intervention,
                 intervention().set_value(x, y, val_board[y][x])
 '''
 
-    activation(user_code, break_rule_code, "1234")
+    print(activation(user_code, break_rule_code, "1234"))
