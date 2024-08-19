@@ -5,7 +5,12 @@ from fdb.firestore_config import fdb
 import sys
 from io import StringIO
 import builtins
+from timeout_decorator import timeout
 # from fdb.uti.upload import upload_video_to_storage
+
+@timeout(8)
+def _driver(func, arg):
+  return func(arg)
 
 def _import(name, *args, **kwargs):
     if name in ('os','subprocess','pickle','marshal','ctypes','shutil','glob','socket','tempfile','urllib','main','index','game_manager','game_manager_debug','game_manager_debug copy','trainAI.Master','trainAI.MasterUser'):
@@ -138,9 +143,9 @@ def run_game(Bot2, UserBot, session_name): # Main
         print(f"__________{move_counter}__________")
 
         if player1.your_side == current_turn:
-            move = UserBot(deepcopy(player1))
+            move = _driver(UserBot, deepcopy(player1))
         else:
-            move = Bot2(deepcopy(player2))
+            move = _driver(Bot2, deepcopy(player2))
         Raise_exception(move, current_turn, game_state["board"])
 
         move_new_pos = move["new_pos"]
