@@ -20,6 +20,7 @@ class Player:
     your_side = None
     board = None
     move_counter = 0
+    global_var = None
 class intervention():
     global game_state
 
@@ -49,6 +50,13 @@ class intervention():
             self.__res.update({f'{x},{y}' : 'insert_red'})
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
 
+    def blue_win(self):
+        game_state["result"] = "win"
+    def red_win(self):
+        game_state["result"] = "lost"
+    def draw(self):
+        game_state["result"] = "draw"
+
     def set_value(self, x, y, value):
         self.__res.update({f'{x},{y},{value}' : 'set_value'})
 
@@ -69,12 +77,13 @@ class intervention():
                     game_state["board"][y][x] = -1
                     game_state["positions"][-1].append((x, y))
 
-        if game_state["move_counter"] == 200 or (not game_state["positions"][1] and not game_state["positions"][-1]):
-            game_state["result"] = "draw"
-        elif not game_state["positions"][1]:
-            game_state["result"] = "lost"
-        elif not game_state["positions"][-1]:
-            game_state["result"] = "win"
+        if not game_state["result"]:
+            if game_state["move_counter"] == 200 or (not game_state["positions"][1] and not game_state["positions"][-1]):
+                game_state["result"] = "draw"
+            elif not game_state["positions"][1]:
+                game_state["result"] = "lost"
+            elif not game_state["positions"][-1]:
+                game_state["result"] = "win"
 
         self.clear()
 
@@ -175,8 +184,9 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
     player1.board = player2.board = game_state["board"]
     player1.your_pos = player2.opp_pos = game_state["positions"][1]
     player2.your_pos = player1.opp_pos = game_state["positions"][-1]
-
-    break_rule(game_state, intervention)
+    player1.global_var = player2.global_var = global_var = {}
+    
+    break_rule(game_state, intervention, global_var)
     body = {
         "username": session_name,
         "img": [],
@@ -225,18 +235,13 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
         elif not game_state["positions"][-1]:
             game_state["result"] = "win"
 
-        break_rule(deepcopy(game_state), intervention)
+        break_rule(deepcopy(game_state), intervention, global_var)
         body["img"].append([*move_selected_pos, *move_new_pos, intervention().get_result()])
         intervention().action()
 
         game_state["current_turn"] *= -1
 
-    pprint(body)
-    import time
-    start = time.time()
     new_url = requests.post("http://quan064.pythonanywhere.com//generate_video", json=body).text
-    end = time.time()
-    print(end - start)
     return game_state["result"], game_state["move_counter"], new_url
 
 if __name__ == "__main__":
@@ -253,29 +258,28 @@ def main(player):
         except: pass
 '''
 
-    break_rule_code = r'''
-def break_rule(game_state, intervention,
-    # Trạng thái lưu lại qua các lượt
-    val_board = [["❄" for j in range(5)] for i in range(5)]
-):
+    break_rule_code = '''
+def break_rule(game_state, intervention, global_var):
     if game_state["move_counter"] == 0:
         # Setup
         for y in range(5):
             for x in range(5):
                 intervention().set_value(x, y, "❄")
 
+        # Trạng thái lưu lại qua các lượt
+        global_var["val_board"] = [["❄" for j in range(5)] for i in range(5)]
     else:
         x, y = game_state["move"]["selected_pos"]
         # Vỡ băng khi di chuyển
-        match val_board[y][x]:
+        match global_var["val_board"][y][x]:
             case "❄":
-                val_board[y][x] = "🧊"
+                global_var["val_board"][y][x] = "🧊"
             case "🧊":
-                val_board[y][x] = "💧"
+                global_var["val_board"][y][x] = "💧"
 
         # Chết khi vỡ hết băng
         x, y = game_state["move"]["new_pos"]
-        if val_board[y][x] == "💧":
+        if global_var["val_board"][y][x] == "💧":
             if game_state["board"][y][x] == 1:
                 intervention().remove_blue(x, y)
             else:
@@ -284,7 +288,7 @@ def break_rule(game_state, intervention,
         # Cài đặt trạng thái
         for y in range(5):
             for x in range(5):
-                intervention().set_value(x, y, val_board[y][x])
+                intervention().set_value(x, y, global_var["val_board"][y][x])
 '''
 
     print(activation(user_code, break_rule_code, "1234"))
