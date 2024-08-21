@@ -24,30 +24,34 @@ class Player:
 class intervention():
     global game_state
 
-    __res = {}
+    __res = []
     def get_result(self):
-        return self.__res.copy()
-    def __delitem__(self, key):
-        del self.__res[key]
+        return [i.copy() for i in self.__res]
+    def remove(self, key):
+        self.__res.remove(key)
     def clear(self):
         self.__res.clear()
 
     def remove_blue(self, x, y):
-        if (x, y) in game_state["positions"][1]:
-            self.__res.update({f'{x},{y}' : 'remove_blue'})
+        comd = {"action":'remove_blue', "pos":[x, y]}
+        if game_state["board"][y][x] == 1 and comd not in self.__res:
+            self.__res.append(comd)
         else: raise ValueError(f"There is no blue piece in ({x}, {y})")
     def remove_red(self, x, y):
-        if (x, y) in game_state["positions"][-1]:
-            self.__res.update({f'{x},{y}' : 'remove_red'})
+        comd = {"action":'remove_red', "pos" : [x, y]}
+        if game_state["board"][y][x] == -1 and comd not in self.__res:
+            self.__res.append(comd)
         else: raise ValueError(f"There is no red piece in ({x}, {y})")
 
     def insert_blue(self, x, y):
-        if game_state["board"][y][x] == 0:
-            self.__res.update({f'{x},{y}' : 'insert_blue'})
+        comd = {"action":'insert_blue', "pos":[x, y]}
+        if game_state["board"][y][x] == 0 and comd not in self.__res:
+            self.__res.append(comd)
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
     def insert_red(self, x, y):
-        if game_state["board"][y][x] == 0:
-            self.__res.update({f'{x},{y}' : 'insert_red'})
+        comd = {"action":'insert_red', "pos":[x, y]}
+        if game_state["board"][y][x] == 0 and comd not in self.__res:
+            self.__res.append(comd)
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
 
     def blue_win(self):
@@ -58,12 +62,14 @@ class intervention():
         game_state["result"] = "draw"
 
     def set_value(self, x, y, value):
-        self.__res.update({f'{x},{y},{value}' : 'set_value'})
+        if value.__class__ == str:
+            self.__res.append({"action":'set_value', "pos":[x, y], "value":value})
+        else: raise ValueError(f"Value must be string (not {value.__class__})")
 
     def action(self):
-        for key, action in self.__res.items():
-            x, y = int(key[0]), int(key[2])
-            match action:
+        for comd in self.__res:
+            x, y = comd["pos"]
+            match comd["action"]:
                 case 'remove_blue':
                     game_state["board"][y][x] = 0
                     game_state["positions"][1].remove((x, y))

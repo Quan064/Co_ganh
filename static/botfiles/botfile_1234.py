@@ -1,4 +1,10 @@
+import random
+from tool import valid_move
+
 def main(player):
-    for x, y in player.your_pos:
-        for mx, my in valid_move(x, y, player.board):
-            return {"selected_pos": (x,y), "new_pos": (mx,my)}
+    while True:
+        try:
+            selected_pos = x, y = random.choice(player.your_pos)
+            new_pos = random.choice(valid_move(x, y, player.board))
+            return {"selected_pos": selected_pos, "new_pos": new_pos}
+        except: pass

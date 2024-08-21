@@ -6,12 +6,7 @@ import sys
 import trainAI.MasterUser
 from io import StringIO
 import builtins
-from timeout_decorator import timeout
 # from fdb.uti.upload import upload_video_to_storage
-
-@timeout(8)
-def _driver(func, arg):
-  return func(arg)
 
 def _import(name, *args, **kwargs):
     if name in ('os','subprocess','pickle','marshal','ctypes','shutil','glob','socket','tempfile','urllib','main','index','game_manager','game_manager_debug','game_manager_debug copy','trainAI.Master','trainAI.MasterUser'):
@@ -143,9 +138,9 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
         print(f"__________{move_counter}__________")
 
         if player1.your_side == current_turn:
-            move = _driver(UserBot, deepcopy(player1))
+            move = UserBot(deepcopy(player1))
         else:
-            move = _driver(Bot2, deepcopy(player2))
+            move = Bot2(deepcopy(player2))
         Raise_exception(move, current_turn, game_state["board"])
         inp_oup.append(move)
 
@@ -172,7 +167,7 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
         remove.extend( ganh_chet(move_new_pos, opp_pos, current_turn, -current_turn) )
         remove.extend( vay(opp_pos) )
 
-        body["img"].append([*move_selected_pos, *move_new_pos, {",".join(map(str, i)):"remove_blue" if current_turn==-1 else "remove_red" for i in remove}, rate])
+        body["img"].append([*move_selected_pos, *move_new_pos, [{"action":"remove_blue" if current_turn==-1 else "remove_red", "pos":i} for i in remove], rate])
 
         game_state["current_turn"] *= -1
 
