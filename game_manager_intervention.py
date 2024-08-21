@@ -29,6 +29,8 @@ class intervention():
         return [i.copy() for i in self.__res]
     def remove(self, key):
         self.__res.remove(key)
+    def __delitem__(self, key):
+        del self.__res[key]
     def clear(self):
         self.__res.clear()
 
