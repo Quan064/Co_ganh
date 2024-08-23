@@ -5,7 +5,6 @@ from fdb.firestore_config import fdb
 import sys
 from io import StringIO
 import builtins
-from pprint import pprint
 from trainAI.Master_breakrule import main as Bot
 # from fdb.uti.upload import upload_video_to_storage
 
@@ -25,35 +24,43 @@ class intervention():
     global game_state
 
     __res = []
-    def get_result(self):
+    def view_command(self):
         return [i.copy() for i in self.__res]
-    def remove(self, key):
-        self.__res.remove(key)
-    def __delitem__(self, key):
-        del self.__res[key]
-    def clear(self):
-        self.__res.clear()
 
     def remove_blue(self, x, y):
-        comd = {"action":'remove_blue', "pos":[x, y]}
-        if game_state["board"][y][x] == 1 and comd not in self.__res:
-            self.__res.append(comd)
+        if game_state["board"][y][x] == 1:
+            self.__res.append({"action":'remove_blue', "pos":[x, y]})
+            game_state["board"][y][x] = 0
+            game_state["positions"][1].remove((x, y))
         else: raise ValueError(f"There is no blue piece in ({x}, {y})")
     def remove_red(self, x, y):
-        comd = {"action":'remove_red', "pos" : [x, y]}
-        if game_state["board"][y][x] == -1 and comd not in self.__res:
-            self.__res.append(comd)
+        if game_state["board"][y][x] == -1:
+            self.__res.append({"action":'remove_red', "pos" : [x, y]})
+            game_state["board"][y][x] = 0
+            game_state["positions"][-1].remove((x, y))
         else: raise ValueError(f"There is no red piece in ({x}, {y})")
 
     def insert_blue(self, x, y):
-        comd = {"action":'insert_blue', "pos":[x, y]}
-        if game_state["board"][y][x] == 0 and comd not in self.__res:
-            self.__res.append(comd)
+        if game_state["board"][y][x] == 0:
+            self.__res.append({"action":'insert_blue', "pos":[x, y]})
+            game_state["board"][y][x] = 1
+            game_state["positions"][1].append((x, y))
+            remove = vay(game_state["positions"][-1])
+            remove.extend( ganh_chet((x, y), game_state["positions"][-1], 1, -1) )
+            remove.extend( vay(game_state["positions"][-1]) )
+            for i in remove:
+                self.remove_red(*i)
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
     def insert_red(self, x, y):
-        comd = {"action":'insert_red', "pos":[x, y]}
-        if game_state["board"][y][x] == 0 and comd not in self.__res:
-            self.__res.append(comd)
+        if game_state["board"][y][x] == 0:
+            self.__res.append({"action":'insert_red', "pos":[x, y]})
+            game_state["board"][y][x] = -1
+            game_state["positions"][-1].append((x, y))
+            remove = vay(game_state["positions"][1])
+            remove.extend( ganh_chet((x, y), game_state["positions"][1], -1, 1) )
+            remove.extend( vay(game_state["positions"][1]) )
+            for i in remove:
+                self.remove_blue(*i)
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
 
     def blue_win(self):
@@ -69,22 +76,6 @@ class intervention():
         else: raise ValueError(f"Value must be string (not {value.__class__})")
 
     def action(self):
-        for comd in self.__res:
-            x, y = comd["pos"]
-            match comd["action"]:
-                case 'remove_blue':
-                    game_state["board"][y][x] = 0
-                    game_state["positions"][1].remove((x, y))
-                case 'remove_red':
-                    game_state["board"][y][x] = 0
-                    game_state["positions"][-1].remove((x, y))
-                case 'insert_blue':
-                    game_state["board"][y][x] = 1
-                    game_state["positions"][1].append((x, y))
-                case 'insert_red':
-                    game_state["board"][y][x] = -1
-                    game_state["positions"][-1].append((x, y))
-
         if not game_state["result"]:
             if game_state["move_counter"] == 200 or (not game_state["positions"][1] and not game_state["positions"][-1]):
                 game_state["result"] = "draw"
@@ -92,8 +83,7 @@ class intervention():
                 game_state["result"] = "lost"
             elif not game_state["positions"][-1]:
                 game_state["result"] = "win"
-
-        self.clear()
+        self.__res.clear()
 
 # Board manipulation
 def Raise_exception(move, current_side, board):
@@ -198,7 +188,7 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
     body = {
         "username": session_name,
         "img": [],
-        "setup": intervention().get_result()
+        "setup": intervention().view_command()
     }
     intervention().action()
 
@@ -244,7 +234,7 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
             game_state["result"] = "win"
 
         break_rule(deepcopy(game_state), intervention, global_var)
-        body["img"].append([*move_selected_pos, *move_new_pos, intervention().get_result()])
+        body["img"].append([*move_selected_pos, *move_new_pos, intervention().view_command()])
         intervention().action()
 
         game_state["current_turn"] *= -1
