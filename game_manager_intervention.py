@@ -5,7 +5,6 @@ from fdb.firestore_config import fdb
 import sys
 from io import StringIO
 import builtins
-from trainAI.Master_breakrule import main as Bot
 # from fdb.uti.upload import upload_video_to_storage
 
 def _import(name, *args, **kwargs):
@@ -135,10 +134,10 @@ def vay(opp_pos):
     return opp_pos.copy()
 
 # System
-def activation(user_code, break_rule_code, name):
+def activation(user_code, break_rule_code, master_code, name):
     f = StringIO()
     org_stdout = sys.stdout
-    # sys.stdout = f
+    sys.stdout = f
 
     custom_builtins = builtins.__dict__.copy()
     custom_builtins['__import__'] = _import
@@ -148,9 +147,11 @@ def activation(user_code, break_rule_code, name):
     try:
         local = {'__builtins__': custom_builtins}
         local_break = {'__builtins__': custom_builtins}
+        local_master = {'__builtins__': custom_builtins}
         exec(user_code, local, local)
         exec(break_rule_code, local_break, local_break)
-        game_res = run_game(Bot, local["main"], local_break["break_rule"], name)
+        exec(master_code, local_master, local_master)
+        game_res = run_game(local_master["main"], local["main"], local_break["break_rule"], name)
 
         sys.stdout = org_stdout
         return False, game_res, f.getvalue()
@@ -241,52 +242,3 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
 
     new_url = requests.post("http://quan064.pythonanywhere.com//generate_video", json=body).text
     return game_state["result"], game_state["move_counter"], new_url
-
-if __name__ == "__main__":
-    user_code = '''
-import random
-from tool import valid_move
-
-def main(player):
-    while True:
-        try:
-            selected_pos = x, y = random.choice(player.your_pos)
-            new_pos = random.choice(valid_move(x, y, player.board))
-            return {"selected_pos": selected_pos, "new_pos": new_pos}
-        except: pass
-'''
-
-    break_rule_code = '''
-def break_rule(game_state, intervention, global_var):
-    if game_state["move_counter"] == 0:
-        # Setup
-        for y in range(5):
-            for x in range(5):
-                intervention().set_value(x, y, "❄")
-
-        # Trạng thái lưu lại qua các lượt
-        global_var["val_board"] = [["❄" for j in range(5)] for i in range(5)]
-    else:
-        x, y = game_state["move"]["selected_pos"]
-        # Vỡ băng khi di chuyển
-        match global_var["val_board"][y][x]:
-            case "❄":
-                global_var["val_board"][y][x] = "🧊"
-            case "🧊":
-                global_var["val_board"][y][x] = "💧"
-
-        # Chết khi vỡ hết băng
-        x, y = game_state["move"]["new_pos"]
-        if global_var["val_board"][y][x] == "💧":
-            if game_state["board"][y][x] == 1:
-                intervention().remove_blue(x, y)
-            else:
-                intervention().remove_red(x, y)
-
-        # Cài đặt trạng thái
-        for y in range(5):
-            for x in range(5):
-                intervention().set_value(x, y, global_var["val_board"][y][x])
-'''
-
-    print(activation(user_code, break_rule_code, "1234"))
