@@ -28,38 +28,36 @@ class intervention():
 
     def remove_blue(self, x, y):
         if game_state["board"][y][x] == 1:
-            self.__res.append({"action":'remove_blue', "pos":[x, y]})
+            self.__res.append({"action":'remove_blue', "pos":(x, y)})
             game_state["board"][y][x] = 0
             game_state["positions"][1].remove((x, y))
         else: raise ValueError(f"There is no blue piece in ({x}, {y})")
     def remove_red(self, x, y):
         if game_state["board"][y][x] == -1:
-            self.__res.append({"action":'remove_red', "pos" : [x, y]})
+            self.__res.append({"action":'remove_red', "pos" : (x, y)})
             game_state["board"][y][x] = 0
             game_state["positions"][-1].remove((x, y))
         else: raise ValueError(f"There is no red piece in ({x}, {y})")
 
     def insert_blue(self, x, y):
         if game_state["board"][y][x] == 0:
-            self.__res.append({"action":'insert_blue', "pos":[x, y]})
+            self.__res.append({"action":'insert_blue', "pos":(x, y)})
             game_state["board"][y][x] = 1
             game_state["positions"][1].append((x, y))
             remove = vay(game_state["positions"][-1])
             remove.extend( ganh_chet((x, y), game_state["positions"][-1], 1, -1) )
             remove.extend( vay(game_state["positions"][-1]) )
-            for i in remove:
-                self.remove_red(*i)
+            for i in remove: self.__res.append({"action":'remove_red', "pos" : i})
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
     def insert_red(self, x, y):
         if game_state["board"][y][x] == 0:
-            self.__res.append({"action":'insert_red', "pos":[x, y]})
+            self.__res.append({"action":'insert_red', "pos":(x, y)})
             game_state["board"][y][x] = -1
             game_state["positions"][-1].append((x, y))
             remove = vay(game_state["positions"][1])
             remove.extend( ganh_chet((x, y), game_state["positions"][1], -1, 1) )
             remove.extend( vay(game_state["positions"][1]) )
-            for i in remove:
-                self.remove_blue(*i)
+            for i in remove: self.__res.append({"action":'remove_blue', "pos":i})
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
 
     def blue_win(self):
@@ -185,7 +183,7 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
     player2.your_pos = player1.opp_pos = game_state["positions"][-1]
     player1.global_var = player2.global_var = global_var = {}
     
-    break_rule(game_state, intervention, global_var)
+    break_rule(deepcopy(game_state), intervention, global_var)
     body = {
         "username": session_name,
         "img": [],
@@ -218,9 +216,9 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
         game_state["positions"][game_state["current_turn"]][index_move] = move_new_pos
 
         opp_pos = game_state["positions"][-game_state["current_turn"]]
-        remove = vay(opp_pos)
-        remove.extend( ganh_chet(move_new_pos, opp_pos, game_state["current_turn"], -game_state["current_turn"]) )
-        remove.extend( vay(opp_pos) )
+        remove = set( vay(opp_pos) )
+        remove.update( ganh_chet(move_new_pos, opp_pos, game_state["current_turn"], -game_state["current_turn"]) )
+        remove.update( vay(opp_pos) )
         for i in remove:
             if game_state["current_turn"]==1:
                 intervention().remove_red(*i)
