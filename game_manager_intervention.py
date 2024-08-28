@@ -44,20 +44,22 @@ class intervention():
             self.__res.append({"action":'insert_blue', "pos":(x, y)})
             game_state["board"][y][x] = 1
             game_state["positions"][1].append((x, y))
-            remove = vay(game_state["positions"][-1])
-            remove.extend( ganh_chet((x, y), game_state["positions"][-1], 1, -1) )
-            remove.extend( vay(game_state["positions"][-1]) )
-            for i in remove: self.__res.append({"action":'remove_red', "pos" : i})
+            remove = set( vay(game_state["positions"][-1]) )
+            remove.update( ganh_chet((x, y), game_state["positions"][-1], 1, -1) )
+            remove.update( vay(game_state["positions"][-1]) )
+            for i in remove:
+                self.remove_red(*i)
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
     def insert_red(self, x, y):
         if game_state["board"][y][x] == 0:
             self.__res.append({"action":'insert_red', "pos":(x, y)})
             game_state["board"][y][x] = -1
             game_state["positions"][-1].append((x, y))
-            remove = vay(game_state["positions"][1])
-            remove.extend( ganh_chet((x, y), game_state["positions"][1], -1, 1) )
-            remove.extend( vay(game_state["positions"][1]) )
-            for i in remove: self.__res.append({"action":'remove_blue', "pos":i})
+            remove = set( vay(game_state["positions"][1]) )
+            remove.update( ganh_chet((x, y), game_state["positions"][1], -1, 1) )
+            remove.update( vay(game_state["positions"][1]) )
+            for i in remove:
+                self.remove_blue(*i)
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
 
     def blue_win(self):
