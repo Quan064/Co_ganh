@@ -27,40 +27,40 @@ class intervention():
         return [i.copy() for i in self.__res]
 
     def remove_blue(self, x, y, trackOn=True):
-        if game_state["board"][y][x] == 1:
-            self.__res.append({"action":'remove_blue', "pos":(x, y), "trackOn":trackOn})
-            game_state["board"][y][x] = 0
-            game_state["positions"][1].remove((x, y))
-        else: raise ValueError(f"There is no blue piece in ({x}, {y})")
+        if game_state["board"][y][x] != 1: raise ValueError(f"There is no blue piece in ({x}, {y})")
+        if  trackOn.__class__ != bool: raise ValueError(f"trackOn must be string (not {trackOn.__class__})")
+        self.__res.append({"action":'remove_blue', "pos":(x, y), "trackOn":trackOn})
+        game_state["board"][y][x] = 0
+        game_state["positions"][1].remove((x, y))
     def remove_red(self, x, y, trackOn=True):
-        if game_state["board"][y][x] == -1:
-            self.__res.append({"action":'remove_red', "pos" : (x, y), "trackOn":trackOn})
-            game_state["board"][y][x] = 0
-            game_state["positions"][-1].remove((x, y))
-        else: raise ValueError(f"There is no red piece in ({x}, {y})")
+        if game_state["board"][y][x] != -1: raise ValueError(f"There is no red piece in ({x}, {y})")
+        if  trackOn.__class__ != bool: raise ValueError(f"trackOn must be string (not {trackOn.__class__})")
+        self.__res.append({"action":'remove_red', "pos" : (x, y), "trackOn":trackOn})
+        game_state["board"][y][x] = 0
+        game_state["positions"][-1].remove((x, y))
 
     def insert_blue(self, x, y, trackOn=True):
-        if game_state["board"][y][x] == 0:
-            self.__res.append({"action":'insert_blue', "pos":(x, y), "trackOn":trackOn})
-            game_state["board"][y][x] = 1
-            game_state["positions"][1].append((x, y))
-            remove = set( vay(game_state["positions"][-1]) )
-            remove.update( ganh_chet((x, y), game_state["positions"][-1], 1, -1) )
-            remove.update( vay(game_state["positions"][-1]) )
-            for i in remove:
-                self.remove_red(*i)
-        else: raise ValueError(f"There already has a piece in ({x}, {y})")
+        if game_state["board"][y][x] != 0: raise ValueError(f"There already has a piece in ({x}, {y})")
+        if  trackOn.__class__ != bool: raise ValueError(f"trackOn must be string (not {trackOn.__class__})")
+        self.__res.append({"action":'insert_blue', "pos":(x, y), "trackOn":trackOn})
+        game_state["board"][y][x] = 1
+        game_state["positions"][1].append((x, y))
+        remove = set( vay(game_state["positions"][-1]) )
+        remove.update( ganh_chet((x, y), game_state["positions"][-1], 1, -1) )
+        remove.update( vay(game_state["positions"][-1]) )
+        for i in remove:
+            self.remove_red(*i)
     def insert_red(self, x, y, trackOn=True):
-        if game_state["board"][y][x] == 0:
-            self.__res.append({"action":'insert_red', "pos":(x, y), "trackOn":trackOn})
-            game_state["board"][y][x] = -1
-            game_state["positions"][-1].append((x, y))
-            remove = set( vay(game_state["positions"][1]) )
-            remove.update( ganh_chet((x, y), game_state["positions"][1], -1, 1) )
-            remove.update( vay(game_state["positions"][1]) )
-            for i in remove:
-                self.remove_blue(*i)
-        else: raise ValueError(f"There already has a piece in ({x}, {y})")
+        if game_state["board"][y][x] != 0: raise ValueError(f"There already has a piece in ({x}, {y})")
+        if  trackOn.__class__ != bool: raise ValueError(f"trackOn must be string (not {trackOn.__class__})")
+        self.__res.append({"action":'insert_red', "pos":(x, y), "trackOn":trackOn})
+        game_state["board"][y][x] = -1
+        game_state["positions"][-1].append((x, y))
+        remove = set( vay(game_state["positions"][1]) )
+        remove.update( ganh_chet((x, y), game_state["positions"][1], -1, 1) )
+        remove.update( vay(game_state["positions"][1]) )
+        for i in remove:
+            self.remove_blue(*i)
 
     def blue_win(self):
         game_state["result"] = "win"
@@ -70,9 +70,12 @@ class intervention():
         game_state["result"] = "draw"
 
     def set_value(self, x, y, value, size=20, fill=[255,255,255], stroke_width=1, stroke_fill=[0,0,0]):
-        if value.__class__ == str:
-            self.__res.append({"action":'set_value', "pos":[x, y], "value":value, "size":size, "fill":fill, "stroke_width":stroke_width, "stroke_fill":stroke_fill})
-        else: raise ValueError(f"Value must be string (not {value.__class__})")
+        if value.__class__ != str: raise ValueError(f"value must be string (not {value.__class__})")
+        if size.__class__ != int: raise ValueError(f"size must be int (not {size.__class__})")
+        if fill.__class__ != list or len(fill) != 3: raise ValueError(f"fill must be list of [r, g, b]")
+        if stroke_width.__class__ != int: raise ValueError(f"stroke_width must be int (not {stroke_width.__class__})")
+        if stroke_fill.__class__ != list or len(stroke_fill) != 3: raise ValueError(f"stroke_fill must be list of [r, g, b]")
+        self.__res.append({"action":'set_value', "pos":(x, y), "value":value, "size":size, "fill":fill, "stroke_width":stroke_width, "stroke_fill":stroke_fill})
 
     def action(self):
         if not game_state["result"]:
