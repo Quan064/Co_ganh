@@ -26,22 +26,22 @@ class intervention():
     def view_command(self):
         return [i.copy() for i in self.__res]
 
-    def remove_blue(self, x, y):
+    def remove_blue(self, x, y, trackOn=True):
         if game_state["board"][y][x] == 1:
-            self.__res.append({"action":'remove_blue', "pos":(x, y)})
+            self.__res.append({"action":'remove_blue', "pos":(x, y), "trackOn":trackOn})
             game_state["board"][y][x] = 0
             game_state["positions"][1].remove((x, y))
         else: raise ValueError(f"There is no blue piece in ({x}, {y})")
-    def remove_red(self, x, y):
+    def remove_red(self, x, y, trackOn=True):
         if game_state["board"][y][x] == -1:
-            self.__res.append({"action":'remove_red', "pos" : (x, y)})
+            self.__res.append({"action":'remove_red', "pos" : (x, y), "trackOn":trackOn})
             game_state["board"][y][x] = 0
             game_state["positions"][-1].remove((x, y))
         else: raise ValueError(f"There is no red piece in ({x}, {y})")
 
-    def insert_blue(self, x, y):
+    def insert_blue(self, x, y, trackOn=True):
         if game_state["board"][y][x] == 0:
-            self.__res.append({"action":'insert_blue', "pos":(x, y)})
+            self.__res.append({"action":'insert_blue', "pos":(x, y), "trackOn":trackOn})
             game_state["board"][y][x] = 1
             game_state["positions"][1].append((x, y))
             remove = set( vay(game_state["positions"][-1]) )
@@ -50,9 +50,9 @@ class intervention():
             for i in remove:
                 self.remove_red(*i)
         else: raise ValueError(f"There already has a piece in ({x}, {y})")
-    def insert_red(self, x, y):
+    def insert_red(self, x, y, trackOn=True):
         if game_state["board"][y][x] == 0:
-            self.__res.append({"action":'insert_red', "pos":(x, y)})
+            self.__res.append({"action":'insert_red', "pos":(x, y), "trackOn":trackOn})
             game_state["board"][y][x] = -1
             game_state["positions"][-1].append((x, y))
             remove = set( vay(game_state["positions"][1]) )
@@ -69,9 +69,9 @@ class intervention():
     def draw(self):
         game_state["result"] = "draw"
 
-    def set_value(self, x, y, value):
+    def set_value(self, x, y, value, size=20, fill=[255,255,255], stroke_width=1, stroke_fill=[0,0,0]):
         if value.__class__ == str:
-            self.__res.append({"action":'set_value', "pos":[x, y], "value":value})
+            self.__res.append({"action":'set_value', "pos":[x, y], "value":value, "size":size, "fill":fill, "stroke_width":stroke_width, "stroke_fill":stroke_fill})
         else: raise ValueError(f"Value must be string (not {value.__class__})")
 
     def action(self):
