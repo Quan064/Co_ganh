@@ -5,6 +5,7 @@ from fdb.firestore_config import fdb
 import sys
 from io import StringIO
 import builtins
+from func_timeout import func_timeout
 # from fdb.uti.upload import upload_video_to_storage
 
 def _import(name, *args, **kwargs):
@@ -188,7 +189,7 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
     player2.your_pos = player1.opp_pos = game_state["positions"][-1]
     player1.global_var = player2.global_var = global_var = {}
     
-    break_rule(deepcopy(game_state), intervention, global_var)
+    func_timeout(8, break_rule, args=(deepcopy(game_state), intervention, global_var))
     body = {
         "username": session_name,
         "img": [],
@@ -203,10 +204,10 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
 
         if player1.your_side == game_state["current_turn"]:
             player1.move_counter = game_state["move_counter"]
-            game_state["move"] = UserBot(deepcopy(player1))
+            game_state["move"] = func_timeout(8, UserBot, args=(deepcopy(player1),))
         else:
             player2.move_counter = game_state["move_counter"]
-            game_state["move"] = Bot(deepcopy(player2))
+            game_state["move"] = func_timeout(8, Bot, args=(deepcopy(player2),))
         Raise_exception(game_state["move"], game_state["current_turn"], game_state["board"])
 
         move_new_pos = game_state["move"]["new_pos"]
@@ -237,7 +238,7 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
         elif not game_state["positions"][-1]:
             game_state["result"] = "win"
 
-        break_rule(deepcopy(game_state), intervention, global_var)
+        func_timeout(8, break_rule, args=(deepcopy(game_state), intervention, global_var))
         body["img"].append([*move_selected_pos, *move_new_pos, intervention().view_command()])
         intervention().action()
 

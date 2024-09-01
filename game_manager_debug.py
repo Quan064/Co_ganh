@@ -6,6 +6,7 @@ import sys
 import trainAI.MasterUser
 from io import StringIO
 import builtins
+from func_timeout import func_timeout
 # from fdb.uti.upload import upload_video_to_storage
 
 def _import(name, *args, **kwargs):
@@ -138,9 +139,9 @@ def run_game(Bot2, UserBot, session_name, debugNum): # Main
         print(f"__________{move_counter}__________")
 
         if player1.your_side == current_turn:
-            move = UserBot(deepcopy(player1))
+            move = func_timeout(8, UserBot, args=(deepcopy(player1),))
         else:
-            move = Bot2(deepcopy(player2))
+            move = func_timeout(8, Bot2, args=(deepcopy(player2),))
         Raise_exception(move, current_turn, game_state["board"])
         inp_oup.append(move)
 

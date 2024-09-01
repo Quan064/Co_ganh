@@ -23,6 +23,7 @@ import traceback
 import sys
 import time
 import builtins
+from func_timeout import func_timeout
 
 doc_ref_room = fdb.collection("room")
 doc_ref_post = fdb.collection("post")
@@ -416,7 +417,7 @@ def run_task():
             local = {'__builtins__': custom_builtins}
 
             exec(code, local, local)
-            Uoutput = local["main"](*i["input"])
+            Uoutput = func_timeout(8, local["main"], args=i["input"])
             comparision = i["output"] == Uoutput
             if comparision:
                 user_output.append({
@@ -486,7 +487,7 @@ def submit():
             local = {'__builtins__': custom_builtins}
 
             exec(code, local, local)
-            Uoutput = local["main"](*i["input"])
+            Uoutput = func_timeout(8, local["main"], args=i["input"])
             comparision = i["output"] == Uoutput
             print(comparision)
 
