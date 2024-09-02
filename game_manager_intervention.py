@@ -70,12 +70,12 @@ class intervention():
     def draw(self):
         game_state["result"] = "draw"
 
-    def set_value(self, x, y, value, size=20, fill=[255,255,255], stroke_width=1, stroke_fill=[0,0,0]):
+    def set_value(self, x, y, value, size=20, fill=[255,255,255,255], stroke_width=1, stroke_fill=[0,0,0,255]):
         if value.__class__ != str: raise ValueError(f"value must be string (not {value.__class__})")
         if size.__class__ != int: raise ValueError(f"size must be int (not {size.__class__})")
-        if fill.__class__ != list or len(fill) != 3: raise ValueError(f"fill must be list of [r, g, b]")
+        if fill.__class__ != list or len(fill) != 4: raise ValueError(f"fill must be list of [r, g, b, a]")
         if stroke_width.__class__ != int: raise ValueError(f"stroke_width must be int (not {stroke_width.__class__})")
-        if stroke_fill.__class__ != list or len(stroke_fill) != 3: raise ValueError(f"stroke_fill must be list of [r, g, b]")
+        if stroke_fill.__class__ != list or len(stroke_fill) != 4: raise ValueError(f"stroke_fill must be list of [r, g, b, a]")
         self.__res.append({"action":'set_value', "pos":(x, y), "value":value, "size":size, "fill":fill, "stroke_width":stroke_width, "stroke_fill":stroke_fill})
 
     def action(self):
