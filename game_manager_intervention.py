@@ -145,7 +145,7 @@ def vay(opp_pos):
 def activation(user_code, break_rule_code, master_code, name):
     f = StringIO()
     org_stdout = sys.stdout
-    sys.stdout = f
+    # sys.stdout = f
 
     custom_builtins = builtins.__dict__.copy()
     custom_builtins['__import__'] = _import
@@ -250,3 +250,21 @@ def run_game(Bot, UserBot, break_rule, session_name): # Main
 
     new_url = requests.post("http://quan064.pythonanywhere.com//generate_video", json=body).text
     return game_state["result"], game_state["move_counter"], new_url
+
+if __name__ == "__main__":
+    user_code = r'''
+import random
+from tool import valid_move
+def main(player):
+    while True:
+        try:
+            selected = random.choice(player.your_pos)
+            new = random.choice(valid_move(*selected, player.board))
+            return {"selected_pos" : selected, "new_pos" : new}
+        except: pass
+'''
+    with open("C:/Users/Hello/OneDrive/Code Tutorial/Python/TEST/test.py", encoding="utf8") as f:
+        break_rule_code = f.read()
+    with open("C:/Users/Hello/OneDrive/Code Tutorial/Python/TEST/test5.py", encoding="utf8") as f:
+        master_code = f.read()
+    print(activation(user_code, break_rule_code, master_code, "Quan064"))

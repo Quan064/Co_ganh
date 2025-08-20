@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- <link rel="stylesheet" href="../static/css/style.css"> -->
+    <link rel="stylesheet" href="../static/css/animation.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/text_editor.css">
+    <link rel="stylesheet" href="../static/css/challenge_mode.css">
+</head>
+<body>
+
+    <div class="cover" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, .05); z-index: 1000;"></div>
+
+    <div class="guide"></div>
+
+    <div class="container">
+        <div class="container_element bot_display">
+            <div class="bot_display-tasks">
+                <div class="bot_display-tasks_nav">
+                    
+                </div>
+            </div>
+            <div class="bot_display_nav">
+                <div class="bot_display_nav-block">
+                    <div class="bot_display_nav-block--item task">
+                        TASK
+                        <div class="loading_nav_task">
+                            <div class="loader"></div>
+                            <i class="fa-solid fa-circle-check check_icon"></i>
+                        </div>
+                    </div>
+                    <div class="bot_display_nav-block--item result">
+                        RESULT
+                        <div class="loading_nav_image">
+                            <i class="fa-solid fa-circle-check check_icon"></i>
+                            <div class="loader"></div>
+                        </div>
+                    </div>
+                    <div class="bot_display_nav-block--item submissions">
+                        SUBMISSIONS
+                    </div>
+                    <div class="bot_display_nav-block--item help">
+                        HELP
+                    </div>
+                    <div class="animation">
+                        <div class="children"></div>
+                    </div>
+                </div>
+            </div>
+    
+            <div style="display: block;" class="bot_display-item bot_display-task">
+                <!-- {{task}} -->
+                <div class="bot_display-task--title">{{task.task_name}}</div>
+                <ul class="bot_display-task--class_list">
+                    <li class="bot_display-task--class_item {{task.tag.difficult}}">{{task.tag.difficult}}</li>
+                    <!-- <li class="bot_display-task--class_item">beginner</li>
+                    <li class="bot_display-task--class_item">100</li> -->
+                </ul>
+                <code>
+                    {{task.content | safe}}
+                </code>
+
+                <div class="bot_display-task--status">
+                    <div class="bot_display-task--status_item tallent">accepted <div class="num">{{task.accepted_count}}</div></div>
+                    <div class="bot_display-task--status_item good">submissions <div class="num">{{task.submission_count}}</div></div>
+                    <div class="bot_display-task--status_item submissions">accepted rate <div class="num">{{(task.accepted_count / (task.submission_count if task.submission_count > 0 else 1) * 100)|round(1)}} %</div></div>
+                </div>
+            </div>
+
+            <div style="display: none;" class="bot_display-item bot_display-result">
+                <div class="type accepted">
+                    <div class="user">
+                        <div class="user_avatar">{{user.username[0].upper()}}</div>
+                        <div class="user_name">{{user.username}}</div>
+                    </div>
+                    <div class="status accepted">chưa có kết quả</div>
+                </div>
+                <div class="display_result accepted">
+                    <div class="test_case_result">
+                        <div class="test_case_result_overview">
+                            <div class="test_case_runtime">
+                                <div class="runtime_title">Runtime</div>
+                                <div class="runtime">1ms</div>
+                            </div>
+                            <div class="test_case_AC">
+                                <div class="AC_title">AC</div>
+                                <div class="AC">10/10</div>
+                            </div>
+                        </div>
+                        <div class="warper_TCRL">
+                            <ul class="test_case_result_list">
+                                <!-- <li tabindex="0" class="test_case_result_item accepted">
+                                    Test 1
+                                    <div class="text_case_InOu accepted">
+                                        <div class="text_case_oup_title">output =</div>
+                                        <div class="test_case_oup">[[1,2],[3,1],[5,1],[3,5],[1,2],[3,1],[5,1],[3,5],[1,2],[3,1],[5,1],[3,5]]</div>
+                                        <hr style="width: 100%; border: 1px solid #007BFF; margin-top: 14px">
+                                        <div class="user_oup_title">your output =</div>
+                                        <div class="user_oup">[1,2,3,4]</div>
+                                    </div>
+                                </li> -->
+                            </ul>
+                        </div>
+                        <div style="display: none;" class="test_case_result_err">
+
+                        </div>
+                    </div>
+                    <div class="change_task_block">
+                        <div class="pre_task">back</div>
+                        <div class="next_task available">next</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: none;" class="bot_display-item bot_display-submissions">
+                <div class="submissions_title">
+                    <div class="sbum_status">Status</div>
+                    <div class="sbum_submit_time">Submit time</div>
+                    <div class="sbum_test_finished">Test finished</div>
+                    <div style="flex: 2;"></div>
+                </div>
+                <ul class="submissions_list">
+                </ul>
+            </div>
+
+            <div style="display: none;" class="bot_display-item bot_display-help">
+                <div class="help_title">Kiến thức cần thiết</div>
+                <ul class="help_list help_type">
+                    {% for skre in task.tag.skill_require %}
+                        <li class="help_item help_type"><a href="{{skre.link}}">{{skre.name}}</a></li>
+                    {% endfor %}
+                </ul>
+                <div class="help_title">Các bài blog</div>
+                <ul class="help_list">
+                    <li class="help_item help_blog"><a href="{{url_for('post', post_id='1719022233537')}}">Kiểm tra nước đi hợp lệ</a></li>
+                    <li class="help_item help_blog"><a href="{{url_for('post', post_id='1719228535494')}}">Kiểm tra gánh chẹt</a></li>
+                    <li class="help_item help_blog"><a href="{{url_for('post', post_id='1720181857262')}}">Kiểm tra vây</a></li>
+                </ul>
+                <div class="help_title">Mô phỏng thuật toán</div>
+                <ul class="help_list">
+                    <li class="help_item help_blog"><a href="{{url_for('visualize', id='OYRJNv4Jqez9dKZjLW27')}}">Kiểm tra nước đi</a></li>
+                    <li class="help_item help_blog"><a href="{{url_for('visualize', id='aLzIcTxFR2EfRXVFov07')}}">Kiểm tra gánh chẹt</a></li>
+                    <li class="help_item help_blog"><a href="{{url_for('visualize', id='1OyReHWrH3zgV5IfcZPk')}}">Kiểm tra vây</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="container_element coding_module">
+            <div class="coding_module-nav">
+                <a href="{{ url_for('menu') }}" class="coding_module-nav--backBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+                <div class="coding_module-nav--runBtn btn">Run</div>
+                <div class="coding_module-nav--submitBtn loader" style="display: none; animation: none;"><div class="coding_module-nav--loading"></div></div>
+                <div class="coding_module-nav--submitBtn btn">Submit</div>
+            </div>
+            <div class="a" style="height: 100%; position: relative; display: flex; flex-direction: column;">
+                <div id="coding_module-coding_block"></div>
+                <div class="guide_box--nav" style="z-index: 2000; display: none;">
+                    <div class="left">&#11164;</div>
+                    <div class="right">&#11166;</div>
+                </div>
+                <!-- <div class="guide_box">
+                    <div class="guide_box--content">hellohellohellohellellohellohellohelloellohellohellohellohellohellohelloello</div>
+                    <div class="guide_box--arrow"></div>
+                </div> -->
+                <div class="test_cases_block">
+                    <div class="title">Test case</div>
+                    <ul class="test_case_nav_list">
+                        <li class="test_case_nav_item choosen">
+                            <div class="test_case_nav_title">
+                                Case 1
+                            </div>
+                            <div class="test_case_item_loader">
+                                <div class="test_case_item_loading"></div>
+                            </div>
+                        </li>
+                        <li class="test_case_nav_item">
+                            <div class="test_case_nav_title">
+                                Case 2
+                            </div>
+                            <div class="test_case_item_loader">
+                                <div class="test_case_item_loading"></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <ul class="test_case_list">
+                        <!-- {{task}} -->
+                        {% set inp_oup = task.inp_oup | eval_string %}
+                        {% for i in range(0, 2) %}
+                            <li class="test_case_item {{'appear' if i == 0 else ''}}">
+                                {% for j in range(inp_oup[i].input | length) %}
+                                    <div class="inp_title">{{task.input_title[j]}} =</div>
+                                    <div class="inp">{{inp_oup[i].input[j]}}</div>
+                                {% endfor %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="username">{{user.username}}</div>
+    <div class="demo_code" hidden>{{task.demo_code}}</div>
+    <div class="task_inp_oup" hidden>{{task.inp_oup}}</div>
+    <div id="task_id" hidden>{{id}}</div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.min.js"></script>
+    <script type="module" src="../static/fdb_fontend/firestore_config.js"></script>
+    <script type="module" src="../static/script/challenge_mode.js"></script>
+</body>
+</html>

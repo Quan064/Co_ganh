@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "C:\Users\ADMIN\Desktop\Co_ganh_deploy\game_manager.py", line 109, in activation
+    temp = run_game(UserBot, Bot2, session_name, debugNum)
+  File "C:\Users\ADMIN\Desktop\Co_ganh_deploy\game_manager.py", line 144, in run_game
+    move = UserBot.main(deepcopy(player1))
+  File "C:\Users\ADMIN\Desktop\Co_ganh_deploy\static\botfiles\botfile_tlv23.py", line 8, in main
+    d = random.choice(valid_move(c[0], c[1], player.board))
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\random.py", line 378, in choice
+    return seq[self._randbelow(len(seq))]
+IndexError: tuple index out of range
